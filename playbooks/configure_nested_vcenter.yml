@@ -1,0 +1,222 @@
+---
+-   name: Configure nested_hosts
+    hosts: localhost
+    gather_facts: False
+    vars:
+        # empty var to populate
+        datastores_to_add:
+
+    tasks:
+    -   name: Create Datacenter
+        vmware_datacenter:
+            hostname: "{{ nested_vcenter.ip }}"
+            username: "{{ nested_vcenter.user }}"
+            password: "{{ nested_vcenter.password }}"
+            datacenter_name: "{{ nested_vcenter.datacenter }}"
+            state: present
+            validate_certs: False
+        
+    -   name: Create Clusters
+        vmware_cluster:
+            hostname: "{{ nested_vcenter.ip }}"
+            username: "{{ nested_vcenter.user }}"
+            password: "{{ nested_vcenter.password }}"
+            datacenter_name: "{{ nested_vcenter.datacenter }}"
+            cluster_name: "{{ item.key }}"
+            validate_certs: False
+            enable_ha: "{{ item.value.ha.enabled }}" 
+            ha_admission_control_enabled: "{{ item.value.ha.admission_control_enabled }}" 
+            ha_host_monitoring: "{{ item.value.ha.ha_host_monitoring_enabled }}" 
+            enable_drs: "{{ item.value.drs }}"
+            enable_vsan: False
+        with_dict: "{{ nested_clusters }}"
+    
+    -   name: Add ESXi Host to VCSA
+        vmware_host:
+            hostname: "{{ nested_vcenter.ip }}"
+            username: "{{ nested_vcenter.user }}"
+            password: "{{ nested_vcenter.password }}"
+            datacenter_name: "{{ nested_vcenter.datacenter }}"
+            validate_certs: false
+            cluster_name: "{{ item.value.nested_cluster }}"
+            esxi_hostname: "{{ item.value.ip }}"
+            esxi_username: "root"
+            esxi_password: "{{ nested_host_password }}"
+            state: present
+        with_dict: "{{ nested_hosts }}"
+
+    -   name: Remove Default VM Portgroup
+        vmware_portgroup:
+            hostname: "{{ nested_vcenter.ip }}"
+            username: "{{ nested_vcenter.user }}"
+            password: "{{ nested_vcenter.password }}"
+            validate_certs: False
+            cluster_name: "{{ item.key }}"
+            switch_name: vSwitch0
+            portgroup_name: "VM Network"
+            state: absent
+        delegate_to: localhost
+        with_dict: "{{ nested_clusters }}"
+
+    -   name: Add VM Portgroup to vSwitch 0
+        vmware_portgroup:
+            hostname: "{{ nested_vcenter.ip }}"
+            username: "{{ nested_vcenter.user }}"
+            password: "{{ nested_vcenter.password }}"
+            validate_certs: False
+            cluster_name: "{{item.key}}"
+            switch_name: vSwitch0
+            portgroup_name: "{{ item.value.vswitch0_port_group_name }}"
+            vlan_id: "{{ item.value.vswitch0_port_group_vlan }}"
+        delegate_to: localhost
+        with_dict: "{{ nested_clusters }}"
+
+
+    -   name: Gather info about disk of all ESXi Host in the given Cluster
+        vmware_host_disk_info:
+            hostname: "{{ nested_vcenter.ip }}"
+            username: "{{ nested_vcenter.user }}"
+            password: "{{ nested_vcenter.password }}"
+            validate_certs: false
+            cluster_name: "{{item.key}}"
+        delegate_to: localhost
+        register: cluster_host_disks
+        with_dict: "{{ nested_clusters }}"
+    
+    -   debug: msg="{{cluster_host_disks}}"
+
+    -   name: Build device lookup table
+        set_fact: 
+            host_disk_map: >-
+                {
+                {% for cluster in cluster_host_disks.results %}
+                {% for host_name, disks in cluster.hosts_disk_facts.items() %}
+                {% for disk in disks %}
+                "{{cluster.invocation.module_args.cluster_name}}_{{host_name}}_{{disk.disk_ctd[0]}}": 
+                    "{{disk.canonical_name}}",
+                {% endfor %}
+                {% endfor %}
+                {% endfor %}
+                }
+
+    -   debug: msg="{{host_disk_map}}"
+
+    # Build a list of each datastore to add to each host
+    -   name: Build datastores to add
+        set_fact: 
+            datastores_to_add: >-
+                [{% for disk in nested_clusters[item.value.nested_cluster].nested_hosts_disks  %}
+                {% if "datastore_name" in  disk %}
+                {
+                "host_name": "{{ item.value.ip }}",
+                "datastore_name": "{{disk.datastore_name}}-{{ item.key }}",
+                "disk_reference" : "{{ item.value.nested_cluster }}_{{ item.value.ip }}_vmhba0:C0:T{{ loop.index0 + 3 }}:L0",
+                },
+                {% endif %}
+                {% endfor %}
+                ]
+        with_dict: "{{ nested_hosts }}"
+
+    
+
+    -   name: Mount VMFS datastores to ESXi
+        vmware_host_datastore:
+            hostname: "{{ nested_vcenter.ip }}"
+            username: "{{ nested_vcenter.user }}"
+            password: "{{ nested_vcenter.password }}"
+            validate_certs: False
+            datastore_name: "{{ item.datastore_name }}"
+            datastore_type: "vmfs"
+            vmfs_device_name: "{{host_disk_map[item.disk_reference]}}"
+            vmfs_version: 6
+            esxi_hostname: "{{ item.host_name }}"
+            state: present
+        delegate_to: localhost
+        with_items: "{{ datastores_to_add }}"
+
+    # -   name: Add Management Network VM Portgroup to all hosts in a cluster
+    #     vmware_portgroup:
+    #         hostname: "{{ nested_vcenter.ip }}"
+    #         username: "{{ nested_vcenter.user }}"
+    #         password: "{{ nested_vcenter.password }}"
+    #         validate_certs: False
+    #         cluster_name: "{{ item.key }}"
+    #         switch_name: "vSwitch0"
+    #         portgroup_name: "{{ item.value.vswitch0_port_group_name }}"
+    #         vlan_id: 0
+    #     with_dict: "{{ nested_clusters }}"
+    #     delegate_to: localhost
+
+    -   name: Add resource pool to vCenter
+        vmware_resource_pool:
+            hostname: "{{ nested_vcenter.ip }}"
+            username: "{{ nested_vcenter.user }}"
+            password: "{{ nested_vcenter.password }}"
+            validate_certs: False
+            datacenter: "{{ nested_vcenter.datacenter }}"
+            cluster: "{{ item.0.cluster_name }}"
+            resource_pool: "{{ item.1 }}"
+            state: present
+        with_subelements:
+            -   "{{ resource_pools }}"
+            -   resource_pool_name
+        delegate_to: localhost
+
+    -   name: Create VDS
+        vmware_dvswitch:
+            hostname: "{{ nested_vcenter.ip }}"
+            username: "{{ nested_vcenter.user }}"
+            password: "{{ nested_vcenter.password }}"
+            validate_certs: false
+            datacenter: "{{ nested_vcenter.datacenter }}"
+            switch: "{{ item.name }}"
+            version: 7.0.0
+            mtu: "{{ item.mtu }}"
+            uplink_quantity: "{{ item.uplink_quantity }}"
+            state: present
+        with_items: "{{ distributed_switches }}"
+        delegate_to: localhost
+      
+    -   name: Add Host to dVS
+        vmware_dvs_host:
+            hostname: "{{ nested_vcenter.ip }}"
+            username: "{{ nested_vcenter.user }}"
+            password: "{{ nested_vcenter.password }}"
+            validate_certs: false
+            esxi_hostname: "{{ nested_hosts[item.1].ip }}"
+            switch_name: "{{ item.0.name }}"
+            vmnics: "{{ item.0.vmnics }}"
+            state: present
+        with_subelements: 
+            -   "{{ distributed_switches }}"
+            -   hosts
+        delegate_to: localhost
+
+    -   name: Create vlan portgroup
+        vmware_dvs_portgroup:
+            hostname: "{{ nested_vcenter.ip }}"
+            username: "{{ nested_vcenter.user }}"
+            password: "{{ nested_vcenter.password }}"
+            validate_certs: false
+            portgroup_name: "{{ item.name }}"
+            switch_name: "{{ item.switch_name }}"
+            vlan_id: "{{ item.vlan_id }}"
+            num_ports: 8
+            portgroup_type: earlyBinding
+            state: present
+        with_items: "{{ distributed_port_groups }}"
+        delegate_to: localhost
+
+    # -   name: Create datastore a tag
+    #   vmware_tag:
+    #     hostname: "{{ nested_vcenter.ip }}"
+    #     username: "{{ nested_vcenter.user }}"
+    #     password: "{{ nested_vcenter.password }}"
+    #     validate_certs: false
+    #     tag_name: k8s-storage
+    #     tag_description: "Tag for datastores used by K8s"
+    #     state: present
+    #   delegate_to: localhost
+
+
+      # Awaiting Ansible 2.10 to allow datastore tagging and creation of storage profiles.

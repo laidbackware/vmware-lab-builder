@@ -1,0 +1,450 @@
+---
+-   name: Deploy VC and Hosts
+    hosts: localhost
+    gather_facts: False
+    pre_tasks:
+    -   name: Ensure xorriso is installed
+        package:
+            name: xorriso
+            state: present  
+    vars:
+    # empty var to populate
+        datastores_to_add:
+        
+        disks_to_add: ""
+    tasks:
+
+    -   name: Deploy ESXi
+        vmware_deploy_ovf:
+            hostname: "{{ hosting_vcenter.ip }}"
+            username: "{{ hosting_vcenter.user }}" 
+            password: "{{ hosting_vcenter.password }}" 
+            validate_certs: no
+            name: "{{ environment_tag }}-{{ item.key }}"
+            datacenter: Home
+            # folder: /SG1/vm
+            cluster: "{{ nested_clusters[item.value.nested_cluster].hosting_cluster }}"
+            datastore: "{{ nested_clusters[item.value.nested_cluster].hosting_datastore }}"
+            disk_provisioning: thin
+            networks:  # TODO
+                "VM Network": Nest
+            ova: ../Nested_ESXi7.0.1_Appliance_Template_v1.ova  #TODO
+            allow_duplicates: no
+            power_on: no
+            fail_on_spec_warnings: yes
+            wait: yes
+            wait_for_ip_address: no
+            inject_ovf_env: yes
+            properties:
+                guestinfo.hostname: "{{ environment_tag }}-{{ item.key }}"
+                guestinfo.ipaddress: "{{ item.value.ip }} "
+                guestinfo.netmask: "{{ item.value.mask }}"
+                guestinfo.gateway: "{{ item.value.gw }}"
+                guestinfo.vlan: "{{ nested_clusters[item.value.nested_cluster].mgmt_vlan }}"
+                guestinfo.dns: "{{ dns1 }}"
+                guestinfo.domain: "{{ domain }}"
+                guestinfo.ntp: "{{ntp}}"
+                guestinfo.syslog: ""
+                guestinfo.password: "{{ nested_host_password }}"
+                guestinfo.ssh: "True"
+                guestinfo.createvmfs: "False"
+        with_dict: "{{ nested_hosts }}"
+        async: 7200
+        poll: 0
+        register: hosts
+
+    
+    -   name: Check if vCenter already exists so install steps can be skipped
+        uri:
+            url: "https://{{ nested_vcenter.ip }}/ui/"
+            method: GET
+            status_code: 200
+            timeout: 2
+            validate_certs: False
+        ignore_errors: True
+        register: vcenter_response
+
+    -   set_fact:
+            vcenter_exists={{vcenter_response.status == 200}}
+
+    -   name: Fix permissions before delete
+        command: chmod -R +w {{tmp_dir}}/VCSA
+        ignore_errors: yes
+        when: not vcenter_exists
+
+    -   name: Clean VCSA ISO Directory
+        file:
+            path: '{{tmp_dir}}/VCSA'
+            state: absent
+        when: not vcenter_exists
+
+    -   name: Extract VCSA ISO image
+        command: xorriso -ecma119_map lowercase -osirrox on -indev {{vcIso}} -extract / {{tmp_dir}}/VCSA
+        when: not vcenter_exists
+
+    -   name: Fix VCSA directory permissions
+        command: "{{item}}"
+        with_items:
+        -   chmod -R 777 {{tmp_dir}}/VCSA
+        when: not vcenter_exists
+    
+    -   name: Create JSON template file for VCSA 6.7 with embeded PSC
+        template: 
+            src=../templates/embedded_vCSA_on_VC_6.7.json
+            dest={{tmp_dir}}/vCSA_on_ESXi.json
+        when: vcIso is search("-6.7.") and not vcenter_exists
+
+    -   name: Create JSON template file for VCSA 7.0 with embeded PSC
+        template: 
+            src=../templates/embedded_vCSA_on_VC_7.0.json
+            dest={{tmp_dir}}/vCSA_on_ESXi.json
+        when: vcIso is search("-7.0.") and not vcenter_exists
+
+    -   name: Perform VC CLI Install
+        command: "./vcsa-deploy install --accept-eula --no-esx-ssl-verify {{tmp_dir}}/vCSA_on_ESXi.json"
+        args:
+            chdir: '{{tmp_dir}}/VCSA/vcsa-cli-installer/lin64/'
+        when: not vcenter_exists
+        async: 3600
+        poll: 0
+        register: vcenter_result
+
+    -   name: Result check for deployment of host
+        async_status:
+            jid: "{{ item.ansible_job_id }}"
+        register: job_result
+        until: job_result.finished
+        with_items: "{{ hosts.results }}"
+        retries: 100
+        delay: 15
+
+    # Build list of hosts with disks to be added, inlcuding the 3 base disks
+    -   name: Build list of disks to add 
+        set_fact: 
+            disks_to_add: >-
+                [{% for host_name, host_spec in nested_hosts.items()  %}
+                {
+                "name": "{{ environment_tag }}-{{ host_name }}",
+                "disks" : [{"size_gb": 4, "type": "{{ disk_mode }}", "controller_type": "paravirtual", "controller_number": 0, "unit_number": 0},
+                                    {"size_gb": 4, "type": "{{ disk_mode }}", "controller_type": "paravirtual", "controller_number": 0, "unit_number": 1},
+                                    {"size_gb": 8, "type": "{{ disk_mode }}", "controller_type": "paravirtual", "controller_number": 0, "unit_number": 2},
+                                    {% for disk in nested_clusters[host_spec.nested_cluster].nested_hosts_disks  %}
+                                        {
+                                            "size_gb": {{ disk.size_gb }}, 
+                                            "type": "{{ disk_mode }}",
+                                            "datastore": "{{ nested_clusters[host_spec.nested_cluster].hosting_datastore }}",
+                                            "controller_type": "paravirtual",
+                                            "controller_number": 0,
+                                            "unit_number": {{loop.index0}} + 3
+                                        },
+                                    {% endfor %}
+                                    ]
+                },
+                {% endfor %}]
+
+
+                
+    -   name: Add Disks
+        vmware_guest:
+            hostname: "{{ hosting_vcenter.ip }}"
+            username: "{{ hosting_vcenter.user }}" 
+            password: "{{ hosting_vcenter.password }}" 
+            validate_certs: no
+            datacenter: "{{ hosting_vcenter.datacenter }}"
+            name: "{{ item.name }}"
+            disk: "{{ item.disks }}"
+        delegate_to: localhost
+        register: deploy_vm
+        with_items: "{{ disks_to_add }}"
+
+    -   name: Edit VM CPU, Memory and networks
+        vmware_guest:
+            hostname: "{{ hosting_vcenter.ip }}"
+            username: administrator@vsphere.local
+            password: Pass123$
+            validate_certs: no
+            datacenter: "{{ hosting_vcenter.datacenter }}"
+            name: "{{ environment_tag }}-{{ item.key }}"
+            # disk: "{{ nested_clusters[item.value.nested_cluster].nested_hosts_disks}}"
+            hardware:
+                memory_mb: "{{ nested_clusters[item.value.nested_cluster].ram_in_gb  *1024}}"
+                num_cpus: "{{ nested_clusters[item.value.nested_cluster].cpu_cores }}"
+            networks: "{{nested_clusters[item.value.nested_cluster].vmnic_physical_portgroup_assignment}}"
+            # wait_for_ip_address: yes
+        delegate_to: localhost
+        with_dict: "{{ nested_hosts }}"
+
+    -   name: Set the state of a virtual machine to power on
+        vmware_guest_powerstate:
+            hostname: "{{ hosting_vcenter.ip }}"
+            username: administrator@vsphere.local
+            password: Pass123$
+            validate_certs: no
+            # folder: "/{{ datacenter_name }}/vm/my_folder"
+            name: "{{ environment_tag }}-{{ item.key }}"
+            state: powered-on
+        delegate_to: localhost
+        with_dict: "{{ nested_hosts }}"
+
+    -   name: Check if hosts are online
+        uri:
+            url: "https://{{ item.value.ip }}/ui/"
+            method: GET
+            status_code: 200
+            timeout: 2
+            validate_certs: False
+        retries: 60
+        delay: 10
+        register: result
+        until: result.status == 200
+        with_dict: "{{ nested_hosts }}"
+        
+
+################### gap where original code was
+
+    -   debug: msg="The vCenter deployment can take a long time.\nYou can check progress at https://{{nested_vcenter.ip}}:5480 after about 20 minutes.\nFor detailed output browse to the most recent folder starting with vcsaCliInstaller under {{tmp_dir}} and follow vcsa-cli-installer.log "
+        when: not vcenter_exists
+
+    -   name: Result check for deployment of vCenter task
+        async_status:
+            jid: "{{ vcenter_result.ansible_job_id }}"
+        register: job_result
+        until: job_result.finished      
+        retries: 240
+        delay: 15
+        when: not vcenter_exists
+
+    -   name: Check the vSphere API is online
+        command: "curl -k --silent -v https://{{ nested_vcenter.ip }}/ui/"
+        register: result
+        until: result.stdout.find("<title>vSphere Client</title>") != -1
+        retries: 120
+        delay: 5
+        changed_when: false
+        when: not vcenter_exists
+
+    -   name: Wait 30 seconds for the vCenter to settle
+        pause: seconds=30
+        when: not vcenter_exists
+    
+    post_tasks:
+    -   name: Delete the temporary JSON template file
+        file: 
+            path: "{{tmp_dir}}/vCSA_on_ESXi.json"
+            state: absent
+
+    -   name: Clean VCSA ISO Directory
+        file:
+            path: "{{tmp_dir}}/VCSA/"
+            state: absent
+
+
+#########################################
+
+    # -   name: Remove Nested vESXi CDROM
+    #   vmware_guest:
+    #     hostname: "{{ hosting_vcenter.ip }}"
+    #     username: "{{ hosting_vcenter.user }}" 
+    #     password: "{{ hosting_vcenter.password }}" 
+    #     validate_certs: no
+    #     name: "{{ environment_tag }}-{{ item.key }}"
+    #     cdrom:
+    #       type: client
+    #   with_dict: "{{ nested_hosts }}"
+
+    # -   name: Change nested_host hostnames
+    #   vmware_vm_shell:
+    #     hostname: "{{ hosting_vcenter.ip }}"
+    #     username: "{{ hosting_vcenter.user }}"
+    #     password: "{{ hosting_vcenter.password }}"
+    #     datacenter: "{{ hosting_vcenter.datacenter }}"
+    #     validate_certs: false
+    #     vm_id: "{{ environment_tag }}-{{ item.key }}"
+    #     vm_username: "{{ nested_host_credentials.user }}"
+    #     vm_password: "{{ nested_host_password }}"
+    #     vm_shell: /bin/esxcli
+    #     vm_shell_args: "system hostname set --fqdn={{ environment_tag }}-{{ item.key }}.{{ domain }}"
+    #     vm_shell_env:
+    #     -   "PATH=/bin"
+    #     -   "VAR=test"
+    #     vm_shell_cwd: "/tmp"
+    #   with_dict: "{{ nested_hosts }}"
+    #   async: 7200
+    #   poll: 0
+    #   register: hname
+
+    # -   name: Result check for configuring hostname
+    #   async_status:
+    #     jid: "{{ item.ansible_job_id }}"
+    #   register: job_result
+    #   until: job_result.finished
+    #   with_items: "{{ hname.results }}"
+    #   retries: 10
+
+    # -   name: Set VLAN to Management portgroup
+    #   vmware_vm_shell:
+    #     hostname: "{{ hosting_vcenter.ip }}"
+    #     username: "{{ hosting_vcenter.user }}"
+    #     password: "{{ hosting_vcenter.password }}"
+    #     datacenter: "{{ hosting_vcenter.datacenter }}"
+    #     validate_certs: false
+    #     vm_id: "{{ environment_tag }}-{{ item.key }}"
+    #     vm_username: "{{ nested_host_credentials.user }}"
+    #     vm_password: "{{ nested_host_password }}"
+    #     vm_shell: /bin/esxcli
+    #     vm_shell_args: "network vswitch standard portgroup set --portgroup-name='Management Network' --vlan-id={{ nested_clusters[item.value.nested_cluster].mgmt_vlan }}"
+    #     vm_shell_env: 
+    #     -   "PATH=/bin"
+    #     -   "VAR=test"
+    #     vm_shell_cwd: "/tmp"
+    #   with_dict: "{{ nested_hosts }}"
+    #   async: 7200
+    #   poll: 0
+    #   register: hvlan
+
+    # -   name: Result check for setting VLAN
+    #   async_status:
+    #     jid: "{{ item.ansible_job_id }}"
+    #   register: job_result
+    #   until: job_result.finished
+    #   with_items: "{{ hvlan.results }}"
+    #   retries: 10
+
+    # -   name: Set vmk0 ip addresses
+    #   vmware_vm_shell:
+    #     hostname: "{{ hosting_vcenter.ip }}"
+    #     username: "{{ hosting_vcenter.user }}"
+    #     password: "{{ hosting_vcenter.password }}"
+    #     datacenter: "{{ hosting_vcenter.datacenter }}"
+    #     validate_certs: false
+    #     vm_id: "{{ environment_tag }}-{{ item.key }}"
+    #     vm_username: "{{ nested_host_credentials.user }}"
+    #     vm_password: "{{ nested_host_password }}"
+    #     vm_shell: /bin/esxcli
+    #     vm_shell_args: "network ip interface ipv4 set --interface-name=vmk0 --ipv4={{ item.value.ip }} --netmask={{ item.value.mask }} --type=static"
+    #     vm_shell_env: 
+    #     -   "PATH=/bin"
+    #     -   "VAR=test"
+    #     vm_shell_cwd: "/tmp"
+    #   with_dict: "{{ nested_hosts }}"
+    #   async: 7200
+    #   poll: 0
+    #   register: hip
+
+    # -   name: Result check for setting vmk0 ip addresses
+    #   async_status:
+    #     jid: "{{ item.ansible_job_id }}"
+    #   register: job_result
+    #   until: job_result.finished
+    #   with_items: "{{ hip.results }}"
+    #   retries: 10
+
+    # -   name: Set default gw
+    #   vmware_vm_shell:
+    #     hostname: "{{ hosting_vcenter.ip }}"
+    #     username: "{{ hosting_vcenter.user }}"
+    #     password: "{{ hosting_vcenter.password }}"
+    #     datacenter: "{{ hosting_vcenter.datacenter }}"
+    #     validate_certs: false
+    #     vm_id: "{{ environment_tag }}-{{ item.key }}"
+    #     vm_username: "{{ nested_host_credentials.user }}"
+    #     vm_password: "{{ nested_host_password }}"
+    #     vm_shell: /bin/esxcfg-route
+    #     vm_shell_args: " -a default {{ item.value.gw }}"
+    #     vm_shell_env: 
+    #     -   "PATH=/bin"
+    #     -   "VAR=test"
+    #     vm_shell_cwd: "/tmp"
+    #   with_dict: "{{ nested_hosts }}"
+    #   async: 7200
+    #   poll: 0
+    #   register: hgw
+
+    # -   name: Result check for setting default gw
+    #   async_status:
+    #     jid: "{{ item.ansible_job_id }}"
+    #   register: job_result
+    #   until: job_result.finished
+    #   with_items: "{{ hgw.results }}"
+    #   retries: 10
+
+    # -   name: Set search domain
+    #   vmware_vm_shell:
+    #     hostname: "{{ hosting_vcenter.ip }}"
+    #     username: "{{ hosting_vcenter.user }}"
+    #     password: "{{ hosting_vcenter.password }}"
+    #     datacenter: "{{ hosting_vcenter.datacenter }}"
+    #     validate_certs: false
+    #     vm_id: "{{ environment_tag }}-{{ item.key }}"
+    #     vm_username: "{{ nested_host_credentials.user }}"
+    #     vm_password: "{{ nested_host_password }}"
+    #     vm_shell: /bin/esxcli
+    #     vm_shell_args: "network ip dns search add --domain={{ domain}}"
+    #     vm_shell_env: 
+    #     -   "PATH=/bin"
+    #     -   "VAR=test"
+    #     vm_shell_cwd: "/tmp"
+    #   with_dict: "{{ nested_hosts }}"
+    #   async: 7200
+    #   poll: 0
+    #   register: hsd
+
+    # -   name: Result check for setting a search domain
+    #   async_status:
+    #     jid: "{{ item.ansible_job_id }}"
+    #   register: job_result
+    #   until: job_result.finished
+    #   with_items: "{{ hsd.results }}"
+    #   retries: 10
+
+    # -   name: Set a DNS Server
+    #   vmware_vm_shell:
+    #     hostname: "{{ hosting_vcenter.ip }}"
+    #     username: "{{ hosting_vcenter.user }}"
+    #     password: "{{ hosting_vcenter.password }}"
+    #     datacenter: "{{ hosting_vcenter.datacenter }}"
+    #     validate_certs: false
+    #     vm_id: "{{ environment_tag }}-{{ item.key }}"
+    #     vm_username: "{{ nested_host_credentials.user }}"
+    #     vm_password: "{{ nested_host_password }}"
+    #     vm_shell: /bin/esxcli
+    #     vm_shell_args: "network ip dns server add --server={{ dns1 }}"
+    #     vm_shell_env: 
+    #     -   "PATH=/bin"
+    #     -   "VAR=test"
+    #     vm_shell_cwd: "/tmp"
+    #   with_dict: "{{ nested_hosts }}"
+    #   async: 7200
+    #   poll: 0
+    #   register: hdns
+
+    # -   name: Disable SSH Warnings
+    #   vmware_vm_shell:
+    #     hostname: "{{ hosting_vcenter.ip }}"
+    #     username: "{{ hosting_vcenter.user }}"
+    #     password: "{{ hosting_vcenter.password }}"
+    #     datacenter: "{{ hosting_vcenter.datacenter }}"
+    #     validate_certs: false
+    #     vm_id: "{{ environment_tag }}-{{ item.key }}"
+    #     vm_username: "{{ nested_host_credentials.user }}"
+    #     vm_password: "{{ nested_host_password }}"
+    #     vm_shell: /bin/vim-cmd
+    #     vm_shell_args: "hostsvc/advopt/update UserVars.SuppressShellWarning long 1"
+    #     vm_shell_env: 
+    #     -   "PATH=/bin"
+    #     -   "VAR=test"
+    #     vm_shell_cwd: "/tmp"
+    #   with_dict: "{{ nested_hosts }}"
+    #   async: 7200
+    #   poll: 0
+    #   register: hwrn
+
+    # -   name: Result check for setting a DNS Server
+    #   async_status:
+    #     jid: "{{ item.ansible_job_id }}"
+    #   register: job_result
+    #   until: job_result.finished
+    #   with_items: "{{ hdns.results }}"
+    #   retries: 10
+
+

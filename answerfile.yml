@@ -1,0 +1,99 @@
+# path to vCenter installer ISO
+vcIso: "~/minio/vmware-products/VMware-VCSA-all-7.0.1-16860138.iso"
+# vsphere_version: "7.0"
+
+environment_tag: "lab1" # Used to prepend object names
+dns1: "192.168.0.110"
+dns2: "192.168.0.1"
+domain: "home.local"
+ntp: time1.google.com
+disk_mode: thin #How all disks should be deployed
+nested_host_password: "VMware1!"
+#TODO change all disk more references
+
+hosting_vcenter: # This is the vCenter which will be the target for nested vCenters and ESXi hosts
+    ip: "192.168.0.113"
+    user: "{{ lookup('env', 'PARENT_VCENTER_USERNAME') }}"
+    password: "{{ lookup('env', 'PARENT_VCENTER_PASSWORD') }}"
+    datacenter: "Home" # Target for all VM deployment
+
+nested_vcenter: # the vCenter appliance that will be deployed
+    ip: "192.168.0.181" # vCenter ip address 
+    mask: "24"
+    gw: "192.168.0.1"
+    host_name: "192.168.0.181" # FQDN if there is working DNS server, otherwise put the ip as a name
+    user: "administrator@vsphere.local" 
+    password: "VMware1!"
+    datacenter: "Lab" # DC to create after deployment
+    # Below are properties of parent cluster
+    network: "Net1" # Parent port group where the vCenter VM will be deployed
+    datastore: "NVME" # Parent datastore where the vCenter VM will be deployed
+    cluster: "Physical" # Parent cluster where the vCenter VM will be deployed
+
+# You can add nested ESXi hosts below
+nested_hosts:
+    esx1: # environment_tag will prepend the name to create the VM name
+        ip: 192.168.0.182 # This will also be used as the hostname in the nested vCenter
+        mask: 255.255.255.0
+        gw: 192.168.0.1
+        nested_cluster: compute # the nested vcenter cluster, which is defined in the clusters section.
+    # esx2:
+    #     ip: 192.168.0.183 # This will also be used as the hostname in the nested vCenter
+    #     mask: 255.255.255.0
+    #     gw: 192.168.0.1
+    #     nested_cluster: compute # the nested vcenter cluster, which is defined in the clusters section.
+    
+nested_clusters: # You can add, remove or rename clusters in this section
+    test:
+        test: True
+    compute: # This will be the name of the cluster in the nested  vCenter
+        drs: True
+        # HA can only be enabled if there is are datastores accessible by all hosts.
+        ha:
+            enabled: True
+            admission_control_enabled: False
+            ha_host_monitoring_enabled: disabled
+        # Settings below are assigned to each host in the cluster
+        vswitch0_port_group_name: net1
+        vswitch0_port_group_vlan: 0
+        mgmt_vlan: 0 # VLAN ID used to tag VMK0
+        cpu_cores: 4 # CPU count
+        ram_in_gb: 16 # memory
+        # In order list of disks to assign to the nested host. All will be marked as SSD.
+        # Datastore names will be automatically be pre-pended with the hostname. E.g esx1
+        # If the datastore_name property is removed the disk will not be set as a datastore
+        nested_hosts_disks: 
+            -   size_gb: 50
+                datastore_name: "test1" 
+            -   size_gb: 50    
+                datastore_name: "test2" 
+            -   size_gb: 10  # this disk will not have a datastore added
+        # Below are properties of the hosting cluster
+        hosting_cluster: "Physical" # the cluster where physical ESXi is connected to. The nested VMs will be deployed here
+        hosting_datastore: "NVME" # Datastore target for nested ESXi VMs
+        vmnic_physical_portgroup_assignment: # In vmnic order, these port groups must exist on the physical host
+            -   name: "Nest"
+            -   name: "TEP"
+            -   name: "TEP"
+
+resource_pools:
+    -   cluster_name: compute
+        resource_pool_name: 
+            -   TAS-AZ1
+            -   TKGI-AZ1
+
+distributed_switches:
+    -   name: vds_overlay
+        mtu: 9000
+        hosts:
+            - esx1
+        uplink_quantity: 1
+        vmnics:
+            - vmnic1
+
+distributed_port_groups:
+    -   name: tep_pg
+        switch_name: vds_overlay
+        vlan_id: "0"
+
+
