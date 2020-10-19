@@ -30,6 +30,28 @@ echo "Temp dir is ${TMPDIR}"
 ansible-playbook deploy.yml --extra-vars="@answerfile-minimal.yml"  --extra-vars "tmp_dir=${TMPDIR}"
 ```
 
+## with Docker
+
+### Building the container
+
+```
+mkdir -p context && docker build -f Dockerfile context/ -t vsphere-ansible
+```
+
+### Build vSphere lab
+
+```
+docker run \
+    --rm \
+    --env PARENT_VCENTER_USERNAME='administrator@vsphere.local' \
+    --env PARENT_VCENTER_PASSWORD='VMware1!' \
+    --volume ${PWD}:/work \
+    vsphere-ansible \
+    ansible-playbook deploy.yml \
+        --extra-vars '@answerfile-minimal.yml'  \
+        --extra-vars 'tmp_dir=/tmp'
+```
+
 # Known issues/future plans
 - The TKGS playbook is broken with vCenter  7.0U1 due to a bug with the vCenter not creating tag categories correctly.
 - VMs are not currently deployed into a folder or resource pool
