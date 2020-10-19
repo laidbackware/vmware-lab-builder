@@ -1,0 +1,4 @@
+---
+- include: playbooks/deploy_vc_and_hosts.yml
+- include: playbooks/configure_nested_vcenter.yml
+# - include: playbooks/tkgs_prep.yml
