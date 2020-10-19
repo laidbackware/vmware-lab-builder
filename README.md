@@ -26,9 +26,6 @@ export PARENT_VCENTER_PASSWORD="VMware1!"
 TMPDIR=$(mktemp -d) || exit 1
 echo "Temp dir is ${TMPDIR}"
 
-ansible-playbook playbooks/prepare_esxi_iso_installer.yml \
-    --extra-vars="@answerfile.yml" --extra-vars "tmp_dir=${TMPDIR}"
-
 # Deploy vCenter and host/s
 ansible-playbook deploy.yml --extra-vars="@answerfile-minimal.yml"  --extra-vars "tmp_dir=${TMPDIR}"
 ```
