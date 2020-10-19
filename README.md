@@ -32,10 +32,14 @@ ansible-playbook deploy.yml --extra-vars="@answerfile-minimal.yml"  --extra-vars
 
 ## with Docker
 
-### Building the container
+### Building the vsphere-ansible Docker image
 
 ```
-mkdir -p context && docker build -f Dockerfile context/ -t vsphere-ansible
+mkdir -p context \
+&& docker build \
+    --file Dockerfile \
+    --tag vsphere-ansible \
+    context/
 ```
 
 ### Build vSphere lab
