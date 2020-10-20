@@ -12,5 +12,10 @@ RUN pip3 install \
     	pyvmomi \
     	git+https://github.com/vmware/vsphere-automation-sdk-python.git
 
+# Fix vmware_dvswitch.py library on filesystem ..
+# TODO: Remove once fixed upstream
+COPY fix_dvs_for_7.sh /tmp/
+RUN /tmp/fix_dvs_for_7.sh
+
 RUN mkdir /work
 WORKDIR /work
