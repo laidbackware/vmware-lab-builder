@@ -1,7 +1,10 @@
 FROM ubuntu:20.04
 
 RUN apt-get update
+
+# ping is required by `vcsa-deploy`
 RUN apt-get -y install \
+        iputils-ping \
         xorriso \
         sshpass \
         python3-pip \
