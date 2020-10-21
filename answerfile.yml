@@ -1,6 +1,6 @@
 # path to vCenter installer ISO
-vc_iso: "~/minio/vmware-products/VMware-VCSA-all-7.0.1-16860138.iso"
-esxi_ova: "~/minio/vmware-products/Nested_ESXi7.0.0_Appliance_Template_v1.ova"
+vc_iso: "{{ lookup('env', 'VCSA_DIR') }}/VMware-VCSA-all-7.0.1-16860138.iso"
+esxi_ova: "{{ lookup('env', 'ESXI_DIR') }}/Nested_ESXi7.0.0_Appliance_Template_v1.ova"
 
 environment_tag: "lab1" # Used to prepend object names
 dns1: "192.168.0.110"

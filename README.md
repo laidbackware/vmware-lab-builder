@@ -23,11 +23,13 @@ When running for the first time you must run `./fix_dvs_for_7.sh` to enable crea
 ```
 export PARENT_VCENTER_USERNAME="administrator@vsphere.local"
 export PARENT_VCENTER_PASSWORD="VMware1!"
+export VCSA_DIR="/home/matt/minio/vmware-products"
+export ESXI_DIR="/home/matt/minio/vmware-products"
 TMPDIR=$(mktemp -d) || exit 1
 echo "Temp dir is ${TMPDIR}"
 
 # Deploy vCenter and host/s
-ansible-playbook deploy.yml --extra-vars="@answerfile-minimal.yml"  --extra-vars "tmp_dir=${TMPDIR}"
+ansible-playbook deploy.yml --extra-vars="@answerfile-minimal.yml"  --extra-vars "tmp_dir=${TMPDIR}" 
 ```
 
 # Known issues/future plans
