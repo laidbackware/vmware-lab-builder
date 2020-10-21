@@ -81,6 +81,12 @@
         command: xorriso -ecma119_map lowercase -osirrox on -indev {{vc_iso}} -extract / {{tmp_dir}}/VCSA
         when: not vcenter_exists
 
+    # -   name: Create a directory if it does not exist
+    #     file:
+    #       path: /etc/some_directory
+    #       state: directory
+    #       mode: '0755'
+
     -   name: Fix VCSA directory permissions
         command: "{{item}}"
         with_items:
@@ -243,8 +249,8 @@
             validate_certs: False
         retries: 60
         delay: 10
-        register: result
-        until: result.status == 200
+        register: result_host_check
+        until: result_host_check.status == 200
         with_dict: "{{ nested_hosts }}"
         
     -   debug: msg="The vCenter deployment can take a long time.\nYou can check progress at https://{{nested_vcenter.ip}}:5480 after about 20 minutes.\nFor detailed output browse to the most recent folder starting with vcsaCliInstaller under {{tmp_dir}} and follow vcsa-cli-installer.log "
@@ -258,15 +264,19 @@
         retries: 240
         delay: 15
         when: not vcenter_exists
-
-    -   name: Check the vSphere API is online
-        command: "curl -k --silent -v https://{{ nested_vcenter.ip }}/ui/"
-        register: result
-        until: result.stdout.find("<title>vSphere Client</title>") != -1
-        retries: 120
-        delay: 5
-        changed_when: false
-        when: not vcenter_exists
+    
+    -   name: Check if the vSphere API is online
+        uri:
+            url: "https://{{ nested_vcenter.ip }}/ui/"
+            method: GET
+            status_code: 200
+            timeout: 2
+            validate_certs: False
+            return_content: True
+        retries: 60
+        delay: 10
+        until: result_vc_check.content.find("<title>vSphere Client</title>") != -1
+        register: result_vc_check
 
     -   name: Wait 30 seconds for the vCenter to settle
         pause: seconds=30
