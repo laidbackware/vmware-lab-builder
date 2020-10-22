@@ -2,6 +2,7 @@
 -   name: Deploy VC and Hosts
     hosts: localhost
     gather_facts: False
+    strategy: free
     pre_tasks:
     -   name: Ensure xorriso is installed
         package:
@@ -13,7 +14,8 @@
         
         disks_to_add: ""
     tasks:
-
+    # -   name: ESXi install and configure tasks
+    #     block:
     -   name: Deploy ESXi
         vmware_deploy_ovf:
             hostname: "{{ hosting_vcenter.ip }}"
@@ -52,67 +54,6 @@
         async: 7200
         poll: 0
         register: hosts_results
-    
-    -   name: Check if vCenter already exists so install steps can be skipped
-        uri:
-            url: "https://{{ nested_vcenter.ip }}/ui/"
-            method: GET
-            status_code: 200
-            timeout: 2
-            validate_certs: False
-        ignore_errors: True
-        register: vcenter_response
-
-    -   set_fact:
-            vcenter_exists={{vcenter_response.status == 200}}
-
-    -   name: Fix permissions before delete
-        command: chmod -R +w {{tmp_dir}}/VCSA
-        ignore_errors: yes
-        when: not vcenter_exists
-
-    -   name: Clean VCSA ISO Directory
-        file:
-            path: '{{tmp_dir}}/VCSA'
-            state: absent
-        when: not vcenter_exists
-
-    -   name: Extract VCSA ISO image
-        command: xorriso -ecma119_map lowercase -osirrox on -indev {{vc_iso}} -extract / {{tmp_dir}}/VCSA
-        when: not vcenter_exists
-
-    # -   name: Create a directory if it does not exist
-    #     file:
-    #       path: /etc/some_directory
-    #       state: directory
-    #       mode: '0755'
-
-    -   name: Fix VCSA directory permissions
-        command: "{{item}}"
-        with_items:
-        -   chmod -R 777 {{tmp_dir}}/VCSA
-        when: not vcenter_exists
-    
-    -   name: Create JSON template file for VCSA 6.7 with embeded PSC
-        template: 
-            src=../templates/embedded_vCSA_on_VC_6.7.json
-            dest={{tmp_dir}}/vCSA_on_ESXi.json
-        when: vc_iso is search("-6.7.") and not vcenter_exists
-
-    -   name: Create JSON template file for VCSA 7.0 with embeded PSC
-        template: 
-            src=../templates/embedded_vCSA_on_VC_7.0.json
-            dest={{tmp_dir}}/vCSA_on_ESXi.json
-        when: vc_iso is search("-7.0.") and not vcenter_exists
-
-    -   name: Perform VC CLI Install
-        command: "./vcsa-deploy install --accept-eula --no-esx-ssl-verify {{tmp_dir}}/vCSA_on_ESXi.json"
-        args:
-            chdir: '{{tmp_dir}}/VCSA/vcsa-cli-installer/lin64/'
-        when: not vcenter_exists
-        async: 3600
-        poll: 0
-        register: vcenter_result
 
     -   name: Result check for deployment of host
         async_status:
@@ -239,6 +180,144 @@
             state: powered-on
         delegate_to: localhost
         with_dict: "{{ nested_hosts }}"
+        async: 7200
+        poll: 0
+        register: hosts_power_on_result
+        
+        
+            
+
+    -   name: vCenter install and configure tasks
+        block: 
+
+        -   name: Check if vCenter already exists so install steps can be skipped
+            uri:
+                url: "https://{{ nested_vcenter.ip }}/ui/"
+                method: GET
+                status_code: 200
+                timeout: 2
+                validate_certs: False
+            ignore_errors: True
+            register: vcenter_response
+
+        -   set_fact:
+                vcenter_exists={{vcenter_response.status == 200}}
+
+        # -   name: Fix permissions before delete
+        #     command: chmod -R +w {{tmp_dir}}/VCSA
+        #     ignore_errors: yes
+        #     when: not vcenter_exists
+
+        # -   name: Clean VCSA ISO Directory
+        #     file:
+        #         path: '{{tmp_dir}}/VCSA'
+        #         state: absent
+        #     when: not vcenter_exists
+
+        -   name: Create temporary build directory
+            tempfile:
+                state: directory
+                suffix: build
+            register: temp_dir_results
+
+        -   set_fact:
+                tmp_dir={{temp_dir_results.path}}
+
+        -   name: Extract VCSA ISO image
+            command: xorriso -ecma119_map lowercase -osirrox on -indev {{vc_iso}} -extract / {{tmp_dir}}/VCSA
+            when: not vcenter_exists
+
+        # -   name: Create a directory if it does not exist
+        #     file:
+        #       path: /etc/some_directory
+        #       state: directory
+        #       mode: '0755'
+
+        -   name: Fix VCSA directory permissions
+            command: "{{item}}"
+            with_items:
+            -   chmod -R 777 {{tmp_dir}}/VCSA
+            when: not vcenter_exists
+        
+        -   name: Create JSON template file for VCSA 6.7 with embeded PSC
+            template: 
+                src=../templates/embedded_vCSA_on_VC_6.7.json
+                dest={{tmp_dir}}/vCSA_on_ESXi.json
+            when: vc_iso is search("-6.7.") and not vcenter_exists
+
+        -   name: Create JSON template file for VCSA 7.0 with embeded PSC
+            template: 
+                src=../templates/embedded_vCSA_on_VC_7.0.json
+                dest={{tmp_dir}}/vCSA_on_ESXi.json
+            when: vc_iso is search("-7.0.") and not vcenter_exists
+
+        -   name: Perform VC CLI Install
+            command: "./vcsa-deploy install --accept-eula --no-esx-ssl-verify {{tmp_dir}}/vCSA_on_ESXi.json"
+            args:
+                chdir: '{{tmp_dir}}/VCSA/vcsa-cli-installer/lin64/'
+            when: not vcenter_exists
+            async: 3600
+            poll: 0
+            register: vcenter_result
+
+        -   debug: msg="The vCenter deployment can take a long time.\nYou can check progress at https://{{nested_vcenter.ip}}:5480 after about 20 minutes.\nFor detailed output browse to the most recent folder starting with vcsaCliInstaller under {{tmp_dir}} and follow vcsa-cli-installer.log "
+            when: not vcenter_exists
+
+        -   name: Result check for deployment of vCenter task
+            async_status:
+                jid: "{{ vcenter_result.ansible_job_id }}"
+            register: job_result
+            until: job_result.finished      
+            retries: 240
+            delay: 15
+            when: not vcenter_exists
+        
+        -   name: Check if the vSphere API is online
+            uri:
+                url: "https://{{ nested_vcenter.ip }}/ui/"
+                method: GET
+                status_code: 200
+                timeout: 2
+                validate_certs: False
+                return_content: True
+            retries: 60
+            delay: 10
+            until: result_vc_check.content.find("<title>vSphere Client</title>") != -1
+            register: result_vc_check
+
+        # -   name: Wait 30 seconds for the vCenter to settle
+        #     pause: seconds=30
+        #     when: not vcenter_exists
+    
+        -   name: Wait 30 seconds for the vCenter to settle
+            wait_for:
+                timeout: 30
+            when: not vcenter_exists
+
+        always:
+        -   name: Use the registered var and the file module to remove the temporary file
+            file:
+                path: "{{ tmp_dir }}"
+                state: absent
+            when: tmp_dir is defined
+        # -   name: Delete the temporary JSON template file
+        #     file: 
+        #         path: "{{tmp_dir}}/vCSA_on_ESXi.json"
+        #         state: absent
+
+        # -   name: Clean VCSA ISO Directory
+        #     file:
+        #         path: "{{tmp_dir}}/VCSA/"
+        #         state: absent
+        
+    -   name: Result check for deployment of host power on
+        async_status:
+            jid: "{{ item.ansible_job_id }}"
+        register: job_result
+        until: job_result.finished
+        with_items: "{{ hosts_power_on_result.results }}"
+        retries: 100
+        delay: 15
 
     -   name: Check if hosts are online
         uri:
@@ -252,43 +331,3 @@
         register: result_host_check
         until: result_host_check.status == 200
         with_dict: "{{ nested_hosts }}"
-        
-    -   debug: msg="The vCenter deployment can take a long time.\nYou can check progress at https://{{nested_vcenter.ip}}:5480 after about 20 minutes.\nFor detailed output browse to the most recent folder starting with vcsaCliInstaller under {{tmp_dir}} and follow vcsa-cli-installer.log "
-        when: not vcenter_exists
-
-    -   name: Result check for deployment of vCenter task
-        async_status:
-            jid: "{{ vcenter_result.ansible_job_id }}"
-        register: job_result
-        until: job_result.finished      
-        retries: 240
-        delay: 15
-        when: not vcenter_exists
-    
-    -   name: Check if the vSphere API is online
-        uri:
-            url: "https://{{ nested_vcenter.ip }}/ui/"
-            method: GET
-            status_code: 200
-            timeout: 2
-            validate_certs: False
-            return_content: True
-        retries: 60
-        delay: 10
-        until: result_vc_check.content.find("<title>vSphere Client</title>") != -1
-        register: result_vc_check
-
-    -   name: Wait 30 seconds for the vCenter to settle
-        pause: seconds=30
-        when: not vcenter_exists
-    
-    post_tasks:
-    -   name: Delete the temporary JSON template file
-        file: 
-            path: "{{tmp_dir}}/vCSA_on_ESXi.json"
-            state: absent
-
-    -   name: Clean VCSA ISO Directory
-        file:
-            path: "{{tmp_dir}}/VCSA/"
-            state: absent
