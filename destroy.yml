@@ -1,0 +1,2 @@
+---
+- include: playbooks/destroy_vc_and_hosts.yml

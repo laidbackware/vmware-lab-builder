@@ -191,7 +191,7 @@
             validate_certs: false
             datacenter: "{{ nested_vcenter.datacenter }}"
             switch: "{{ item.vds_name }}"
-            version: 7.0.0
+            version: "{{item.vds_version}}"
             mtu: "{{ item.mtu }}"
             uplink_quantity: "{{ item.uplink_quantity }}"
             state: present

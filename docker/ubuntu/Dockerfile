@@ -6,7 +6,7 @@ RUN set -xe \
     && echo "****** Install system dependencies ******" \
     && apt update \
     && apt install -y --no-install-recommends \
-         python3 xorriso ca-certificates iputils-ping \
+         python3 xorriso ca-certificates iputils-ping python3-apt \
     \
     && echo "****** Install Python dependencies ******" \
     && apt install -y --no-install-recommends \

@@ -1,6 +1,6 @@
 # path to vCenter installer ISO
-vc_iso: "{{ lookup('env', 'VCSA_DIR') }}/VMware-VCSA-all-7.0.1-16860138.iso"
-esxi_ova: "{{ lookup('env', 'ESXI_DIR') }}/Nested_ESXi7.0.0_Appliance_Template_v1.ova"
+vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.1-16860138.iso"
+esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0.0_Appliance_Template_v1.ova"
 
 environment_tag: "full" # Used to prepend object names
 dns1: "192.168.0.110"
@@ -103,6 +103,7 @@ nested_hosts:
 distributed_switches: # To not create any distributed switches, comment this section.
     -   vds_name: vds_overlay
         mtu: 9000
+        vds_version: 7.0.0 # Should be 7.0.0, 6.7.0
         clusters: # distributed switch will be attached to all hosts in the cluster
             - compute        
         uplink_quantity: 1

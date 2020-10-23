@@ -242,7 +242,7 @@
         -   name: Create JSON template file for VCSA 6.7 with embeded PSC
             template: 
                 src=../templates/embedded_vCSA_on_VC_6.7.json
-                dest={{tmp_dir}}/vCSA_on_ESXi.json
+                dest={{tmp_dir}}/vCSA_on_ESXi.json 
             when: vc_iso is search("-6.7.") and not vcenter_exists
 
         -   name: Create JSON template file for VCSA 7.0 with embeded PSC
@@ -260,7 +260,7 @@
             poll: 0
             register: vcenter_result
 
-        -   debug: msg="The vCenter deployment can take a long time.\nYou can check progress at https://{{nested_vcenter.ip}}:5480 after about 20 minutes.\nFor detailed output browse to the most recent folder starting with vcsaCliInstaller under {{tmp_dir}} and follow vcsa-cli-installer.log "
+        -   debug: msg="The vCenter deployment can take a long time.\nYou can check progress at https://{{nested_vcenter.ip}}:5480 after the vCenter VM has booted.\nFor detailed output browse to the most recent folder starting with vcsaCliInstaller under /tmp and follow vcsa-cli-installer.log "
             when: not vcenter_exists
 
         -   name: Result check for deployment of vCenter task

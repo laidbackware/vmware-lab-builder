@@ -1,8 +1,8 @@
 # path to vCenter installer ISO
-vc_iso: "{{ lookup('env', 'VCSA_DIR') }}/VMware-VCSA-all-7.0.1-16860138.iso"
-esxi_ova: "{{ lookup('env', 'ESXI_DIR') }}/Nested_ESXi7.0.0_Appliance_Template_v1.ova"
+vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.1-16860138.iso"
+esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0.0_Appliance_Template_v1.ova"
 
-environment_tag: "minmal" # Used to prepend object names
+environment_tag: "minimal" # Used to prepend object names
 dns1: "192.168.0.110"
 dns2: "192.168.0.1"
 domain: "home.local"
@@ -30,7 +30,7 @@ nested_vcenter: # the vCenter appliance that will be deployed
     hosting_datastore: "NVME" # Parent datastore where the vCenter VM will be deployed
     
 nested_clusters: # You can add clusters in this section by duplicating the existing cluster
-minmal: # This will be the name of the cluster in the nested  vCenter. Below are the minimum settings.
+    minimal: # This will be the name of the cluster in the nested  vCenter. Below are the minimum settings.
         # Below are properties of the hosting cluster
         hosting_cluster: "Physical" # the cluster where physical ESXi is connected to. The nested VMs will be deployed here
         hosting_datastore: "NVME" # Datastore target for nested ESXi VMs
@@ -49,7 +49,7 @@ nested_hosts:
         ip: 192.168.0.182 # This will also be used as the hostname in the nested vCenter
         mask: 255.255.252.0
         gw: 192.168.0.1
-        nested_cluster: minmal # the nested vcenter cluster, which is defined in the clusters section.
+        nested_cluster: minimal # the nested vcenter cluster, which is defined in the clusters section.
 
 tkgs:
     datastore_tag_category: tkgs-storage-category        
