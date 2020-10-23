@@ -6,7 +6,13 @@ You can use the ansible playbooks in this repo to build out nested ESXi hosts, d
 
 # Dependencies
 The following procedure has been developed on a debian based linux machine.<br/>
-Versions:
+This process will build a vCenter and 1 or more clusters, with nested ESXi hosts.<br/> 
+Infrastructure:
+- A vSphere cluster with a manging vCenter.
+- A datastore to host VMs of at least 200GB
+- A control server which can contact the networks when VMs will be deployed.
+- NTP available
+Software versions:
 - Ansible 2.10 or higher
 - Linux tools `apt-get install xorriso sshpass python-pip git`
 - Python modules `pip3 install pyvmomi`
@@ -54,5 +60,5 @@ docker run \
 
 # Known issues/future plans
 - The TKGS playbook is broken with vCenter  7.0U1 due to a bug with the vCenter not creating tag categories correctly.
-- VMs are not currently deployed into a folder or resource pool
+- VMs are not currently deployed into a folder or resource pool on the parent vCenter.
 - Only local datastores are used. In the future NFS support may be added.

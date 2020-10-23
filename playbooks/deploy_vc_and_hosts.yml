@@ -268,7 +268,7 @@
                 jid: "{{ vcenter_result.ansible_job_id }}"
             register: job_result
             until: job_result.finished      
-            retries: 240
+            retries: 600
             delay: 15
             when: not vcenter_exists
         

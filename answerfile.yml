@@ -2,7 +2,7 @@
 vc_iso: "{{ lookup('env', 'VCSA_DIR') }}/VMware-VCSA-all-7.0.1-16860138.iso"
 esxi_ova: "{{ lookup('env', 'ESXI_DIR') }}/Nested_ESXi7.0.0_Appliance_Template_v1.ova"
 
-environment_tag: "lab1" # Used to prepend object names
+environment_tag: "full" # Used to prepend object names
 dns1: "192.168.0.110"
 dns2: "192.168.0.1"
 domain: "home.local"
@@ -60,7 +60,7 @@ nested_clusters: # You can add clusters in this section by duplicating the exist
         # To leave the default OVA disks in place, delete this section.
         nested_hosts_disks: 
             -   size_gb: 200
-                datastore_name: "test2" 
+                datastore_name: "datastore" 
             # -   size_gb: 50    
             #     datastore_name: "test2" 
             # -   size_gb: 10  # this disk will not have a datastore added
