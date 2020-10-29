@@ -17,7 +17,7 @@ RUN set -xe \
     && pip3 install ansible pyvmomi  git+https://github.com/vmware/vsphere-automation-sdk-python.git \
     \
     && echo "****** Removing build tools ******" \
-    && apt remove -y build-essential python3-setuptools python3-pip python3-dev git \
+    && apt remove -y build-essential python3-pip python3-dev git \
     && apt autoremove -y \
     && rm -Rf /var/lib/apt/lists/* \
     && rm -Rf /usr/share/doc && rm -Rf /usr/share/man \

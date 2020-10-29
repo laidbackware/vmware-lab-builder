@@ -1,6 +1,6 @@
 # path to vCenter installer ISO
-vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.1-16860138.iso"
-esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0.0_Appliance_Template_v1.ova"
+vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.1-17004997.iso"
+esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0.1_Appliance_Template_v1.ova"
 
 environment_tag: "tkgs" # Used to prepend object names
 dns1: "192.168.0.110"
@@ -40,7 +40,7 @@ nested_clusters: # You can add clusters in this section by duplicating the exist
         vswitch0_port_group_name: net1
         vswitch0_port_group_vlan: 0
         cpu_cores: 6 # CPU count
-        ram_in_gb: 64 # memory
+        ram_in_gb: 96 # memory
         # In order list of disks to assign to the nested host. All will be marked as SSD.
         # Datastore names will be automatically be pre-pended with the hostname. E.g esx1
         # If the datastore_name property is removed the disk will not be set as a datastore
