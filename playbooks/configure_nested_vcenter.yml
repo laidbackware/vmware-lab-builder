@@ -56,7 +56,7 @@
             state: absent
         delegate_to: localhost
         with_dict: "{{ nested_clusters }}"
-        when: '"vswitch0_vm_port_group_name" in item and "vswitch0_vm_port_group_vlan" in item '
+        when: '"vswitch0_vm_port_group_name" in item.value and "vswitch0_vm_port_group_vlan" in item.value'
 
     -   name: Add VM Portgroup to vSwitch 0
         vmware_portgroup:
@@ -70,7 +70,7 @@
             vlan_id: "{{ item.value.vswitch0_vm_port_group_vlan }}"
         delegate_to: localhost
         with_dict: "{{ nested_clusters }}"
-        when: '"vswitch0_vm_port_group_name" in item and "vswitch0_vm_port_group_vlan" in item '
+        when: '"vswitch0_vm_port_group_name" in item.value and "vswitch0_vm_port_group_vlan" in item.value'
 
 
     -   name: Gather info about disk of all ESXi Host in the given Cluster
@@ -151,7 +151,7 @@
             enable_drs: "{{ item.value.drs }}"
             enable_vsan: False
         with_dict: "{{ nested_clusters }}"
-        when: '"enable_ha" in item'
+        when: '"enable_ha" in item.value'
 
     # Build a list of resource pools to add and ignore cluster if none specified
     -   name: Build resource pools to add
