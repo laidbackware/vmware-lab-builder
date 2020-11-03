@@ -105,12 +105,12 @@ distributed_switches: # To not create any distributed switches, comment this sec
         mtu: 9000
         vds_version: 7.0.0 # Should be 7.0.0, 6.7.0
         clusters: # distributed switch will be attached to all hosts in the cluster
-            - compute        
+            - full-fat        
         uplink_quantity: 1
         vmnics:
             - vmnic1
-        distributed_port_groups: # Must create 1 or more port group
-            -   portgroup_name: tep_pg
+        distributed_port_groups: # Remove to create an empty VDS
+            -   port_group_name: tep_pg
                 vlan_id: "0"
 
 tkgs:
