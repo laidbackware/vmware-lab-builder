@@ -110,10 +110,10 @@
                 {% for nested_host_name, nested_host_spec in nested_hosts.items() %}
                 {% if "nested_hosts_disks" in  nested_clusters[nested_host_spec.nested_cluster] %}
                 {% for disk in nested_clusters[nested_host_spec.nested_cluster].nested_hosts_disks  %}
-                {% if "datastore_name" in  disk %}
+                {% if "datastore_prefix" in  disk %}
                 {
                     "host_name": "{{ nested_host_spec.ip }}",
-                    "datastore_name": "{{disk.datastore_name}}-{{ nested_host_name }}",
+                    "datastore_prefix": "{{disk.datastore_prefix}}-{{ nested_host_name }}",
                     "disk_reference" : "{{ nested_host_spec.nested_cluster }}_{{ nested_host_spec.ip }}_vmhba0:C0:T{{ loop.index0 + 1 }}:L0",
                 },
                 {% endif %}
@@ -128,7 +128,7 @@
             username: "{{ nested_vcenter.user }}"
             password: "{{ nested_vcenter.password }}"
             validate_certs: False
-            datastore_name: "{{ item.datastore_name }}"
+            datastore_name: "{{ item.datastore_prefix }}"
             datastore_type: "vmfs"
             vmfs_device_name: "{{host_disk_map[item.disk_reference]}}"
             vmfs_version: 6
