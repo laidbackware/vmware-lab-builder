@@ -183,9 +183,6 @@
         async: 7200
         poll: 0
         register: hosts_power_on_result
-        
-        
-            
 
     -   name: vCenter install and configure tasks
         block: 
@@ -203,17 +200,6 @@
         -   set_fact:
                 vcenter_exists={{vcenter_response.status == 200}}
 
-        # -   name: Fix permissions before delete
-        #     command: chmod -R +w {{tmp_dir}}/VCSA
-        #     ignore_errors: yes
-        #     when: not vcenter_exists
-
-        # -   name: Clean VCSA ISO Directory
-        #     file:
-        #         path: '{{tmp_dir}}/VCSA'
-        #         state: absent
-        #     when: not vcenter_exists
-
         -   name: Create temporary build directory
             tempfile:
                 state: directory
@@ -226,12 +212,6 @@
         -   name: Extract VCSA ISO image
             command: xorriso -ecma119_map lowercase -osirrox on -indev {{vc_iso}} -extract / {{tmp_dir}}/VCSA
             when: not vcenter_exists
-
-        # -   name: Create a directory if it does not exist
-        #     file:
-        #       path: /etc/some_directory
-        #       state: directory
-        #       mode: '0755'
 
         -   name: Fix VCSA directory permissions
             command: "{{item}}"
@@ -284,10 +264,6 @@
             delay: 10
             until: result_vc_check.content.find("<title>vSphere Client</title>") != -1
             register: result_vc_check
-
-        # -   name: Wait 30 seconds for the vCenter to settle
-        #     pause: seconds=30
-        #     when: not vcenter_exists
     
         -   name: Wait 30 seconds for the vCenter to settle
             wait_for:
@@ -300,16 +276,7 @@
                 path: "{{ tmp_dir }}"
                 state: absent
             when: tmp_dir is defined
-        # -   name: Delete the temporary JSON template file
-        #     file: 
-        #         path: "{{tmp_dir}}/vCSA_on_ESXi.json"
-        #         state: absent
 
-        # -   name: Clean VCSA ISO Directory
-        #     file:
-        #         path: "{{tmp_dir}}/VCSA/"
-        #         state: absent
-        
     -   name: Result check for deployment of host power on
         async_status:
             jid: "{{ item.ansible_job_id }}"
