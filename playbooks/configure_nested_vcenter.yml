@@ -151,7 +151,7 @@
             enable_drs: "{{ item.value.drs }}"
             enable_vsan: False
         with_dict: "{{ nested_clusters }}"
-        when: '"enable_ha" in item.value'
+        when: '"ha_enabled" in item.value'
 
     # Build a list of resource pools to add and ignore cluster if none specified
     -   name: Build resource pools to add
