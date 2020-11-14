@@ -228,7 +228,7 @@
             validate_certs: false
             esxi_hostname: "{{ item.esxi_hostname }}"
             switch_name: "{{ item.vds_name }}"
-            vmnics: "{{ item.vmnics }}"
+            vmnics: "{{ item.vmnics | default(omit)}}"
             state: present
         with_items: "{{ host_vds_binding }}" 
         delegate_to: localhost

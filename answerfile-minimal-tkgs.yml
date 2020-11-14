@@ -8,7 +8,9 @@ dns2: "192.168.0.1"
 domain: "home.local"
 ntp: time1.google.com
 disk_mode: thin #How all disks should be deployed
-nested_host_password: "VMware1!"
+# This will be set everywhere!
+master_password: "VMware1!"
+nested_host_password: "{{master_password}}"
 
 hosting_vcenter: # This is the vCenter which will be the target for nested vCenters and ESXi hosts
     ip: "192.168.0.113"
@@ -22,7 +24,7 @@ nested_vcenter: # the vCenter appliance that will be deployed
     gw: "192.168.0.1"
     host_name: "192.168.0.171" # FQDN if there is working DNS server, otherwise put the ip as a name
     user: "administrator@vsphere.local" 
-    password: "VMware1!"
+    password: "{{master_password}}"
     datacenter: "Lab" # DC to create after deployment
     # Below are properties of parent cluster
     hosting_network: "Net1" # Parent port group where the vCenter VM will be deployed
@@ -30,7 +32,7 @@ nested_vcenter: # the vCenter appliance that will be deployed
     hosting_datastore: "NVME" # Parent datastore where the vCenter VM will be deployed
     
 nested_clusters: # You can add clusters in this section by duplicating the existing cluster
-    tkgs: # This will be the name of the cluster in the nested  vCenter. Below are the minimum settings.
+    tkgs-cluster: # This will be the name of the cluster in the nested  vCenter. Below are the minimum settings.
         drs: True
         # HA can only be enabled if there is are datastores accessible by all hosts.
         ha_enabled: True
@@ -63,9 +65,65 @@ nested_hosts:
         ip: 192.168.0.172 # This will also be used as the hostname in the nested vCenter
         mask: 255.255.252.0
         gw: 192.168.0.1
-        nested_cluster: tkgs # the nested vcenter cluster, which is defined in the clusters section.
+        nested_cluster: tkgs-cluster # the nested vcenter cluster, which is defined in the clusters section.
+        
+distributed_switches: # To not create any distributed switches, comment this section.
+    -   vds_name: tkgs-vds
+        mtu: 1500
+        vds_version: 7.0.0 # Should be 7.0.0, 6.7.0
+        clusters: # distributed switch will be attached to all hosts in the cluster
+            - tkgs-cluster
+        uplink_quantity: 1
+        vmnics:
+            - vmnic1
+        distributed_port_groups: # Remove to create an empty VDS
+            -   port_group_name: routed-pg
+                vlan_id: "0"
+            -   port_group_name: private-pg
+                vlan_id: "666"
 
 tkgs:
     datastore_tag_category: tkgs-storage-category        
     datastore_tag: tkgs-storage
     datastore_to_tag: datastore-esx1
+    load_balancer_ip: "192.168.0.173:5556"
+    load_balancer_virtual_servers: 172.31.0.10-172.31.0.50
+    management_port_group: routed-pg
+    management_subnet: "255.255.252.0"
+    management_gateway: "192.168.0.1"
+    workload_port_group: private-pg
+    workload_subnet: "255.255.255.0"
+    workload_gateway: "172.31.0.1"
+    workload_ip_range: 172.31.0.51-172.31.0.100
+
+vyos:
+    cluster: tkgs-cluster
+    datastore: datastore-esx1
+    uplink_ip: "192.168.0.170"
+    uplink_netmask: "255.255.252.0"
+    uplink_network_gateway: "192.168.0.1"
+    uplink_port_group: routed-pg
+    internal_ip: "172.31.0.0"
+    internal_netmask: "255.255.255.0"
+    internal_network_gateway: "172.31.0.1"
+    internal_port_group: private-pg
+    admin_password: "{{master_password}}"
+
+haproxy:
+    cluster: "tkgs-cluster"
+    datastore: "datastore-esx1"
+    root_pwd: "{{ master_password }}"
+    nameservers: "{{ dns1 }}, {{ dns2 }}"
+    management_ip: "192.168.0.173/22"
+    management_port: 5556 # not set
+    management_gateway: "192.168.0.1"
+    management_port_group: "routed-pg"
+    workload_ip: "172.31.0.2"
+    workload_gateway: "172.31.0.1/24"
+    workload_port_group: "private-pg"
+    service_ip_range: "172.31.0.128/25"
+    haproxy_user: admin
+    haproxy_pwd: "{{ master_password }}"
+
+
+

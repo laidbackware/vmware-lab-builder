@@ -11,6 +11,7 @@
                 password: "{{ nested_vcenter.password }}"
                 validate_certs: false
                 cluster_name: compute
+                subscription_url: http://wp-content.vmware.com/v2/latest/lib.json
             delegate_to: localhost
             register: cluster_host_disk
 
