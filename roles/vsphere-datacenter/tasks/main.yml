@@ -1,0 +1,9 @@
+---
+- name: Create Datacenter
+  community.vmware.vmware_datacenter:
+    hostname: "{{ nested_vcenter.ip }}"
+    username: "{{ nested_vcenter.user }}"
+    password: "{{ nested_vcenter.password }}"
+    datacenter_name: "{{ nested_vcenter.datacenter }}"
+    state: present
+    validate_certs: False

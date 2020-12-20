@@ -1,0 +1,23 @@
+---
+- name: Deploy Ubuntu NFS server
+  vmware_deploy_ovf:
+    hostname: "{{ nested_vcenter.ip }}"
+    username: "{{ nested_vcenter.user }}" 
+    password: "{{ nested_vcenter.password }}" 
+    validate_certs: no
+    name: "vyos"
+    datacenter: "{{ nested_vcenter.datacenter }}"
+    # folder: /SG1/vm
+    cluster: "{{ vyos.cluster }}"
+    datastore: "{{ vyos.datastore }}"
+    disk_provisioning: "{{ disk_mode }}"
+    networks:  
+      public: "{{ vyos.uplink_port_group }}"
+      internal: "{{ vyos.internal_port_group }}"
+    ova: "../dump/focal-server-cloudimg-amd64.ova" 
+    allow_duplicates: no
+    power_on: yes
+    fail_on_spec_warnings: yes
+    wait: yes
+    wait_for_ip_address: yes
+    inject_ovf_env: no

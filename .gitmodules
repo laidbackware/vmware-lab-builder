@@ -1,0 +1,3 @@
+[submodule "ansible-for-nsxt"]
+	path = ansible-for-nsxt
+	url = https://github.com/vmware/ansible-for-nsxt.git

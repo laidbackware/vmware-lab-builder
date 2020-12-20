@@ -1,0 +1,21 @@
+sudo -i
+
+apt update
+apt install nfs-kernel-server
+
+lshw -C disk
+parted /dev/sdb # replace with inline command
+mkfs.ext4 /dev/sdb1
+mkdir /srv/share/
+mount /dev/sdb1 /srv/share
+mkdir /srv/share/vms /srv/share/isos
+
+chown -R nobody:nogroup /srv/share/
+chmod -R 777 /srv/share/
+echo "/srv/share  192.168.0.0/22(rw,async,no_subtree_check)" > /etc/exports
+
+exportfs -ra
+systemctl restart nfs-kernel-server
+
+
+~/projects/ansible-for-vsphere/sync.sh

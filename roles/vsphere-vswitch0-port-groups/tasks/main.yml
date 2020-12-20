@@ -1,0 +1,28 @@
+---
+- name: Remove Default VM Portgroup
+  community.vmware.vmware_portgroup:
+    hostname: "{{ nested_vcenter.ip }}"
+    username: "{{ nested_vcenter.user }}"
+    password: "{{ nested_vcenter.password }}"
+    validate_certs: False
+    cluster_name: "{{ item.key }}"
+    switch_name: vSwitch0
+    portgroup_name: "VM Network"
+    state: absent
+  delegate_to: localhost
+  with_dict: "{{ nested_clusters }}"
+  when: '"vswitch0_vm_port_group_name" in item.value and "vswitch0_vm_port_group_vlan" in item.value'
+
+- name: Add VM Portgroup to vSwitch 0
+  community.vmware.vmware_portgroup:
+    hostname: "{{ nested_vcenter.ip }}"
+    username: "{{ nested_vcenter.user }}"
+    password: "{{ nested_vcenter.password }}"
+    validate_certs: False
+    cluster_name: "{{item.key}}"
+    switch_name: vSwitch0
+    portgroup_name: "{{ item.value.vswitch0_vm_port_group_name }}"
+    vlan_id: "{{ item.value.vswitch0_vm_port_group_vlan }}"
+  delegate_to: localhost
+  with_dict: "{{ nested_clusters }}"
+  when: '"vswitch0_vm_port_group_name" in item.value and "vswitch0_vm_port_group_vlan" in item.value'

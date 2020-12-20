@@ -1,0 +1,24 @@
+---
+- name: Create Clusters
+  community.vmware.vmware_cluster:
+    hostname: "{{ nested_vcenter.ip }}"
+    username: "{{ nested_vcenter.user }}"
+    password: "{{ nested_vcenter.password }}"
+    datacenter_name: "{{ nested_vcenter.datacenter }}"
+    cluster_name: "{{ item.key }}"
+    validate_certs: False
+  with_dict: "{{ nested_clusters }}"
+
+- name: Add ESXi Host to VCSA
+  community.vmware.vmware_host:
+    hostname: "{{ nested_vcenter.ip }}"
+    username: "{{ nested_vcenter.user }}"
+    password: "{{ nested_vcenter.password }}"
+    datacenter_name: "{{ nested_vcenter.datacenter }}"
+    validate_certs: false
+    cluster_name: "{{ item.value.nested_cluster }}"
+    esxi_hostname: "{{ item.value.ip }}"
+    esxi_username: "root"
+    esxi_password: "{{ nested_host_password }}"
+    state: present
+  with_dict: "{{ nested_hosts }}"

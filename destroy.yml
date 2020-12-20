@@ -1,2 +1,7 @@
 ---
-- include: playbooks/destroy_vc_and_hosts.yml
+- name: Delete Deployment
+  hosts: localhost
+  gather_facts: False
+  strategy: free
+  roles: 
+    - role: delete-deployment

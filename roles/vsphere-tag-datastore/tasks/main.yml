@@ -1,0 +1,56 @@
+---
+- name: Create a storage tag category
+  community.vmware.vmware_category:
+    hostname: "{{ nested_vcenter.ip }}"
+    username: "{{ nested_vcenter.user }}"
+    password: "{{ nested_vcenter.password }}"
+    validate_certs: false
+    category_name: "{{ tkgs.datastore_tag_category }}"
+    category_description: Datastore Description
+    category_cardinality: 'single'
+    associable_object_types:
+      - Datastore
+    # urn:vim25:
+    state: present
+  delegate_to: localhost
+  register: tag_category_result
+
+- name: Create datastore a tag
+  community.vmware.vmware_tag:
+    hostname: "{{ nested_vcenter.ip }}"
+    username: "{{ nested_vcenter.user }}"
+    password: "{{ nested_vcenter.password }}"
+    validate_certs: false
+    category_id: "{{tag_category_result.category_results.category_id}}"
+    tag_name: "{{ tkgs.datastore_tag }}"
+    tag_description: "Tag for datastores used by K8s"
+    state: present
+  delegate_to: localhost
+  register: tag_result
+
+- name: Add tags to a datastore
+  community.vmware.vmware_tag_manager:
+    hostname: "{{ nested_vcenter.ip }}"
+    username: "{{ nested_vcenter.user }}"
+    password: "{{ nested_vcenter.password }}"
+    validate_certs: false
+    tag_names:
+    - "{{ tkgs.datastore_tag }}"
+    object_name: "{{tkgs.datastore_to_tag}}"
+    object_type: Datastore
+    state: add
+  delegate_to: localhost
+
+- name: Create or update a vSphere tag-based storage policy
+  community.vmware.vmware_vm_storage_policy:
+    hostname: "{{ nested_vcenter.ip }}"
+    username: "{{ nested_vcenter.user }}"
+    password: "{{ nested_vcenter.password }}"
+    validate_certs: false
+    name: "{{ tkgs.storage_policy_name }}"
+    description: "TKGS storage performance policy"
+    tag_category: "{{ tkgs.datastore_tag_category }}"
+    tag_name: "{{ tkgs.datastore_tag }}"
+    tag_affinity: true
+    state: "present"
+  delegate_to: localhost

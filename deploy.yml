@@ -1,3 +1,27 @@
 ---
-- include: playbooks/deploy_vc_and_hosts.yml
-- include: playbooks/configure_nested_vcenter.yml
+- name: Deploy VC and Hosts
+  hosts: localhost
+  gather_facts: False
+  strategy: free
+  roles:
+    - role: vsphere-deploy-vc-and-hosts
+    - role: vsphere-datacenter
+    - role: vsphere-clusters
+    - role: vsphere-vswitch0-port-groups
+    - role: vsphere-local-datastores
+    - role: vsphere-enable-cluster-services
+    - role: vsphere-resource-pools
+    - role: vsphere-distributed-switches
+      when: 'distributed_switches is defined'
+    - role: vsphere-distributed-port-groups
+      when: 'distributed_switches is defined'
+    - role: vsphere-tag-datastore
+      when: 'tkgs is defined'
+    - role: vsphere-content-library
+      when: 'tkgs is defined'
+    - role: tkgs-vyos-router
+      when: 'tkgs is defined and tkgs.router is defined'
+    - role: tkgs-ha-proxy
+      when: 'tkgs is defined'
+    - role: tkgs-enable-cluster
+      when: 'tkgs is defined'

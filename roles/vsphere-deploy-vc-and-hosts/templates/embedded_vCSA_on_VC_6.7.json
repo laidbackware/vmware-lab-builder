@@ -4,7 +4,7 @@
     "new.vcsa": {
         "vc": {
             "hostname": "{{ hosting_vcenter.ip }}",
-            "username": "{{ hosting_vcenter.user }}",
+            "username": "{{ hosting_vcenter.username }}",
             "password": "{{ hosting_vcenter.password }}",
             "deployment_network": "{{ nested_vcenter.hosting_network }}",
             "datacenter": [

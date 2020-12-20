@@ -1,0 +1,58 @@
+---
+- name: Gather all registered virtual machines
+  community.vmware.vmware_guest_info:
+    hostname: "{{ nested_vcenter.ip }}"
+    username: "{{ nested_vcenter.user }}" 
+    password: "{{ nested_vcenter.password }}" 
+    validate_certs: false
+    datacenter: "{{ nested_vcenter.datacenter }}"
+    name: tkgs-haproxy
+    show_extra_config: true
+  delegate_to: localhost
+  register: vminfo
+
+- name: Decode haproxy CA Cert
+  set_fact:
+    haproxy_ca_cert: "{{ vminfo.instance.extra_config['guestinfo.dataplaneapi.cacert'] | b64decode }}"
+
+- name: Create vsphere namespace cluster
+  community.vmware.vmware_namespace_cluster_vds_manage:
+    hostname: "{{ nested_vcenter.ip }}"
+    username: "{{ nested_vcenter.user }}"
+    password: "{{ nested_vcenter.password }}"
+    validate_certs: false
+    content_library_name: "{{ tkgs.content_library_name }}"
+    cluster_name: "{{ tkgs.vsphere_cluster }}"
+    dns_search_domains: "{{ domain }}"
+    dns_servers: "{{ tkgs.ntp_server_list }}"
+    haproxy_range_start_address: "172.31.0.128"
+    haproxy_range_count: 26
+    haproxy_ca_chain: "{{ haproxy_ca_cert }}"
+    haproxy_management_ip: "192.168.0.173" #TODO haproxy module expects cidr format. This should remove netmask bits
+    haproxy_password: "{{ tkgs_haproxy.password }}"
+    haproxy_username: "{{ tkgs_haproxy.username }}"
+    management_port_group: "{{ tkgs.management_port_group }}"
+    management_gateway: "{{ tkgs.management_gateway }}"
+    management_starting_address: "{{ tkgs.management_starting_address }}"
+    management_netmask: "{{ tkgs.management_netmask }}"
+    ntp_servers: "{{ tkgs.ntp_server_list }}"
+    workload_gateway: "{{ tkgs.workload_gateway }}"
+    workload_portgroup: "{{ tkgs.workload_port_group }}"
+    workload_range_starting_ip: "172.31.0.32"
+    workload_range_count: 27
+    workload_netmask: "{{ tkgs.workload_netmask }}"
+    services_cidr: "{{ tkgs.cluster_ip_services_cidr }}"
+    supervisor_size: "{{ tkgs.supervisor_size }}"
+    storage_policy_name: "{{ tkgs.storage_policy_name }}"
+    state: present
+  async: 3600
+  poll: 0
+  register: cluster_results
+
+- name: Check on enable namespace job
+  async_status:
+    jid: "{{ cluster_results.ansible_job_id }}"
+  register: job_result
+  until: job_result.finished
+  retries: 240
+  delay: 15

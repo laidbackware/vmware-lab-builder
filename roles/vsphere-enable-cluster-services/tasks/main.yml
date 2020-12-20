@@ -1,0 +1,26 @@
+---
+- name: Update Clusters to enable HA
+  community.vmware.vmware_cluster_ha:
+    hostname: "{{ nested_vcenter.ip }}"
+    username: "{{ nested_vcenter.user }}"
+    password: "{{ nested_vcenter.password }}"
+    datacenter_name: "{{ nested_vcenter.datacenter }}"
+    cluster_name: "{{ item.key }}"
+    validate_certs: False
+    enable_ha: "{{ item.value.enable_ha }}" 
+    ha_host_monitoring: "{{ item.value.ha_host_monitoring | default('disabled')}}" 
+  with_dict: "{{ nested_clusters }}"
+  when: '"enable_ha" in item.value'
+
+- name: Update Clusters to enable DRS
+  community.vmware.vmware_cluster_drs:
+    hostname: "{{ nested_vcenter.ip }}"
+    username: "{{ nested_vcenter.user }}"
+    password: "{{ nested_vcenter.password }}"
+    datacenter_name: "{{ nested_vcenter.datacenter }}"
+    cluster_name: "{{ item.key }}"
+    validate_certs: False
+    enable_drs: "{{ item.value.enable_drs }}" 
+    drs_default_vm_behavior: "{{ item.value.drs_default_vm_behavior | default(omit)}}"
+  with_dict: "{{ nested_clusters }}"
+  when: '"enable_drs" in item.value'

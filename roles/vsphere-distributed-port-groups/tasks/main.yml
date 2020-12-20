@@ -1,0 +1,36 @@
+---
+# Build of host to vds mapping buy using the nest_cluster field in the host spec
+- name: Build list of port groups to add to each vds
+  set_fact: 
+    vds_port_groups: >-
+      [
+      {% for distributed_switch in distributed_switches %}
+      {% if "distributed_port_groups" in  distributed_switch %}
+      {% for distributed_port_group in distributed_switch.distributed_port_groups %}
+      {
+        "vds_name": "{{ distributed_switch.vds_name }}",
+        "port_group_name": "{{ distributed_port_group.port_group_name }}",
+        "vlan_id": "{{ distributed_port_group.vlan_id }}",
+      },
+      {% endfor %}
+      {% endif %}
+      {% endfor %}
+      ]
+  when: 'distributed_switches is defined'
+
+- name: Create VDS portgroups
+  community.vmware.vmware_dvs_portgroup:
+    hostname: "{{ nested_vcenter.ip }}"
+    username: "{{ nested_vcenter.user }}"
+    password: "{{ nested_vcenter.password }}"
+    validate_certs: false
+    portgroup_name: "{{ item.port_group_name }}"
+    switch_name: "{{ item.vds_name }}"
+    vlan_id: "{{ item.vlan_id }}"
+    num_ports: 8
+    portgroup_type: earlyBinding
+    state: present
+  with_items: "{{ vds_port_groups }}"
+  delegate_to: localhost
+  when: 'distributed_switches is defined'
+    

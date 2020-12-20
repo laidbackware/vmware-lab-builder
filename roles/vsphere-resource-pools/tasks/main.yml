@@ -1,0 +1,30 @@
+---
+# Build a list of resource pools to add and ignore cluster if none specified
+- name: Build resource pools to add
+  set_fact: 
+    resource_pools_to_add: >-
+      [
+      {% for cluster_name, cluster_spec in nested_clusters.items()  %}
+      {% if "resource_pools" in  cluster_spec %}
+      {% for resource_pool in cluster_spec.resource_pools  %}
+      {
+      "cluster_name": "{{ cluster_name }}",
+      "resource_pool": "{{ resource_pool }}",
+      },
+      {% endfor %}
+      {% endif %}
+      {% endfor %}
+      ]
+
+- name: Add resource pool to vCenter
+  community.vmware.vmware_resource_pool:
+    hostname: "{{ nested_vcenter.ip }}"
+    username: "{{ nested_vcenter.user }}"
+    password: "{{ nested_vcenter.password }}"
+    validate_certs: False
+    datacenter: "{{ nested_vcenter.datacenter }}"
+    cluster: "{{ item.cluster_name }}"
+    resource_pool: "{{ item.resource_pool }}"
+    state: present
+  with_items: "{{ resource_pools_to_add }}"
+  delegate_to: localhost
