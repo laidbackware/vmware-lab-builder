@@ -7,7 +7,7 @@
         -   name: Gather info about vmhbas of all ESXi Host in the given Cluster
             vmware_host_disk_info:
                 hostname: "{{ nested_vcenter.ip }}"
-                username: "{{ nested_vcenter.user }}"
+                username: "{{ nested_vcenter.username }}"
                 password: "{{ nested_vcenter.password }}"
                 validate_certs: false
                 cluster_name: compute

@@ -2,7 +2,7 @@
 - name: Remove Default VM Portgroup
   community.vmware.vmware_portgroup:
     hostname: "{{ nested_vcenter.ip }}"
-    username: "{{ nested_vcenter.user }}"
+    username: "{{ nested_vcenter.username }}"
     password: "{{ nested_vcenter.password }}"
     validate_certs: False
     cluster_name: "{{ item.key }}"
@@ -16,7 +16,7 @@
 - name: Add VM Portgroup to vSwitch 0
   community.vmware.vmware_portgroup:
     hostname: "{{ nested_vcenter.ip }}"
-    username: "{{ nested_vcenter.user }}"
+    username: "{{ nested_vcenter.username }}"
     password: "{{ nested_vcenter.password }}"
     validate_certs: False
     cluster_name: "{{item.key}}"

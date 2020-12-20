@@ -2,7 +2,7 @@
 - name: Deploy Ubuntu NFS server
   vmware_deploy_ovf:
     hostname: "{{ nested_vcenter.ip }}"
-    username: "{{ nested_vcenter.user }}" 
+    username: "{{ nested_vcenter.username }}" 
     password: "{{ nested_vcenter.password }}" 
     validate_certs: no
     name: "vyos"

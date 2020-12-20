@@ -21,7 +21,7 @@
 - name: Create VDS portgroups
   community.vmware.vmware_dvs_portgroup:
     hostname: "{{ nested_vcenter.ip }}"
-    username: "{{ nested_vcenter.user }}"
+    username: "{{ nested_vcenter.username }}"
     password: "{{ nested_vcenter.password }}"
     validate_certs: false
     portgroup_name: "{{ item.port_group_name }}"

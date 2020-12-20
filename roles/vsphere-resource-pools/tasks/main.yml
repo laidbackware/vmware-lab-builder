@@ -19,7 +19,7 @@
 - name: Add resource pool to vCenter
   community.vmware.vmware_resource_pool:
     hostname: "{{ nested_vcenter.ip }}"
-    username: "{{ nested_vcenter.user }}"
+    username: "{{ nested_vcenter.username }}"
     password: "{{ nested_vcenter.password }}"
     validate_certs: False
     datacenter: "{{ nested_vcenter.datacenter }}"

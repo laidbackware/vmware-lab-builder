@@ -2,7 +2,7 @@
 - name: Gather all registered virtual machines
   community.vmware.vmware_guest_info:
     hostname: "{{ nested_vcenter.ip }}"
-    username: "{{ nested_vcenter.user }}" 
+    username: "{{ nested_vcenter.username }}" 
     password: "{{ nested_vcenter.password }}" 
     validate_certs: false
     datacenter: "{{ nested_vcenter.datacenter }}"
@@ -18,7 +18,7 @@
 - name: Create vsphere namespace cluster
   community.vmware.vmware_namespace_cluster_vds_manage:
     hostname: "{{ nested_vcenter.ip }}"
-    username: "{{ nested_vcenter.user }}"
+    username: "{{ nested_vcenter.username }}"
     password: "{{ nested_vcenter.password }}"
     validate_certs: false
     content_library_name: "{{ tkgs.content_library_name }}"
