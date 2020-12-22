@@ -16,8 +16,8 @@
     username: "{{ hosting_vcenter.username }}" 
     password: "{{ hosting_vcenter.password }}" 
     validate_certs: no
-    name: "{{ environment_tag }}-{{ item.key }}"
+    name: "{{ environment_tag }}-{{ item.name }}"
     state: absent
     force: true
   delegate_to: localhost
-  with_dict: "{{ nested_hosts }}"
+  with_items: "{{ nested_hosts }}"

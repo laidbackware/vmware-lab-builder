@@ -1,0 +1,148 @@
+# path to vCenter installer ISO
+vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.1-17004997.iso"
+esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0.1_Appliance_Template_v1.ova"
+
+environment_tag: "tkgs" # Used to prepend object names
+dns_server: "192.168.0.110"
+dns_domain: "home.local"
+ntp_server_ip: "192.168.0.1"
+disk_mode: thin #How all disks should be deployed
+# This will be set everywhere!
+master_password: "VMware1!"
+nested_host_password: "{{master_password}}"
+
+hosting_cluster: Physical
+hosting_datastore: NVME
+hosting_port_group: Nest
+hosting_network_address: "192.168.0.0"
+hosting_network_bit: "22"
+hosting_network_gateway: "192.168.0.1"
+# You must have a minimum of 9 IP continous IP addresses free, plus 1 per host
+hosting_network_starting_ip: "192.168.0.170"
+
+hosting_network:
+  base:
+    port_group: Nest
+    cidr: "192.168.0.0/22"
+    gateway: "192.168.0.1"
+    starting_addr: "192.168.0.170"
+
+tkgs_workload_cidr: "172.31.0.0/24"
+
+hosting_vcenter: # This is the vCenter which will be the target for nested vCenters and ESXi hosts
+  ip: "192.168.0.113"
+  username: "{{ lookup('env', 'PARENT_VCENTER_USERNAME') }}"
+  password: "{{ lookup('env', 'PARENT_VCENTER_PASSWORD') }}"
+  datacenter: "Home" # Target for all VM deployment
+
+#####################################################################
+### No need to edit below this line for an opinionated deployment ###
+#####################################################################
+
+nested_vcenter: # the vCenter appliance that will be deployed
+  ip: "{{ hosting_network.base.starting_addr }}" # vCenter ip address 
+  mask: "{{ hosting_network.base.cidr.split('/')[1] }}"
+  gw: "{{ hosting_network.base.gateway }}"
+  host_name: "{{ hosting_network.base.starting_addr }}" # FQDN if there is working DNS server, otherwise put the ip as a name
+  username: "administrator@vsphere.local" 
+  password: "{{ master_password }}"
+  datacenter: "Lab" # DC to create after deployment
+  # Below are properties of parent cluster
+  hosting_network: "{{ hosting_network.base.port_group }}" # Parent port group where the vCenter VM will be deployed
+  hosting_cluster: "{{ hosting_cluster }}" # Parent cluster where the vCenter VM will be deployed
+  hosting_datastore: "{{ hosting_datastore }}" # Parent datastore where the vCenter VM will be deployed
+
+nested_clusters: # You can add clusters in this section by duplicating the existing cluster
+  compute: # This will be the name of the cluster in the nested  vCenter. Below are the minimum settings.
+    enable_drs: True
+    # HA can only be enabled if there is are datastores accessible by all hosts.
+    enable_ha: True
+    ha_host_monitoring: disabled
+    # Below are properties of the hosting cluster
+    hosting_cluster: "{{ hosting_cluster }}" # the cluster where physical ESXi is connected to. The nested VMs will be deployed here
+    hosting_datastore: "{{ hosting_datastore }}" # Datastore target for nested ESXi VMs
+    # Settings below are assigned to each host in the cluster
+    vswitch0_vm_port_group_name: net1
+    vswitch0_vm_port_group_vlan: 0
+    cpu_cores: 6 # CPU count
+    ram_in_gb: 96 # memory
+    # In order list of disks to assign to the nested host. All will be marked as SSD.
+    # Datastore names will be automatically be pre-pended with the hostname. E.g esx1
+    # If the datastore_prefix property is removed the disk will not be set as a datastore
+    # To leave the default OVA disks in place, delete this section.
+    nested_hosts_disks: 
+      - size_gb: 400
+        datastore_prefix: "datastore" 
+    # Added in vmnic order, these port groups must exist on the physical host
+    # Must specify at least 2 port groups, up to a maximum of 10
+    vmnic_physical_portgroup_assignment: 
+      - name: "{{ hosting_network.base.port_group }}"
+      - name: "{{ hosting_network.base.port_group }}"
+
+# You can add nested ESXi hosts below
+nested_hosts:
+  - name: esx1 # environment_tag will prepend the name to create the VM name
+    ip: "{{ hosting_network.base.starting_addr | ipmath(8) }}" # This will also be used as the hostname in the nested vCenter
+    mask: "{{ hosting_network.base.cidr | ansible.netcommon.ipaddr('netmask') }}"
+    gw: "{{ hosting_network.base.gateway }}"
+    nested_cluster: compute # the nested vcenter cluster, which is defined in the clusters section.
+    
+distributed_switches: # To not create any distributed switches, comment this section.
+  - vds_name: tkgs-vds
+    mtu: 1500
+    vds_version: 7.0.0
+    clusters: # distributed switch will be attached to all hosts in the clusters defined
+      - compute
+    uplink_quantity: 1
+    vmnics:
+      - vmnic1
+    distributed_port_groups: # Remove to create an empty VDS
+      - port_group_name: routed-pg
+        vlan_id: "0"
+      - port_group_name: private-pg
+        vlan_id: "666"
+
+tkgs:
+  cluster_ip_services_cidr: "10.255.255.0/24" # This will not be routed and is private within each cluster
+  content_library_name: tkgs-library
+  content_library_url: "http://wp-content.vmware.com/v2/latest/lib.json"
+  datastore_tag_category: tkgs-storage-category    
+  datastore_tag: tkgs-storage
+  datastore_to_tag: datastore-esx1
+  dns_server_list: ["{{ dns_server }}"]
+  ntp_server_list: ["{{ ntp_server_ip }}"]
+  management_port_group: routed-pg
+  management_netmask: "{{ hosting_network.base.cidr | ansible.netcommon.ipaddr('netmask') }}"
+  management_starting_address: "{{ hosting_network.base.starting_addr | ipmath(3) }}"
+  management_gateway: "{{ hosting_network.base.gateway }}"
+  storage_policy_name: tkgs-storage-policy
+  supervisor_size: tiny
+  vsphere_cluster: compute
+  workload_port_group: private-pg
+  workload_address: "{{ tkgs_workload_cidr.split('/')[0] }}"
+  workload_netmask: "{{ tkgs_workload_cidr | ansible.netcommon.ipaddr('netmask') }}"
+  workload_gateway: "{{ tkgs_workload_cidr | ipmath(1) }}"
+  workload_range_cidrs:
+    # Line below will create a cidr of the second quarter of tkgs_workload_cidr
+    - "{{ tkgs_workload_cidr | ansible.netcommon.ipsubnet((tkgs_workload_cidr.split('/')[1] |int)+2, 1) }}"
+
+  router:
+    uplink_ip_cidr: "{{ hosting_network.base.starting_addr | ipmath(1) }}/{{ hosting_network.base.cidr.split('/')[1] }}"
+    uplink_next_hop: "{{ hosting_network.base.gateway }}"
+    internal_gateway_cidr: "{{ tkgs_workload_cidr | ipmath(1) }}/{{ tkgs_workload_cidr.split('/')[1] }}"
+    internal_network_cidr: "{{ tkgs_workload_cidr }}"
+
+  haproxy:
+    root_pwd: "{{ master_password }}"
+    nameservers: "{{ dns_server }}"
+    management_ip: "{{ hosting_network.base.starting_addr | ipmath(2) }}/{{ hosting_network.base.cidr.split('/')[1] }}"
+    management_port: "5556"
+    management_gateway: "{{ hosting_network.base.gateway }}"
+    management_port_group: "routed-pg"
+    workload_ip: "{{ tkgs_workload_cidr | ipmath(2) }}/{{ tkgs_workload_cidr.split('/')[1] }}"
+    workload_gateway: "{{ tkgs_workload_cidr | ipmath(1) }}"
+    workload_port_group: "private-pg"
+    # Line below will create a cidr of the second half of tkgs_workload_cidr
+    service_ip_range: "{{ tkgs_workload_cidr | ansible.netcommon.ipsubnet((tkgs_workload_cidr.split('/')[1] |int)+1, 1) }}" # Can be comma separated
+    username: admin
+    password: "{{ master_password }}"

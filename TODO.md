@@ -1,10 +1,14 @@
-Add module to enable K8s on cluster
-Extract certificate from HA proxy. Either via community pull request or a new module.
+vsphere k8s module
+  add checks for common errors
+  add functionality to check and apply updates
+
+nsxt
+  add roles to configure edges and clusters
+
 Add ability to shrink TKGS to 2 supervisor nodes
+  https://www.virtuallyghetto.com/2020/04/deploying-a-minimal-vsphere-with-kubernetes-environment.html
 Add check for bsdtar at the beginning
 Add NFS server creation via Ubuntu VM
 Add NFS datastore creation
 Add multi-node TKGS deployment option
 Add more examples for different topologies
-Refactor to simplify the examples with all variables at top and rest derived.
-Add NSX-T roles

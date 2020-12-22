@@ -4,10 +4,9 @@ vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.1-17004997.iso"
 esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0.1_Appliance_Template_v1.ova"
 
 environment_tag: "vsphere-community" # Used to prepend object names
-dns1: "192.168.0.110"
-dns2: "192.168.0.1"
+dns_server: "192.168.0.110"
 domain: "home.local"
-ntp: time1.google.com
+ntp_server_ip: time1.google.com
 disk_mode: thin #How all disks should be deployed
 nested_host_password: "VMware1!"
 

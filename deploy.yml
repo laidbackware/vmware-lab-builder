@@ -4,24 +4,26 @@
   gather_facts: False
   strategy: free
   roles:
-    - role: vsphere-deploy-vc-and-hosts
-    - role: vsphere-datacenter
-    - role: vsphere-clusters
-    - role: vsphere-vswitch0-port-groups
-    - role: vsphere-local-datastores
-    - role: vsphere-enable-cluster-services
-    - role: vsphere-resource-pools
-    - role: vsphere-distributed-switches
+    - role: vsphere/vsphere-deploy-vc-and-hosts
+    - role: vsphere/vsphere-datacenter
+    - role: vsphere/vsphere-clusters
+    - role: vsphere/vsphere-vswitch0-port-groups
+    - role: vsphere/vsphere-local-datastores
+    - role: vsphere/vsphere-enable-cluster-services
+    - role: vsphere/vsphere-resource-pools
+    - role: vsphere/vsphere-distributed-switches
       when: 'distributed_switches is defined'
-    - role: vsphere-distributed-port-groups
+    - role: vsphere/vsphere-distributed-port-groups
       when: 'distributed_switches is defined'
-    - role: vsphere-tag-datastore
+    ### vSphere with Kuberentes Section
+    - role: vsphere/vsphere-tag-datastore
       when: 'tkgs is defined'
-    - role: vsphere-content-library
+    - role: vsphere/vsphere-content-library
       when: 'tkgs is defined'
-    - role: tkgs-vyos-router
+    - role: tkgs/tkgs-vyos-router
       when: 'tkgs is defined and tkgs.router is defined'
-    - role: tkgs-ha-proxy
+    - role: tkgs/tkgs-ha-proxy
       when: 'tkgs is defined'
-    - role: tkgs-enable-cluster
+    - role: tkgs/tkgs-enable-cluster
       when: 'tkgs is defined'
+    

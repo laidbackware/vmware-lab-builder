@@ -4,6 +4,9 @@ FROM ubuntu:20.04
 
 ENV ANSIBLE_VERSION=2.10.*
 
+ENV ANSIBLE_LIBRARY=/repos/ansible-for-nsxt
+ENV ANSIBLE_MODULE_UTILS=/repos/ansible-for-nsxt/module_utils
+
 RUN set -xe \
     && echo "****** Install system dependencies ******" \
     && apt update \
@@ -19,9 +22,13 @@ RUN set -xe \
     && pip3 install ansible pyvmomi netaddr \
          git+https://github.com/vmware/vsphere-automation-sdk-python.git \
     \
-    && echo "****** Cloning modified Ansible repo ******" \
+    && echo "****** Cloning modified vSphere Ansible repo ******" \
     && git clone --branch tkgs https://github.com/laidbackware/ansible-for-vsphere.git /tmp/ansible-for-vsphere \
     && cp -rf /tmp/ansible-for-vsphere/* /usr/local/lib/python3.*/dist-packages/ansible_collections/community/vmware/ \
+    \
+    && echo "****** Cloning ansible-for-nsxt ******" \
+    && mkdir /repos \
+    && git clone --branch vmware-lab-builder https://github.com/laidbackware/ansible-for-nsxt.git /repos/ansible-for-nsxt \
     \
     && echo "****** Removing build tools ******" \
     && apt remove -y build-essential python3-pip python3-dev git \
@@ -29,4 +36,5 @@ RUN set -xe \
     && rm -Rf /var/lib/apt/lists/* \
     && rm -Rf /usr/share/doc && rm -Rf /usr/share/man \
     && rm -rf /root/.cache/pip/ \
+    && rm -rf /tmp/* \
     && apt-get clean \

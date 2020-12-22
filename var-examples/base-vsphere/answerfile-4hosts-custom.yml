@@ -1,0 +1,117 @@
+# path to vCenter installer ISO
+vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.1-16860138.iso"
+esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0.0_Appliance_Template_v1.ova"
+
+environment_tag: "full" # Used to prepend object names
+dns_server: "192.168.0.110"
+dns_domain: "home.local"
+ntp_server_ip: time1.google.com
+disk_mode: thin #How all disks should be deployed
+nested_host_password: "VMware1!"
+
+hosting_vcenter: # This is the vCenter which will be the target for nested vCenters and ESXi hosts
+  ip: "192.168.0.113"
+  username: "{{ lookup('env', 'PARENT_VCENTER_USERNAME') }}"
+  password: "{{ lookup('env', 'PARENT_VCENTER_PASSWORD') }}"
+  datacenter: "Home" # Target for all VM deployment
+
+nested_vcenter: # the vCenter appliance that will be deployed
+  ip: "192.168.0.181" # vCenter ip address 
+  mask: "22"
+  gw: "192.168.0.1"
+  host_name: "192.168.0.181" # FQDN if there is working DNS server, otherwise put the ip as a name
+  username: "administrator@vsphere.local" 
+  password: "VMware1!"
+  datacenter: "Lab" # DC to create after deployment
+  # Below are properties of parent cluster
+  hosting_network: "Net1" # Parent port group where the vCenter VM will be deployed
+  hosting_cluster: "Physical" # Parent cluster where the vCenter VM will be deployed
+  hosting_datastore: "NVME" # Parent datastore where the vCenter VM will be deployed
+  
+nested_clusters: # You can add clusters in this section by duplicating the existing cluster
+  skinny: # This will be the name of the cluster in the nested  vCenter. Below are the minimum settings.
+    # Below are properties of the hosting cluster
+    hosting_cluster: "Physical" # the cluster where physical ESXi is connected to. The nested VMs will be deployed here
+    hosting_datastore: "NVME" # Datastore target for nested ESXi VMs
+    cpu_cores: 4 # CPU count
+    ram_in_gb: 16 # memory
+    # Added in vmnic order, these port groups must exist on the physical host
+    # Must specify at least 2 port groups, up to a maximum of 10
+    vmnic_physical_portgroup_assignment: 
+      - name: "Nest"
+      - name: "Nest"
+  full-fat: # This will be the name of the cluster in the nested  vCenter
+    enable_drs: True
+    drs_default_vm_behavior: partiallyAutomated # Defaults to fully automated
+    # HA can only be enabled if there is are datastores accessible by all hosts.
+    enable_ha: True
+    ha_host_monitoring: enabled
+    # Settings below are assigned to each host in the cluster
+    vswitch0_vm_port_group_name: net1
+    vswitch0_vm_port_group_vlan: 0
+    mgmt_vlan: 0 # VLAN ID used to tag VMK0
+    cpu_cores: 4 # CPU count
+    ram_in_gb: 16 # memory
+    # In order list of disks to assign to the nested host. All will be marked as SSD.
+    # Datastore names will be automatically be pre-pended with the hostname. E.g esx1
+    # If the datastore_prefix property is removed the disk will not be set as a datastore
+    # To leave the default OVA disks in place, delete this section.
+    nested_hosts_disks: 
+      - size_gb: 200
+        datastore_prefix: "datastore"
+      # - size_gb: 50  
+      #   datastore_prefix: "test2" 
+      # - size_gb: 10  # this disk will not have a datastore added
+    # Below are properties of the hosting cluster
+    hosting_cluster: "Physical" # the cluster where physical ESXi is connected to. The nested VMs will be deployed here
+    hosting_datastore: "NVME" # Datastore target for nested ESXi VMs
+    # Added in vmnic order, these port groups must exist on the physical host
+    # Must specify at least 2 port groups, up to a maximum of 10
+    vmnic_physical_portgroup_assignment:
+      - name: "Nest"
+      - name: "TEP"
+      - name: "TEP"
+    resource_pools: # List of resource pools, remove if not needed
+      - TAS-AZ1
+      - TKGI-AZ1
+
+# You can add nested ESXi hosts below
+nested_hosts:
+  - name: esx1 # environment_tag will prepend the name to create the VM name
+    ip: 192.168.0.182 # This will also be used as the hostname in the nested vCenter
+    mask: 255.255.252.0
+    gw: 192.168.0.1
+    nested_cluster: skinny # the nested vcenter cluster, which is defined in the clusters section.
+  - name: esx2 # environment_tag will prepend the name to create the VM name
+    ip: 192.168.0.183 # This will also be used as the hostname in the nested vCenter
+    mask: 255.255.252.0
+    gw: 192.168.0.1
+    nested_cluster: skinny # the nested vcenter cluster, which is defined in the clusters section.
+  - name: esx3
+    ip: 192.168.0.184 # This will also be used as the hostname in the nested vCenter
+    mask: 255.255.252.0
+    gw: 192.168.0.1
+    nested_cluster: full-fat # the nested vcenter cluster, which is defined in the clusters section.
+  - name: esx4
+    ip: 192.168.0.185 # This will also be used as the hostname in the nested vCenter
+    mask: 255.255.252.0
+    gw: 192.168.0.1
+    nested_cluster: full-fat # the nested vcenter cluster, which is defined in the clusters section.
+     
+distributed_switches: # To not create any distributed switches, comment this section.
+  - vds_name: vds_overlay
+    mtu: 9000
+    vds_version: 7.0.0 # Should be 7.0.0, 6.7.0
+    clusters: # distributed switch will be attached to all hosts in the cluster
+      - full-fat    
+    uplink_quantity: 1
+    vmnics:
+      - vmnic1
+    distributed_port_groups: # Remove to create an empty VDS
+      - port_group_name: tep_pg
+        vlan_id: "0"
+
+tkgs:
+  datastore_tag_category: tkgs-storage-category
+  datastore_tag: tkgs-storage
+  datastore_to_tag: test2-esx4
