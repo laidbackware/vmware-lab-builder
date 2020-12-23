@@ -40,7 +40,7 @@ docker run --rm \
     --volume ${PWD}:/work \
     laidbackware/vsphere-ansible \
     ansible-playbook /work/deploy.yml \
-        --extra-vars '@/work/var-examples/vsphere-base/answerfile-1host-opinionated.yml'
+        --extra-vars '@/work/var-examples/base-vsphere/answerfile-1host-opinionated.yml'
 ```
 
 ## Destroying
@@ -68,7 +68,7 @@ docker run  -it --rm \
     /bin/bash
 
 # Then the playbook can be triggered
-ansible-playbook /work/deploy.yml --extra-vars '@/work/answerfile-minimal.yml'
+ansible-playbook /work/deploy.yml --extra-vars '@/work/<path>/<file>.yml'
 ```
 
 # Known issues/future plans
@@ -94,5 +94,5 @@ cp -rf /tmp/ansible-for-vsphere/* /usr/local/lib/python3.*/dist-packages/ansible
 ```
 Once all setup run the playbooks can be run locally:
 ```
-ansible-playbook deploy.yml --extra-vars="@var-examples/vsphere-base/answerfile-1host-opinionated"
+ansible-playbook deploy.yml --extra-vars="@var-examples/base-vsphere/answerfile-1host-opinionated"
 ```
