@@ -1,7 +1,5 @@
-vsphere k8s module
-  add checks for common errors
-  add functionality to check and apply updates
-
+vsphere k8s module - see readme
+  
 nsxt
   add roles to configure edges and clusters
 

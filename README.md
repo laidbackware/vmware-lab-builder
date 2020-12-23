@@ -26,10 +26,10 @@ export SOFTWARE_DIR="/home/matt/minio/vmware-products"
 ```
 
 ## Docker Usage 
-After cloneing the repo, you must update the relevant answerfile yaml include your ova and iso file names, and change any IP addresses or credentials.<br/>
+After cloneing the repo, you should make a copy and update the relevant answerfile yaml to include your ova and iso file names, and change any IP addresses or credentials.<br/>
 Check the readme file in the example directory for any additional steps which may be needed for that solution.<br/>
 
-The example below will deploy a single host and a vCenter, plus create a cluster with the minimum feature set.
+The example below will deploy a single host and a vCenter, plus create a cluster with the minimum feature set. It should be run from the root of this repo and will copy the repo in as `/work`.
 ```
 docker run --rm \
     --env PARENT_VCENTER_USERNAME=${PARENT_VCENTER_USERNAME} \
