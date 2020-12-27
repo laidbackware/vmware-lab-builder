@@ -142,7 +142,7 @@ tkgs:
     workload_ip: "{{ tkgs_workload_cidr | ipmath(2) }}/{{ tkgs_workload_cidr.split('/')[1] }}"
     workload_gateway: "{{ tkgs_workload_cidr | ipmath(1) }}"
     workload_port_group: "private-pg"
-    # Line below will create a cidr of the second half of tkgs_workload_cidr
-    service_ip_range: "{{ tkgs_workload_cidr | ansible.netcommon.ipsubnet((tkgs_workload_cidr.split('/')[1] |int)+1, 1) }}" # Can be comma separated
+    # Line below will create a cidr of the third quarter of tkgs_workload_cidr
+    service_ip_range: "{{ tkgs_workload_cidr | ansible.netcommon.ipsubnet((tkgs_workload_cidr.split('/')[1] |int)+2, 2) }}" # Can be comma separated
     username: admin
     password: "{{ master_password }}"
