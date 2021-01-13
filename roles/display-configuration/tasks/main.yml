@@ -1,0 +1,64 @@
+---
+
+- name: Build outputs
+  set_fact:
+    build_outputs: >-
+      {
+        "vcenter": {
+          "ip": "{{ nested_vcenter.ip }}",
+          "username": "{{ nested_vcenter.username }}",
+          "password": "{{ nested_vcenter.password }}"
+        },
+        "esxi_hosts": [
+          {% for host in nested_hosts %}
+          {
+            "name": "{{ environment_tag }}-{{ host.name }}",
+            "ip": "{{ host.ip }}",
+            "root_password": "{{ nested_host_password }}"
+          },
+          {% endfor %} 
+        ],
+        {% if nsxt is defined %}
+        "nsxt": {
+          "manager_ip": "{{ nsxt.manager.ip }}",
+          "edge_ips": [
+            {% for edge in nsxt.edge_nodes %}
+            "{{ edge.mgmt_ip_address }}",
+            {% endfor %} 
+          ],
+          "username": "{{ nsxt.manager.username }}",
+          "password": "{{ nsxt.manager.password }}",
+          {% if "tier_0" in nsxt and "locale_services" in nsxt.tier_0 and "interfaces" in nsxt.tier_0.locale_services %}
+          "t0_uplink": "{{ nsxt.tier_0.locale_services[0].interfaces[0].subnets[0].ip_addresses[0] }}"
+          {% endif %}
+        },
+        {% endif %}
+        {% if tkgs is defined %}
+        "tanzu_kubernetes": {
+          {% if tkgs.router is defined %}
+          "router" :{
+            "uplink_ip": "{{ tkgs.router.uplink_ip_cidr.split('/')[0] }}",
+            "username": "vyos",
+            "password": "vyos"
+          },
+          {% endif %}
+          {% if tkgs.router is defined %}
+          "haproxy": {
+            "username": "{{ tkgs.haproxy.username }}",
+            "password": "{{ tkgs.haproxy.password }}",
+            "root_password": "{{ tkgs.haproxy.root_pwd }}",
+            "management_ip": "{{ tkgs.haproxy.management_ip }}",
+            "management_port": "{{ tkgs.haproxy.management_port }}"
+          },
+          {% endif %}
+        },
+        {% endif %}
+
+      }
+
+- name: Display Build environment
+  debug:
+    # msg:
+    #   - Deployment complete. Below is what has been configured.
+    var:
+      build_outputs

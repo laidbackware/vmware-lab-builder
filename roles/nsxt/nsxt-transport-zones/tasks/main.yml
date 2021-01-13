@@ -1,0 +1,17 @@
+---
+- name: Create transport zone
+  nsxt_transport_zones:
+    hostname: "{{ nsxt.manager.hostname }}"
+    username: "{{ nsxt.manager.username }}"
+    password: "{{ nsxt.manager.password }}"
+    validate_certs: False
+    resource_type: "TransportZone"
+    display_name: "{{ item.display_name }}"
+    description: "{{ item.description }}"
+    transport_type: "{{ item.transport_type }}"
+    host_switch_name: "{{ item.host_switch_name | default(omit) }}"
+    nested_nsx: "{{ item.nested_nsx | default(omit) }}"
+    state: "present"
+    tags: "{{ item.tags | default(omit) }}"
+  with_items:
+    - "{{ nsxt.transport_zones }}"

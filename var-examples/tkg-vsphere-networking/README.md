@@ -16,6 +16,9 @@ vCenter = `hosting_network.base.starting_addr`<br/>
 router uplink = `hosting_network.base.starting_addr + 1`<br/>
 first ESXi host = `hosting_network.base.starting_addr + 8`<br/>
 
+# Troubleshooting
+- During creation the API will return errors for an extended period. The module will accept up to 150 seconds of errors, if the playbook ends with an error, check the UI to see if the action is progressing.
+
 # Roadmap
 - Add multi host option
 - Add more debug statements to show config ahead of each task

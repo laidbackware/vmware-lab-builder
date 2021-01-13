@@ -1,0 +1,347 @@
+# SOFTWARE_DIR must contain all needed software
+vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.1-17004997.iso"
+esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0.1_Appliance_Template_v1.ova"
+nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-3.1.0.0.0.17107171.ova"
+
+environment_tag: "nsxt" # Used to prepend object names
+dns_server: "192.168.0.110"
+dns_domain: "home.local"
+ntp_server_ip: "192.168.0.1" # Must be set to an IP address!
+disk_mode: thin # How all disks should be deployed
+nested_host_password: "{{ opinionated.master_password }}"
+
+hosting_vcenter: # This is the vCenter which will be the target for nested vCenters and ESXi hosts
+  ip: "192.168.0.113"
+  username: "{{ lookup('env', 'PARENT_VCENTER_USERNAME') }}"
+  password: "{{ lookup('env', 'PARENT_VCENTER_PASSWORD') }}"
+  datacenter: "Home" # Target for all VM deployment
+
+# This section is only referenced by other variables in this file
+opinionated:
+  master_password: "VMware1!"
+  number_of_hosts: 1 # number of ESXi VMs to deploy
+  nested_hosts:
+    cpu_cores: 4 # CPU count per nested host
+    ram_in_gb: 32 # memory per nested host
+    local_disks: # (optional) this section can be removed to not modify local disks
+      - size_gb: 200
+        datastore_prefix: "datastore" # omit this to not have a datastore created
+  hosting_cluster: Physical
+  hosting_datastore: NVME
+  hosting_network:
+    base:
+      port_group: Nest
+      cidr: "192.168.0.0/22"
+      gateway: "192.168.0.1"
+      # A NSX-T deployment requires 4 IPs, plus 1 per esxi host. They MUST be contiguous.
+      starting_addr: "192.168.0.120"
+    nsxt_tep:
+      port_group: TEP
+      vlan_id: 0
+      cidr: "172.16.0.0/24" # IP calculation depends on this being a /24
+  nsxt:
+    tier0_gateway_name: test-t0
+    tier1_gateways:
+      - display_name: test-t1-1
+        route_advertisement_types:
+          - "TIER1_CONNECTED"
+          - "TIER1_NAT"
+        segments:
+          - display_name: test-seg-1
+            interface_cidr: "10.254.1.1/24"
+      - display_name: test-t1-2
+        route_advertisement_types:
+          - "TIER1_CONNECTED"
+        segments:
+          - display_name: test-seg-2
+            interface_cidr: "10.254.2.1/24"
+    standalone_overlay_segments:
+      - display_name: test-seg-3
+
+#####################################################################
+### No need to edit below this line for an opinionated deployment ###
+#####################################################################
+
+nested_vcenter: # the vCenter appliance that will be deployed
+  ip: "{{ opinionated.hosting_network.base.starting_addr }}" # vCenter ip address 
+  mask: "{{ opinionated.hosting_network.base.cidr.split('/')[1] }}"
+  gw: "{{ opinionated.hosting_network.base.gateway }}"
+  host_name: "{{ opinionated.hosting_network.base.starting_addr }}" # FQDN if there is working DNS server, otherwise put the ip as a name
+  username: "administrator@vsphere.local" 
+  password: "{{ opinionated.master_password }}"
+  datacenter: "Lab" # DC to create after deployment
+  # Below are properties of parent cluster
+  hosting_network: "{{ opinionated.hosting_network.base.port_group }}" # Parent port group where the vCenter VM will be deployed
+  hosting_cluster: "{{ opinionated.hosting_cluster }}" # Parent cluster where the vCenter VM will be deployed
+  hosting_datastore: "{{ opinionated.hosting_datastore }}" # Parent datastore where the vCenter VM will be deployed
+  
+nested_clusters: # You can add clusters in this section by duplicating the existing cluster
+  compute: # This will be the name of the cluster in the nested  vCenter. Below are the minimum settings.
+    enable_drs: True
+    # Below are properties of the hosting cluster
+    hosting_cluster: "{{ opinionated.hosting_cluster }}" # the cluster where physical ESXi is connected to. The nested VMs will be deployed here
+    hosting_datastore: "{{ opinionated.hosting_datastore }}" # Datastore target for nested ESXi VMs
+    # Settings below are assigned to each host in the cluster
+    vswitch0_vm_port_group_name: vm-network
+    vswitch0_vm_port_group_vlan: "0"
+    cpu_cores: "{{ opinionated.nested_hosts.cpu_cores }}" # CPU count
+    ram_in_gb: "{{ opinionated.nested_hosts.ram_in_gb }}" # memory
+    # In order list of disks to assign to the nested host. All will be marked as SSD.
+    # Datastore names will be automatically be pre-pended with the hostname. E.g esx1
+    # If the datastore_prefix property is removed the disk will not be set as a datastore
+    # To leave the default OVA disks in place, delete this section.
+    nested_hosts_disks: "{{ opinionated.nested_hosts.local_disks | default(omit) }}"
+    # Added in vmnic order, these port groups must exist on the physical host
+    # Must specify at least 2 port groups, up to a maximum of 10
+    vmnic_physical_portgroup_assignment: 
+      - name: "{{ opinionated.hosting_network.base.port_group }}"
+      - name: "{{ opinionated.hosting_network.nsxt_tep.port_group }}"
+      - name: "{{ opinionated.hosting_network.nsxt_tep.port_group }}"
+
+opinionated_host_ip_ofset: 4
+# See the custom example for host to build hosts out manually
+nested_hosts: >-
+  [
+    {% for host_number in range(opinionated.number_of_hosts) %}
+    {
+      "name": "esx{{ host_number + 1 }}",
+      "ip": "{{ opinionated.hosting_network.base.starting_addr | ipmath(opinionated_host_ip_ofset + host_number) }}",
+      "mask": "{{ opinionated.hosting_network.base.cidr | ansible.netcommon.ipaddr('netmask') }}",
+      "gw": "{{ opinionated.hosting_network.base.gateway }}",
+      "nested_cluster": "compute"
+    },
+    {% endfor %}
+  ]
+
+distributed_switches: # (optional) - section can be removed to not create any distributed switches
+  - vds_name: nsxt-vds
+    mtu: 1600
+    vds_version: 7.0.0 # Should be 7.0.0, 6.7.0 
+    clusters: # distributed switch will be attached to all hosts in the clusters listed
+      - compute
+    uplink_quantity: 1
+    vmnics:
+      - vmnic1
+  - vds_name: nsxt-edge-tep
+    mtu: 1600
+    vds_version: 7.0.0 # Should be 7.0.0, 6.7.0 
+    clusters: # distributed switch will be attached to all hosts in the clusters listed
+      - compute
+    uplink_quantity: 1
+    vmnics:
+      - vmnic2
+    distributed_port_groups: # (optional) - section can be removed to not create any distributed port groups
+      - port_group_name: tep-pg
+        vlan_id: "{{ opinionated.hosting_network.nsxt_tep.vlan_id |default(0) }}" 
+
+nsxt: # (optional) - section can be removed to not create any nsxt objects
+  manager:
+    hostname: "{{ opinionated.hosting_network.base.starting_addr | ipmath(1) }}"
+    ip: "{{ opinionated.hosting_network.base.starting_addr | ipmath(1) }}"
+    netmask: "{{ opinionated.hosting_network.base.cidr | ansible.netcommon.ipaddr('netmask') }}"
+    gateway: "{{ opinionated.hosting_network.base.gateway }}"
+    username: admin # this cannot be changed
+    password: "{{ opinionated.master_password }}{{ opinionated.master_password }}"
+    hosting_vcenter_ip: "{{ hosting_vcenter.ip }}"
+    hosting_vcenter_username: "{{ hosting_vcenter.username }}"
+    hosting_vcenter_password: "{{ hosting_vcenter.password }}"
+    hosting_datacenter: "{{ hosting_vcenter.datacenter }}"
+    hosting_datastore: "{{ opinionated.hosting_datastore }}"
+    hosting_network: "{{ opinionated.hosting_network.base.port_group }}"
+    hosting_cluster: "{{ opinionated.hosting_cluster }}"
+    license_key: "{{ lookup('env', 'NSXT_LICENSE_KEY') }}"
+  
+  ip_pools:
+    - display_name: tep-pool # This is a non-routable range which is used for the overlay tunnels.
+      subnets:
+        - allocation_ranges:
+            - start: "{{ opinionated.hosting_network.nsxt_tep.cidr | ipmath(1) }}"
+              end: "{{ opinionated.hosting_network.nsxt_tep.cidr | ipmath(254) }}"
+          cidr: "{{ opinionated.hosting_network.nsxt_tep.cidr }}"
+  
+  uplink_profiles:
+    - display_name: host-tep-profile
+      teaming:
+        active_list:
+          - uplink_name: "uplink-1"
+            uplink_type: PNIC
+        policy: FAILOVER_ORDER
+      transport_vlan: 0  
+    - display_name: edge-tep-profile
+      mtu: 9000
+      teaming:
+        active_list:
+          - uplink_name: "uplink-1"
+            uplink_type: PNIC
+        policy: FAILOVER_ORDER
+      transport_vlan: 0  
+    - display_name: edge-uplink-profile
+      mtu: 1500
+      teaming:
+        active_list:
+          - uplink_name: "uplink-1"
+            uplink_type: PNIC
+        policy: FAILOVER_ORDER
+      transport_vlan: 0
+
+  transport_zones:
+    - display_name: tz-overlay
+      transport_type: OVERLAY
+      # host_switch_name: "{{ distributed_switches[0].vds_name }}"
+      nested_nsx: True # Set this to True if you use NSX-T for your physical host networking
+      description: "Overlay Transport Zone"
+    - display_name: tz-vlan
+      transport_type: VLAN
+      # host_switch_name: sw_vlan
+      description: "Uplink Transport Zone"
+
+  transport_node_profiles:
+    - display_name: tnp1
+      host_switches:
+        - host_switch_profiles:
+            - name: host-tep-profile
+              type: UplinkHostSwitchProfile
+          host_switch_name: "{{ distributed_switches[0].vds_name }}"
+          host_switch_type: VDS
+          host_switch_mode: STANDARD
+          ip_assignment_spec:
+            resource_type: StaticIpPoolSpec
+            ip_pool_name: "tep-pool"
+          transport_zone_endpoints:
+            - transport_zone_name: "tz-overlay"
+          uplinks:
+            - uplink_name: "uplink-1"
+              vds_uplink_name: "Uplink 1"
+      description: "Cluster node profile"
+
+  cluster_attach:
+    - display_name: "tnc1"
+      description: "Transport Node Collections 1"
+      compute_manager_name: "vCenter"
+      cluster_name: "compute"
+      transport_node_profile_name: "tnp1"
+
+  edge_nodes:
+    - display_name: edge-node-1
+      size: MEDIUM
+      mgmt_ip_address: "{{ opinionated.hosting_network.base.starting_addr | ipmath(2) }}"
+      mgmt_prefix_length: "{{ opinionated.hosting_network.base.cidr.split('/')[1] }}"
+      mgmt_default_gateway: "{{ opinionated.hosting_network.base.gateway }}"
+      network_management_name: vm-network
+      network_uplink_name: vm-network
+      network_tep_name: tep-pg
+      datastore_name: datastore-esx1
+      cluster_name: compute
+      host_switches:
+        tep:
+          uplink_profile_name: edge-tep-profile
+          ip_assignment_spec:
+            resource_type: StaticIpPoolSpec
+            ip_pool_name: tep-pool
+          transport_zone_endpoints:
+            - transport_zone_name: "tz-overlay"
+        uplink:
+          host_switch_name: "sw_vlan"
+          uplink_profile_name: edge-uplink-profile
+          transport_zone_endpoints:
+            - transport_zone_name: "tz-vlan"
+      transport_zone_endpoints:
+        - transport_zone_name: "tz-overlay-2"
+        - transport_zone_name: "tz-vlan"
+
+  edge_clusters:
+  - edge_cluster_name: edge-cluster-1
+    edge_cluster_members:
+      - transport_node_name: edge-node-1
+
+  uplink_segments:
+    - display_name: t0-uplink
+      vlan_ids: [0]
+      transport_zone_display_name: tz-vlan
+
+  # For full spec see - https://github.com/laidbackware/ansible-for-nsxt/blob/vmware-lab-builder/library/nsxt_policy_tier0.py
+  tier_0:
+    display_name: "{{ opinionated.nsxt.tier0_gateway_name }}"
+    ha_mode: ACTIVE_STANDBY
+    uplink_ip: "{{ opinionated.hosting_network.base.starting_addr | ipmath(3) }}"
+    disable_firewall: True
+    static_routes: 
+      - state: present
+        display_name: default-route
+        network: "0.0.0.0/0"
+        next_hops:
+          - ip_address: "{{ opinionated.hosting_network.base.gateway }}"
+    locale_services:
+      - state: present
+        display_name: "{{ opinionated.nsxt.tier0_gateway_name }}-ls"
+        edge_cluster_info:
+          edge_cluster_display_name: edge-cluster-1
+        interfaces:
+          - display_name: "test-t0-t0ls-iface"
+            state: present
+            subnets:
+              - ip_addresses: ["{{ opinionated.hosting_network.base.starting_addr | ipmath(3) }}"]
+                prefix_len: "{{ opinionated.hosting_network.base.cidr.split('/')[1] | int }}"
+            segment_id: t0-uplink
+            edge_node_info:
+              edge_cluster_display_name: edge-cluster-1
+              edge_node_display_name: edge-node-1
+            mtu: 1500
+
+  # build list of segments from opinionated section. See custom deployment for example of how to configurre
+  overlay_segments: >-
+    [
+      {% for overlay_segment in opinionated.nsxt.standalone_overlay_segments %}
+      {
+        "display_name": "{{ overlay_segment.display_name }}",
+        "transport_zone_display_name": "tz-overlay"
+      },
+      {% endfor %}
+      {% for tier1_gateway in opinionated.nsxt.tier1_gateways %}
+      {% if "segments" in  tier1_gateway %}
+      {% for segment in tier1_gateway.segments %}
+      {
+        "display_name": "{{ segment.display_name }}",
+        "transport_zone_display_name": "tz-overlay"
+      },
+      {% endfor %}
+      {% endif %}
+      {% endfor %}
+    ]
+
+  tier_1_gateways: >-
+    [
+      {% for tier1_gateway in opinionated.nsxt.tier1_gateways %}
+      {
+        "display_name": "{{ tier1_gateway.display_name }}",
+        "route_advertisement_types": "{{ tier1_gateway.route_advertisement_types }}",
+        "tier0_display_name": "{{ opinionated.nsxt.tier0_gateway_name }}",
+        "locale_services" : [
+          {
+            "state": "present",
+            "display_name": "{{ tier1_gateway.display_name }}-ls",
+            "edge_cluster_info": {
+              "edge_cluster_display_name": "edge-cluster-1"
+            },
+            "interfaces" : [
+              {% for segment in tier1_gateway.segments %}
+              {
+                "display_name": "{{ tier1_gateway.display_name }}-{{ segment.display_name }}-if",
+                "state": "present",
+                "mtu": 1500,
+                "subnets": [
+                  {
+                    "ip_addresses": ["{{ segment.interface_cidr.split('/')[0] }}"],
+                    "prefix_len": {{ segment.interface_cidr.split('/')[1] | int }}
+                  },
+                ],
+                "segment_display_name": "{{ segment.display_name }}"
+              },
+              {% endfor %}
+
+            ]
+          }
+        ]
+      },
+      {% endfor %}
+    ]

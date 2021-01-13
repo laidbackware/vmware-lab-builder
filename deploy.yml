@@ -2,7 +2,6 @@
 - name: Deploy VC and Hosts
   hosts: localhost
   gather_facts: False
-  strategy: free
   roles:
     - role: vsphere/vsphere-deploy-vc-and-hosts
     - role: vsphere/vsphere-datacenter
@@ -15,15 +14,34 @@
       when: 'distributed_switches is defined'
     - role: vsphere/vsphere-distributed-port-groups
       when: 'distributed_switches is defined'
-    ### vSphere with Kuberentes Section
-    - role: vsphere/vsphere-tag-datastore
+
+    # NSX-T Section
+    - role: nsxt/nsxt-manager
+      when: 'nsxt is defined'
+    - role: nsxt/nsxt-ip-pools
+      when: 'nsxt is defined'
+    - role: nsxt/nsxt-uplink-profiles
+      when: 'nsxt is defined'
+    - role: nsxt/nsxt-transport-zones
+      when: 'nsxt is defined'
+    - role: nsxt/nsxt-transport-nodes
+      when: 'nsxt is defined'
+    - role: nsxt/nsxt-edge-clusters
+      when: 'nsxt is defined'
+    - role: nsxt/nsxt-switching-routing
+      when: 'nsxt is defined'
+
+    ### vSphere with Kubernetes Section
+    - role: vsphere-tanzu/vsphere-content-library
       when: 'tkgs is defined'
-    - role: vsphere/vsphere-content-library
+    - role: vsphere-tanzu/vsphere-tag-datastore
       when: 'tkgs is defined'
-    - role: tkgs/tkgs-vyos-router
+    - role: vsphere-tanzu/tkgs-vyos-router
       when: 'tkgs is defined and tkgs.router is defined'
-    - role: tkgs/tkgs-ha-proxy
+    - role: vsphere-tanzu/tkgs-ha-proxy
       when: 'tkgs is defined'
-    - role: tkgs/tkgs-enable-cluster
+    - role: vsphere-tanzu/tkgs-enable-cluster
       when: 'tkgs is defined'
     
+    ### Show outputs at the end
+    - role: display-configuration

@@ -1,5 +1,5 @@
 # path to vCenter installer ISO
-vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.1-16860138.iso"
+vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.1-17327517.iso"
 esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0.0_Appliance_Template_v1.ova"
 
 environment_tag: "full" # Used to prepend object names
@@ -31,6 +31,7 @@ nested_vcenter: # the vCenter appliance that will be deployed
 nested_clusters: # You can add clusters in this section by duplicating the existing cluster
   skinny: # This will be the name of the cluster in the nested  vCenter. Below are the minimum settings.
     # Below are properties of the hosting cluster
+    management_vmk0_vlan: "0"
     hosting_cluster: "Physical" # the cluster where physical ESXi is connected to. The nested VMs will be deployed here
     hosting_datastore: "NVME" # Datastore target for nested ESXi VMs
     cpu_cores: 4 # CPU count
@@ -47,7 +48,8 @@ nested_clusters: # You can add clusters in this section by duplicating the exist
     enable_ha: True
     ha_host_monitoring: enabled
     # Settings below are assigned to each host in the cluster
-    vswitch0_vm_port_group_name: net1
+    management_vmk0_vlan: "0"
+    vswitch0_vm_port_group_name: vm-network
     vswitch0_vm_port_group_vlan: 0
     mgmt_vlan: 0 # VLAN ID used to tag VMK0
     cpu_cores: 4 # CPU count

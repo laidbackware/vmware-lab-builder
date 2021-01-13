@@ -1,0 +1,73 @@
+---
+- name: Create transport node
+  nsxt_transport_nodes:
+    hostname: "{{ nsxt.manager.hostname }}"
+    username: "{{ nsxt.manager.username }}"
+    password: "{{ nsxt.manager.password }}"
+    validate_certs: False
+    display_name: "{{ item.display_name }}"
+    host_switch_spec:
+      resource_type: "StandardHostSwitchSpec"
+      host_switches:
+      - host_switch_profiles:
+        - name: "{{ item.host_switches.tep.uplink_profile_name }}"
+          type: UplinkHostSwitchProfile
+        host_switch_name: "{{ item.host_switches.tep.host_switch_name | default('defaultHostSwitch') }}"
+        host_switch_mode: STANDARD
+        transport_zone_endpoints: "{{ item.host_switches.tep.transport_zone_endpoints }}"
+        pnics:
+        - device_name: "fp-eth2"
+          uplink_name: "uplink-1"
+        ip_assignment_spec: "{{ item.host_switches.tep.ip_assignment_spec }}"
+      - host_switch_profiles:
+        - name: "{{ item.host_switches.uplink.uplink_profile_name }}"
+          type: UplinkHostSwitchProfile
+        host_switch_name: "{{ item.host_switches.uplink.host_switch_name }}"
+        host_switch_mode: STANDARD
+        transport_zone_endpoints: "{{ item.host_switches.uplink.transport_zone_endpoints }}"
+        pnics:
+        - device_name: "fp-eth0"
+          uplink_name: "uplink-1"
+    node_deployment_info:
+      resource_type: EdgeNode
+      deployment_config:
+        form_factor: "{{ item.size }}"
+        node_user_settings:
+          audit_password: "{{ nsxt.manager.password }}"
+          audit_username: audit
+          cli_password: "{{ nsxt.manager.password }}"
+          cli_username: admin
+          root_password: "{{ nsxt.manager.password }}"
+        vm_deployment_config:
+          allow_ssh_root_login: true
+          compute: "{{ item.cluster_name }}"
+          data_networks:
+          - "{{ item.network_uplink_name }}"
+          - "{{ item.network_tep_name }}"
+          - "{{ item.network_tep_name }}"
+          default_gateway_addresses:
+          - "{{ item.mgmt_default_gateway }}"
+          enable_ssh: true
+          hostname: "{{ item.mgmt_ip_address }}"
+          management_network: "{{ item.network_management_name }}"
+          management_port_subnets:
+          - ip_addresses:
+            - "{{ item.mgmt_ip_address }}"
+            prefix_length: "{{ item.mgmt_prefix_length }}"
+          placement_type: VsphereDeploymentConfig
+          storage: "{{ item.datastore_name }}"
+          vc_name: vCenter
+          vc_username: "{{ nested_vcenter.username }}"
+          vc_password: "{{ nested_vcenter.password }}"
+      deployment_type: VIRTUAL_MACHINE
+      display_name: "{{ item.display_name}}"
+    # transport_zone_endpoints: "{{ item.transport_zone_endpoints }}"
+    state: present
+  with_items:
+    - "{{ nsxt.edge_nodes }}"
+  register: result_tn  
+
+# - name: Wait 90 seconds for the Transport node to configure
+#   wait_for:
+#       timeout: 90
+#   when: result_tn.changed

@@ -21,3 +21,15 @@
     force: true
   delegate_to: localhost
   with_items: "{{ nested_hosts }}"
+
+- name: Remove NSX-T Manager VM
+  community.vmware.vmware_guest:
+    hostname: "{{ hosting_vcenter.ip }}"
+    username: "{{ hosting_vcenter.username }}" 
+    password: "{{ hosting_vcenter.password }}" 
+    validate_certs: no
+    name: "{{ environment_tag }}-nsxt-manager"
+    state: absent
+    force: true
+  delegate_to: localhost
+  when: 'nsxt is defined'

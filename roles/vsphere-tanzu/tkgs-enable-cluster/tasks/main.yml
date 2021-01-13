@@ -16,10 +16,10 @@
     haproxy_ca_cert: "{{ vminfo.instance.extra_config['guestinfo.dataplaneapi.cacert'] | b64decode }}"
 
 
-- debug: msg="{{ tkgs }}"
+- debug: var="{{ tkgs }}"
 
 - name: Create vsphere namespace cluster
-  vmware_namespace_cluster_vds_manage:
+  vsphere_tanzu_cluster_enable:
     hostname: "{{ nested_vcenter.ip }}"
     username: "{{ nested_vcenter.username }}"
     password: "{{ nested_vcenter.password }}"
@@ -28,12 +28,10 @@
     cluster_name: "{{ tkgs.vsphere_cluster }}"
     dns_search_domains: "{{ dns_domain }}"
     dns_servers: "{{ tkgs.dns_server_list }}"
-    # haproxy_range_start_address: "172.31.0.128"
-    # haproxy_range_count: 26
     haproxy_range_cidrs: "{{ tkgs.haproxy.service_ip_range.replace(' ', '').split(',') }}" # Encapsulating string for future proofing
     haproxy_ca_chain: "{{ haproxy_ca_cert }}"
-    haproxy_management_ip: "{{ tkgs.haproxy.management_ip.split('/')[0] }}" #TODO haproxy module expects cidr format. This should remove netmask bits
-    haproxy_management_port: "{{ tkgs.haproxy.management_port | default('5556')}}" #TODO haproxy module expects cidr format. This should remove netmask bits
+    haproxy_management_ip: "{{ tkgs.haproxy.management_ip.split('/')[0] }}"
+    haproxy_management_port: "{{ tkgs.haproxy.management_port | default('5556')}}"
     haproxy_password: "{{ tkgs.haproxy.password }}"
     haproxy_username: "{{ tkgs.haproxy.username }}"
     management_address_count: "{{ tkgs.management_address_count | default(5) }}"
@@ -44,8 +42,6 @@
     ntp_servers: "{{ tkgs.ntp_server_list }}"
     workload_gateway: "{{ tkgs.workload_gateway }}"
     workload_portgroup: "{{ tkgs.workload_port_group }}"
-    # workload_range_starting_ip: "172.31.0.32"
-    # workload_range_count: 27
     workload_range_cidrs: "{{ tkgs.workload_range_cidrs }}"
     workload_netmask: "{{ tkgs.workload_netmask }}"
     services_cidr: "{{ tkgs.cluster_ip_services_cidr }}"

@@ -1,0 +1,53 @@
+---
+- name: Deploy compute manager
+  nsxt_fabric_compute_managers:
+      hostname: "{{ nsxt.manager.hostname }}"
+      username: "{{ nsxt.manager.username }}"
+      password: "{{ nsxt.manager.password }}"
+      validate_certs: False
+      display_name: "vCenter"
+      server: "{{ nested_vcenter.ip }}"
+      origin_type: "vCenter"
+      credential:
+        credential_type: UsernamePasswordLoginCredential
+        username: "{{ nested_vcenter.username }}"
+        password: "{{ nested_vcenter.password }}"
+      set_as_oidc_provider: true
+      state: present
+  retries: 12
+  delay: 10
+  register: result
+  until: result is not failed
+
+- name: Create transport node profile
+  nsxt_transport_node_profiles:
+    hostname: "{{ nsxt.manager.hostname }}"
+    username: "{{ nsxt.manager.username }}"
+    password: "{{ nsxt.manager.password }}"
+    validate_certs: False
+    resource_type: TransportNodeProfile
+    display_name: "{{ item.display_name}}"
+    description: "{{ item.description}}"
+    host_switch_spec:
+      resource_type: StandardHostSwitchSpec
+      host_switches: "{{ item.host_switches }}"
+    transport_zone_endpoints: "{{ item.transport_zone_endpoints | default(omit)}}"
+    state: present
+  with_items:
+    - "{{ nsxt.transport_node_profiles }}"
+
+- name: Attach Transport node profile to cluster
+  nsxt_transport_node_collections:
+    hostname: "{{ nsxt.manager.hostname }}"
+    username: "{{ nsxt.manager.username }}"
+    password: "{{ nsxt.manager.password }}"
+    validate_certs: False
+    display_name: "{{ item.display_name }}"
+    resource_type: "TransportNodeCollection"
+    description: "{{ item.description }}"
+    compute_manager_name: "{{ item.compute_manager_name }}"
+    cluster_name: "{{ item.cluster_name }}"
+    transport_node_profile_name: "{{ item.transport_node_profile_name }}"
+    state: present      
+  with_items:
+    - "{{ nsxt.cluster_attach }}"

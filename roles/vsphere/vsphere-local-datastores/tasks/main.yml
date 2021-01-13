@@ -10,14 +10,12 @@
   register: cluster_host_disks
   with_dict: "{{ nested_clusters }}"
 
-- debug: msg="{{cluster_host_disks}}"
-
 - name: Build device lookup table
   set_fact: 
     host_disk_map: >-
       {
       {% for cluster in cluster_host_disks.results %}
-      {% for host_name, disks in cluster.hosts_disk_facts.items() %}
+      {% for host_name, disks in cluster.hosts_disk_info.items() %}
       {% for disk in disks %}
       "{{cluster.invocation.module_args.cluster_name}}_{{host_name}}_{{disk.device_ctd_list[0]}}": 
         "{{disk.canonical_name}}",
@@ -25,8 +23,6 @@
       {% endfor %}
       {% endfor %}
       }
-
-- debug: msg="{{host_disk_map}}"
 
 # Build a list of each datastore to add to each host
 - name: Build datastores to add

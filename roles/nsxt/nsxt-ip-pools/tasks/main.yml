@@ -1,0 +1,19 @@
+---
+- name: Create ip pool
+  nsxt_ip_pools:
+    hostname: "{{ nsxt.manager.hostname }}"
+    username: "{{ nsxt.manager.username }}"
+    password: "{{ nsxt.manager.password }}"
+    validate_certs: False
+    display_name: "{{ item.display_name }}"
+    description: "{{ item.description | default(omit) }}"
+    subnets: "{{ item.subnets }}"
+    state: present
+    tags: "{{ item.tags | default(omit) }}"
+    ip_release_delay: "{{ item.ip_release_delay | default(omit) }}"
+  with_items:
+    - "{{ nsxt.ip_pools }}"
+  register: result
+  retries: 5
+  delay: 10
+  until: "'module_stderr' not in result"

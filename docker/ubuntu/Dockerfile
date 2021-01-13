@@ -1,10 +1,8 @@
-   #  && echo "***** Updating vmware_dvswitch.py to enable creation of vds 7.0 ****" \
-   #  && sed -i "s/'6.6.0']/'6.6.0', '7.0.0']/g" /usr/local/lib/python3.*/dist-packages/ansible_collections/community/vmware/plugins/modules/vmware_dvswitch.py
 FROM ubuntu:20.04
 
 ENV ANSIBLE_VERSION=2.10.*
 
-ENV ANSIBLE_LIBRARY=/repos/ansible-for-nsxt
+ENV ANSIBLE_LIBRARY=/repos/ansible-for-nsxt:/repos/ansible-for-vsphere-tanzu
 ENV ANSIBLE_MODULE_UTILS=/repos/ansible-for-nsxt/module_utils
 
 RUN set -xe \
@@ -29,6 +27,7 @@ RUN set -xe \
     && echo "****** Cloning ansible-for-nsxt ******" \
     && mkdir /repos \
     && git clone --branch vmware-lab-builder https://github.com/laidbackware/ansible-for-nsxt.git /repos/ansible-for-nsxt \
+    && git clone https://github.com/laidbackware/ansible-for-vsphere-tanzu.git /repos/ansible-for-vsphere-tanzu \
     \
     && echo "****** Removing build tools ******" \
     && apt remove -y build-essential python3-pip python3-dev git \

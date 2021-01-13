@@ -1,4 +1,7 @@
 ---
+
+- debug: msg="Deploying the following ESXi hosts {{ nested_hosts }}"
+
 - name: Deploy ESXi
   community.vmware.vmware_deploy_ovf:
     hostname: "{{ hosting_vcenter.ip }}"
@@ -25,7 +28,7 @@
       guestinfo.ipaddress: "{{ item.ip }} "
       guestinfo.netmask: "{{ item.mask }}"
       guestinfo.gateway: "{{ item.gw }}"
-      guestinfo.vlan: "{{ nested_clusters[item.nested_cluster].mgmt_vlan | default(0) }}"
+      guestinfo.vlan: "{{ nested_clusters[item.nested_cluster].management_vmk0_vlan | default(0) }}"
       guestinfo.dns: "{{ dns_server }}"
       guestinfo.domain: "{{ dns_domain }}"
       guestinfo.ntp: "{{ ntp_server_ip }}"
@@ -60,6 +63,8 @@
   with_items: "{{ nested_hosts }}"
 
 - debug: msg="{{ disk_info }}"
+
+- debug: msg="Configuring ESXi hosts to cluster spec > {{ nested_clusters }}"
 
 # Build list of hosts with disks to be added, inlcuding the 3 base disks
 # This is because the base ESXi OVA comes with 2 extra disks which might not be needed
@@ -147,7 +152,7 @@
     datacenter: "{{ hosting_vcenter.datacenter }}"
     name: "{{ environment_tag }}-{{ item.name }}"
     hardware:
-      memory_mb: "{{ nested_clusters[item.nested_cluster].ram_in_gb  *1024 }}"
+      memory_mb: "{{ nested_clusters[item.nested_cluster].ram_in_gb | int  *1024 }}"
       num_cpus: "{{ nested_clusters[item.nested_cluster].cpu_cores }}"
     networks: "{{nested_clusters[item.nested_cluster].vmnic_physical_portgroup_assignment }}"
   delegate_to: localhost
@@ -167,21 +172,23 @@
   poll: 0
   register: hosts_power_on_result
 
+- name: Check if vCenter already exists so install steps can be skipped
+  uri:
+    url: "https://{{ nested_vcenter.ip }}/ui/"
+    method: GET
+    status_code: 200
+    timeout: 2
+    validate_certs: False
+  ignore_errors: True
+  register: vcenter_response
+
+- set_fact:
+    vcenter_exists={{vcenter_response.status == 200}}
+
 - name: vCenter install and configure tasks
+  when: not vcenter_exists
   block: 
-
-  - name: Check if vCenter already exists so install steps can be skipped
-    uri:
-      url: "https://{{ nested_vcenter.ip }}/ui/"
-      method: GET
-      status_code: 200
-      timeout: 2
-      validate_certs: False
-    ignore_errors: True
-    register: vcenter_response
-
-  - set_fact:
-      vcenter_exists={{vcenter_response.status == 200}}
+  - debug: var=nested_vcenter
 
   - name: Create temporary build directory
     tempfile:
@@ -200,7 +207,6 @@
 
   - name: Extract VCSA ISO image
     command: bsdtar -xf {{vc_iso}} -C {{tmp_dir}}/vcsa
-    when: not vcenter_exists
   
   - name: Set permissions
     file: dest={{tmp_dir}}/vcsa mode=777 recurse=yes
@@ -209,25 +215,27 @@
     template: 
       src=embedded_vCSA_on_VC_6.7.json
       dest={{tmp_dir}}/vCSA_on_ESXi.json 
-    when: vc_iso is search("-6.7.") and not vcenter_exists
+    when: vc_iso is search("-6.7.")
 
   - name: Create JSON template file for VCSA 7.0 with embeded PSC
     template: 
       src=embedded_vCSA_on_VC_7.0.json
       dest={{tmp_dir}}/vCSA_on_ESXi.json
-    when: vc_iso is search("-7.0.") and not vcenter_exists
+    when: vc_iso is search("-7.0.")
 
   - name: Perform VC CLI Install
     command: "bash ./vcsa-deploy install --accept-eula --no-esx-ssl-verify {{tmp_dir}}/vCSA_on_ESXi.json"
     args:
       chdir: '{{tmp_dir}}/vcsa/vcsa-cli-installer/lin64/'
-    when: not vcenter_exists
     async: 3600
     poll: 0
     register: vcenter_result
 
-  - debug: msg="The vCenter deployment can take a long time.\nYou can check progress at https://{{nested_vcenter.ip}}:5480 after the vCenter VM has booted.\nFor detailed output browse to the most recent folder starting with vcsaCliInstaller under /tmp and follow vcsa-cli-installer.log "
-    when: not vcenter_exists
+  - debug: 
+      msg:
+      - "The vCenter deployment can take a long time."
+      - "You can check progress at https://{{nested_vcenter.ip}}:5480 after the vCenter VM has booted."
+      - "For detailed output browse to the most recent folder starting with vcsaCliInstaller under /tmp and follow vcsa-cli-installer.log "
 
   - name: Result check for deployment of vCenter task
     async_status:
@@ -236,7 +244,6 @@
     until: job_result.finished    
     retries: 600
     delay: 15
-    when: not vcenter_exists
   
   - name: Check if the vSphere API is online
     uri:
@@ -254,7 +261,6 @@
   - name: Wait 30 seconds for the vCenter to settle
     wait_for:
       timeout: 30
-    when: not vcenter_exists
 
   always:
   - name: Use the registered var and the file module to remove the temporary file
