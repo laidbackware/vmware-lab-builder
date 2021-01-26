@@ -33,8 +33,7 @@
       host_switches: "{{ item.host_switches }}"
     transport_zone_endpoints: "{{ item.transport_zone_endpoints | default(omit)}}"
     state: present
-  with_items:
-    - "{{ nsxt.transport_node_profiles }}"
+  loop: "{{ nsxt.transport_node_profiles }}"
 
 - name: Attach Transport node profile to cluster
   nsxt_transport_node_collections:
@@ -49,5 +48,4 @@
     cluster_name: "{{ item.cluster_name }}"
     transport_node_profile_name: "{{ item.transport_node_profile_name }}"
     state: present      
-  with_items:
-    - "{{ nsxt.cluster_attach }}"
+  loop: "{{ nsxt.cluster_attach }}"

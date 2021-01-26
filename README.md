@@ -51,7 +51,7 @@ docker run --rm \
 ```
 
 ### Destroying
-To destroy run use destroy.yml. E.g. `ansible-playbook destroy.yml --extra-vars="@var-examples/vsphere-base/1host-minimal-opinionated.yml"`
+To destroy use destroy.yml. E.g. `ansible-playbook destroy.yml --extra-vars="@var-examples/vsphere-base/1host-minimal-opinionated.yml"`
 
 ## Troubleshooting
 The vCenter install can take a long time. You can check the progress by browsing to https://<vcenter IP>:5480. If the vCenter install fails, check the `vcsa-cli-installer.log` file which can be found in a created directory under /tmp.<br/>

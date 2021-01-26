@@ -12,7 +12,7 @@
       resource_type: EdgeHighAvailabilityProfile
     members: "{{ item.edge_cluster_members }}"
     state: present
-  with_items: "{{ nsxt.edge_clusters }}"
+  loop: "{{ nsxt.edge_clusters }}"
   retries: 12
   delay: 10
   until: "'rc' not in edge_cluster_result"

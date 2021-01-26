@@ -20,7 +20,7 @@
     state: absent
     force: true
   delegate_to: localhost
-  with_items: "{{ nested_hosts }}"
+  loop: "{{ nested_hosts }}"
 
 - name: Remove NSX-T Manager VM
   community.vmware.vmware_guest:

@@ -10,7 +10,7 @@
     transport_zone_display_name: "{{ item.transport_zone_display_name }}"
     vlan_ids: "{{ item.vlan_ids }}"
     tags: "{{ item.tags | default(omit) }}"
-  with_items: "{{ nsxt.uplink_segments }}"
+  loop: "{{ nsxt.uplink_segments }}"
     
 
 - name: Create Tier 0 Gateway
@@ -43,7 +43,7 @@
     state: present
     transport_zone_display_name: "{{ item.transport_zone_display_name }}"
     tags: "{{ item.tags | default(omit) }}"
-  with_items: "{{ nsxt.overlay_segments }}"
+  loop: "{{ nsxt.overlay_segments }}"
 
 - debug: var=nsxt.tier_1_gateways
 
@@ -67,4 +67,4 @@
     tier0_display_name: "{{ item.tier0_display_name }}"
     locale_services: "{{ item.locale_services | default(omit) }}"
     tags: "{{ item.tags | default(omit) }}"
-  with_items: "{{ nsxt.tier_1_gateways }}"
+  loop: "{{ nsxt.tier_1_gateways }}"

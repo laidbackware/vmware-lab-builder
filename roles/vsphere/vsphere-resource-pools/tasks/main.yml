@@ -26,5 +26,5 @@
     cluster: "{{ item.cluster_name }}"
     resource_pool: "{{ item.resource_pool }}"
     state: present
-  with_items: "{{ resource_pools_to_add }}"
+  loop: "{{ resource_pools_to_add }}"
   delegate_to: localhost

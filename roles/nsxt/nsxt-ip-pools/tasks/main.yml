@@ -11,8 +11,7 @@
     state: present
     tags: "{{ item.tags | default(omit) }}"
     ip_release_delay: "{{ item.ip_release_delay | default(omit) }}"
-  with_items:
-    - "{{ nsxt.ip_pools }}"
+  loop: "{{ nsxt.ip_pools }}"
   register: result
   retries: 5
   delay: 10

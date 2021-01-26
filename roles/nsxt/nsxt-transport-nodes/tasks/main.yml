@@ -87,8 +87,7 @@
     state: present
   async: 1800
   poll: 0
-  with_items:
-    - "{{ nsxt.edge_nodes }}"
+  loop: "{{ nsxt.edge_nodes }}"
   register: edge_node_results
 
 - debug: msg="Creating transport node profiles {{ nsxt.transport_node_profiles }}"
@@ -107,8 +106,7 @@
       host_switches: "{{ item.host_switches }}"
     transport_zone_endpoints: "{{ item.transport_zone_endpoints | default(omit)}}"
     state: present
-  with_items:
-    - "{{ nsxt.transport_node_profiles }}"
+  loop: "{{ nsxt.transport_node_profiles }}"
 
 - debug: msg="Attaching transport node profiles {{ nsxt.cluster_attach }}"
 
@@ -125,14 +123,13 @@
     cluster_name: "{{ item.cluster_name }}"
     transport_node_profile_name: "{{ item.transport_node_profile_name }}"
     state: present      
-  with_items:
-    - "{{ nsxt.cluster_attach }}"
+  loop: "{{ nsxt.cluster_attach }}"
 
 - name: Result check for deployment of edge nodes
   async_status:
     jid: "{{ item.ansible_job_id }}"
   register: job_result
   until: job_result.finished
-  with_items: "{{ edge_node_results.results }}"
+  loop: "{{ edge_node_results.results }}"
   retries: 180
   delay: 10

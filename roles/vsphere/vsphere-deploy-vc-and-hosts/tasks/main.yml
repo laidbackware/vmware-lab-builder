@@ -36,7 +36,7 @@
       guestinfo.password: "{{ nested_host_password }}"
       guestinfo.ssh: "True"
       guestinfo.createvmfs: "False"
-  with_items: "{{ nested_hosts }}"
+  loop: "{{ nested_hosts }}"
   async: 7200
   poll: 0
   register: hosts_results
@@ -46,7 +46,7 @@
     jid: "{{ item.ansible_job_id }}"
   register: job_result
   until: job_result.finished
-  with_items: "{{ hosts_results.results }}"
+  loop: "{{ hosts_results.results }}"
   retries: 100
   delay: 15
 
@@ -60,11 +60,13 @@
     name: "{{ environment_tag }}-{{ item.name }}"
   delegate_to: localhost
   register: disk_info
-  with_items: "{{ nested_hosts }}"
+  loop: "{{ nested_hosts }}"
 
-- debug: msg="{{ disk_info }}"
 
-- debug: msg="Configuring ESXi hosts to cluster spec > {{ nested_clusters }}"
+- debug: 
+    msg: 
+      - "Configuring ESXi hosts to cluster spec"
+      - "{{ nested_clusters }}"
 
 # Build list of hosts with disks to be added, inlcuding the 3 base disks
 # This is because the base ESXi OVA comes with 2 extra disks which might not be needed
@@ -104,7 +106,7 @@
     name: "{{ item.esxi_vm_name }}"
     disk: "{{ item.disks }}"
   delegate_to: localhost
-  with_items: "{{ disks_to_remove }}"
+  loop: "{{ disks_to_remove }}"
 
 # Build list of hosts with disks to be added, including the base disk
 - name: Build list of disks to add/modify
@@ -141,7 +143,7 @@
     disk: "{{ item.disks }}"
   delegate_to: localhost
   register: deploy_vm
-  with_items: "{{ disks_to_add }}"
+  loop: "{{ disks_to_add }}"
 
 - name: Edit VM CPU, Memory and networks
   community.vmware.vmware_guest:
@@ -156,7 +158,7 @@
       num_cpus: "{{ nested_clusters[item.nested_cluster].cpu_cores }}"
     networks: "{{nested_clusters[item.nested_cluster].vmnic_physical_portgroup_assignment }}"
   delegate_to: localhost
-  with_items: "{{ nested_hosts }}"
+  loop: "{{ nested_hosts }}"
 
 - name: Set the state of a virtual machine to power on
   community.vmware.vmware_guest_powerstate:
@@ -167,7 +169,7 @@
     name: "{{ environment_tag }}-{{ item.name }}"
     state: powered-on
   delegate_to: localhost
-  with_items: "{{ nested_hosts }}"
+  loop: "{{ nested_hosts }}"
   async: 7200
   poll: 0
   register: hosts_power_on_result
@@ -188,7 +190,10 @@
 - name: vCenter install and configure tasks
   when: not vcenter_exists
   block: 
-  - debug: var=nested_vcenter
+  - debug: 
+      msg:
+        - "Deploying vCenter to spec"
+        - "{{ nested_vcenter }}"
 
   - name: Create temporary build directory
     tempfile:
@@ -274,7 +279,7 @@
     jid: "{{ item.ansible_job_id }}"
   register: job_result
   until: job_result.finished
-  with_items: "{{ hosts_power_on_result.results }}"
+  loop: "{{ hosts_power_on_result.results }}"
   retries: 100
   delay: 15
 
@@ -289,4 +294,4 @@
   delay: 10
   register: result_host_check
   until: result_host_check.status == 200
-  with_items: "{{ nested_hosts }}"
+  loop: "{{ nested_hosts }}"

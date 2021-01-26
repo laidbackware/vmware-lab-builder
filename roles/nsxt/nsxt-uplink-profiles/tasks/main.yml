@@ -11,5 +11,4 @@
     teaming: "{{ item.teaming }}"
     transport_vlan: "{{ item.transport_vlan }}"
     state: "present"
-  with_items:
-    - "{{ nsxt.uplink_profiles }}"  
+  loop: "{{ nsxt.uplink_profiles }}"  

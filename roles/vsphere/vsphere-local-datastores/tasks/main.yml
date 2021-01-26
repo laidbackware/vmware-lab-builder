@@ -57,4 +57,4 @@
     esxi_hostname: "{{ item.host_name }}"
     state: present
   delegate_to: localhost
-  with_items: "{{ datastores_to_add }}"
+  loop: "{{ datastores_to_add }}"

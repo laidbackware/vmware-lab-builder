@@ -30,7 +30,7 @@
     num_ports: 8
     portgroup_type: earlyBinding
     state: present
-  with_items: "{{ vds_port_groups }}"
+  loop: "{{ vds_port_groups }}"
   delegate_to: localhost
   when: 'distributed_switches is defined'
     

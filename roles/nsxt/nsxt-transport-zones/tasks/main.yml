@@ -13,5 +13,4 @@
     nested_nsx: "{{ item.nested_nsx | default(omit) }}"
     state: "present"
     tags: "{{ item.tags | default(omit) }}"
-  with_items:
-    - "{{ nsxt.transport_zones }}"
+  loop: "{{ nsxt.transport_zones }}"

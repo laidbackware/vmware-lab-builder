@@ -63,8 +63,7 @@
       display_name: "{{ item.display_name}}"
     # transport_zone_endpoints: "{{ item.transport_zone_endpoints }}"
     state: present
-  with_items:
-    - "{{ nsxt.edge_nodes }}"
+  loop: "{{ nsxt.edge_nodes }}"
   register: result_tn  
 
 # - name: Wait 90 seconds for the Transport node to configure

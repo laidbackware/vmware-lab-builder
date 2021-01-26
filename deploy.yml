@@ -3,6 +3,7 @@
   hosts: localhost
   gather_facts: False
   roles:
+    # Base vsphere section
     - role: vsphere/vsphere-deploy-vc-and-hosts
     - role: vsphere/vsphere-datacenter
     - role: vsphere/vsphere-clusters
