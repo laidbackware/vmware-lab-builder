@@ -1,0 +1,35 @@
+---
+# Build a list of each datastore to add to each host
+- name: Build datastores to add
+  set_fact: 
+    datastores_to_add: >-
+      [
+      {% for host in nested_hosts %}
+      {% if "nfs_datastores" in  nested_clusters[host.nested_cluster] %}
+      {% for datastore in nested_clusters[host.nested_cluster].nfs_datastores  %}
+      {
+        "host_name": "{{ host.ip }}",
+        "name": "{{datastore.name}}",
+        "host": "{{datastore.host}}",
+        "path": "{{datastore.path}}",
+      },
+      {% endfor %}
+      {% endif %}
+      {% endfor %}
+      ]
+
+- name: Mount NFS3 datastores to ESXi
+  community.vmware.vmware_host_datastore:
+    hostname: "{{ nested_vcenter.ip }}"
+    username: "{{ nested_vcenter.username }}"
+    password: "{{ nested_vcenter.password }}"
+    validate_certs: False
+    datastore_name: "{{ item.name }}"
+    datastore_type: "nfs"
+    nfs_server: '{{ item.host }}'
+    nfs_path: '{{ item.path }}'
+    nfs_ro: no
+    esxi_hostname: "{{ item.host_name }}"
+    state: present
+  delegate_to: localhost
+  loop: "{{ datastores_to_add }}"

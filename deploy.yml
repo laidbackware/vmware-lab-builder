@@ -9,6 +9,7 @@
     - role: vsphere/vsphere-clusters
     - role: vsphere/vsphere-vswitch0-port-groups
     - role: vsphere/vsphere-local-datastores
+    - role: vsphere/vsphere-nfs-datastores
     - role: vsphere/vsphere-enable-cluster-services
     - role: vsphere/vsphere-resource-pools
     - role: vsphere/vsphere-distributed-switches

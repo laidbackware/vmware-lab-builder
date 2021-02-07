@@ -1,0 +1,87 @@
+# path to vCenter installer ISO
+vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.1-17327517.iso"
+esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0.1_Appliance_Template_v1.ova"
+
+environment_tag: "minimal" # Used to prepend object names
+dns_server: "192.168.0.110"
+dns_domain: "home.local"
+ntp_server_ip: "192.168.0.1"
+disk_mode: thin #How all disks should be deployed
+nested_host_password: "{{ opinionated.master_password }}"
+
+hosting_vcenter: # This is the vCenter which will be the target for nested vCenters and ESXi hosts
+  ip: "192.168.0.113"
+  username: "{{ lookup('env', 'PARENT_VCENTER_USERNAME') }}"
+  password: "{{ lookup('env', 'PARENT_VCENTER_PASSWORD') }}"
+  datacenter: "Home" # Target for all VM deployment
+
+# This section is only referenced by other variables in this file
+opinionated:
+  master_password: "VMware1!"
+  number_of_hosts: 2
+  nested_hosts:
+    cpu_cores: 4 # CPU count
+    ram_in_gb: 16 # memory
+  hosting_cluster: Physical
+  hosting_datastore: NVME
+  hosting_network:
+    base:
+      port_group: Nest
+      cidr: "192.168.0.0/22"
+      gateway: "192.168.0.1"
+      # Minimal deployment requires 1 IPs, plus 1 per esxi host. They MUST be contiguous.
+      starting_addr: "192.168.0.180"
+
+#####################################################################
+### No need to edit below this line for an opinionated deployment ###
+#####################################################################
+
+nested_vcenter: # the vCenter appliance that will be deployed
+  ip: "{{ opinionated.hosting_network.base.starting_addr }}" # vCenter ip address 
+  mask: "{{ opinionated.hosting_network.base.cidr.split('/')[1] }}"
+  gw: "{{ opinionated.hosting_network.base.gateway }}"
+  host_name: "{{ opinionated.hosting_network.base.starting_addr }}" # FQDN if there is working DNS server, otherwise put the ip as a name
+  username: "administrator@vsphere.local" 
+  password: "{{ opinionated.master_password }}"
+  datacenter: "Lab" # DC to create after deployment
+  # Below are properties of parent cluster
+  hosting_network: "{{ opinionated.hosting_network.base.port_group }}" # Parent port group where the vCenter VM will be deployed
+  hosting_cluster: "{{ opinionated.hosting_cluster }}" # Parent cluster where the vCenter VM will be deployed
+  hosting_datastore: "{{ opinionated.hosting_datastore }}" # Parent datastore where the vCenter VM will be deployed
+  
+nested_clusters: # You can add clusters in this section by duplicating the existing cluster
+  compute: # This will be the name of the cluster in the nested  vCenter. Below are the minimum settings.
+    # Below are properties of the hosting cluster
+    hosting_cluster: "{{ opinionated.hosting_cluster }}" # the cluster where physical ESXi is connected to. The nested VMs will be deployed here
+    hosting_datastore: "{{ opinionated.hosting_datastore }}" # Datastore target for nested ESXi VMs
+    # Settings below are assigned to each host in the cluster
+    cpu_cores: "{{ opinionated.nested_hosts.cpu_cores }}" # CPU count
+    ram_in_gb: "{{ opinionated.nested_hosts.ram_in_gb }}" # memory
+    # Added in vmnic order, these port groups must exist on the physical host
+    # Must specify at least 2 port groups, up to a maximum of 10
+    vmnic_physical_portgroup_assignment: 
+      - name: "{{ opinionated.hosting_network.base.port_group }}"
+      - name: "{{ opinionated.hosting_network.base.port_group }}"
+    nfs_datastores:
+      - name: nfs01
+        host: nas.homelab.local
+        path: /mnt/nfs01
+      - name: nfs02
+        host: nas.homelab.local
+        path: /mnt/nfs02
+
+opinionated_host_ip_ofset: 1
+# You can add nested ESXi hosts below
+nested_hosts: >-
+  [
+    {% for host_number in range(opinionated.number_of_hosts) %}
+    {
+      "name": "esx{{ host_number + 1 }}",
+      "ip": "{{ opinionated.hosting_network.base.starting_addr | ipmath(opinionated_host_ip_ofset + host_number) }}",
+      "mask": "{{ opinionated.hosting_network.base.cidr | ansible.netcommon.ipaddr('netmask') }}",
+      "gw": "{{ opinionated.hosting_network.base.gateway }}",
+      "nested_cluster": "compute"
+
+    },
+    {% endfor %}
+  ]
