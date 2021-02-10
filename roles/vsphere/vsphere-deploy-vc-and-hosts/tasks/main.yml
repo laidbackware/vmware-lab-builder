@@ -232,7 +232,7 @@
     command: "bash ./vcsa-deploy install --accept-eula --no-esx-ssl-verify {{tmp_dir}}/vCSA_on_ESXi.json"
     args:
       chdir: '{{tmp_dir}}/vcsa/vcsa-cli-installer/lin64/'
-    async: 3600
+    async: 9000
     poll: 0
     register: vcenter_result
 

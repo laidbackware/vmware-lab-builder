@@ -33,18 +33,6 @@
   retries: 3
   delay: 5
 
-- name: Create overlay segments
-  nsxt_policy_segment:
-    hostname: "{{ nsxt.manager.hostname }}"
-    username: "{{ nsxt.manager.username }}"
-    password: "{{ nsxt.manager.password }}"
-    validate_certs: False
-    display_name: "{{ item.display_name }}"
-    state: present
-    transport_zone_display_name: "{{ item.transport_zone_display_name }}"
-    tags: "{{ item.tags | default(omit) }}"
-  loop: "{{ nsxt.overlay_segments }}"
-
 - debug: var=nsxt.tier_1_gateways
 
 - name: Create Tier 1 Gateways
@@ -59,12 +47,23 @@
     disable_firewall: "{{ item.disable_firewall | default(omit) }}"
     force_whitelisting: "{{ item.force_whitelisting | default(omit) }}"
     enable_standby_relocation: "{{ item.enable_standby_relocation | default(omit) }}"
-    route_advertisement_rules: "{{ item.enable_standby_relocation | default(omit) }}"
-    route_advertisement_types:
-        - "TIER1_STATIC_ROUTES"
-        - "TIER1_CONNECTED"
-        - "TIER1_NAT"
+    route_advertisement_rules: "{{ item.route_advertisement_rules | default(omit) }}"
+    route_advertisement_types: "{{ item.route_advertisement_types | default(omit) }}"
     tier0_display_name: "{{ item.tier0_display_name }}"
-    locale_services: "{{ item.locale_services | default(omit) }}"
+    # locale_services: "{{ item.locale_services | default(omit) }}"
     tags: "{{ item.tags | default(omit) }}"
   loop: "{{ nsxt.tier_1_gateways }}"
+
+- name: Create overlay segments
+  nsxt_policy_segment:
+    hostname: "{{ nsxt.manager.hostname }}"
+    username: "{{ nsxt.manager.username }}"
+    password: "{{ nsxt.manager.password }}"
+    validate_certs: False
+    display_name: "{{ item.display_name }}"
+    state: present
+    subnets: "{{ item.subnets | default(omit) }}"
+    tier1_display_name: "{{ item.tier1_display_name | default(omit) }}"
+    transport_zone_display_name: "{{ item.transport_zone_display_name }}"
+    tags: "{{ item.tags | default(omit) }}"
+  loop: "{{ nsxt.overlay_segments }}"
