@@ -1,9 +1,9 @@
 # SOFTWARE_DIR must contain all needed software
-vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.1-17327517.iso"
+vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.1-17004997.iso"
 esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0.1_Appliance_Template_v1.ova"
 nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-3.1.0.0.0.17107171.ova"
 
-environment_tag: "nsxt" # Used to prepend object names
+environment_tag: "tkg-nsxt" # Used to prepend object names
 dns_server: "192.168.0.110"
 dns_domain: "home.local"
 ntp_server_ip: "192.168.0.1" # Must be set to an IP address!
@@ -21,8 +21,8 @@ opinionated:
   master_password: "VMware1!"
   number_of_hosts: 1 # number of ESXi VMs to deploy
   nested_hosts:
-    cpu_cores: 4 # CPU count per nested host
-    ram_in_gb: 32 # memory per nested host
+    cpu_cores: 8 # CPU count per nested host
+    ram_in_gb: 192 # memory per nested host
     local_disks: # (optional) this section can be removed to not modify local disks
       - size_gb: 200
         datastore_prefix: "datastore" # omit this to not have a datastore created
@@ -34,11 +34,11 @@ opinionated:
       cidr: "192.168.0.0/22"
       gateway: "192.168.0.1"
       # A NSX-T deployment requires 4 IPs, plus 1 per esxi host. They MUST be contiguous.
-      starting_addr: "192.168.0.120"
+      starting_addr: "192.168.0.140"
     nsxt_tep:
       port_group: TEP
       vlan_id: 0
-      cidr: "172.16.0.0/24" # IP calculation depends on this being a /24
+      cidr: "172.31.255.0/24" # IP calculation depends on this being a /24
   nsxt:
     tier0_gateway_name: test-t0
     tier1_gateways:

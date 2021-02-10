@@ -28,7 +28,7 @@
           ],
           "username": "{{ nsxt.manager.username }}",
           "password": "{{ nsxt.manager.password }}",
-          {% if "tier_0" in nsxt and "locale_services" in nsxt.tier_0 and "interfaces" in nsxt.tier_0.locale_services %}
+          {% if "tier_0" in nsxt and "locale_services" in nsxt.tier_0 and "interfaces" in nsxt.tier_0.locale_services[0] %}
           "t0_uplink": "{{ nsxt.tier_0.locale_services[0].interfaces[0].subnets[0].ip_addresses[0] }}"
           {% endif %}
         },
