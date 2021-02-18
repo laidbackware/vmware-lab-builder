@@ -22,6 +22,13 @@ opinionated:
   nested_hosts:
     cpu_cores: 4 # CPU count
     ram_in_gb: 16 # memory
+    nfs_datastores:
+      - datastore_name: nfs01
+        nfs_server: nas.homelab.local
+        nfs_path: /mnt/nfs01
+      - datastore_name: nfs02
+        nfs_server: nas.homelab.local
+        nfs_path: /mnt/nfs02
   hosting_cluster: Physical
   hosting_datastore: NVME
   hosting_network:
@@ -62,13 +69,7 @@ nested_clusters: # You can add clusters in this section by duplicating the exist
     vmnic_physical_portgroup_assignment: 
       - name: "{{ opinionated.hosting_network.base.port_group }}"
       - name: "{{ opinionated.hosting_network.base.port_group }}"
-    nfs_datastores:
-      - name: nfs01
-        host: nas.homelab.local
-        path: /mnt/nfs01
-      - name: nfs02
-        host: nas.homelab.local
-        path: /mnt/nfs02
+    nfs_datastores: "{{ opinionated.nested_hosts.nfs_datastores }}"
 
 opinionated_host_ip_ofset: 1
 # You can add nested ESXi hosts below

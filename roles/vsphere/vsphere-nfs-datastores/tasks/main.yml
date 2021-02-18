@@ -9,9 +9,9 @@
       {% for datastore in nested_clusters[host.nested_cluster].nfs_datastores  %}
       {
         "host_name": "{{ host.ip }}",
-        "name": "{{datastore.name}}",
-        "host": "{{datastore.host}}",
-        "path": "{{datastore.path}}",
+        "datastore_name": "{{datastore.datastore_name}}",
+        "nfs_server": "{{datastore.nfs_server}}",
+        "nfs_path": "{{datastore.nfs_path}}",
       },
       {% endfor %}
       {% endif %}
@@ -24,10 +24,10 @@
     username: "{{ nested_vcenter.username }}"
     password: "{{ nested_vcenter.password }}"
     validate_certs: False
-    datastore_name: "{{ item.name }}"
+    datastore_name: "{{ item.datastore_name }}"
     datastore_type: "nfs"
-    nfs_server: '{{ item.host }}'
-    nfs_path: '{{ item.path }}'
+    nfs_server: '{{ item.nfs_server }}'
+    nfs_path: '{{ item.nfs_path }}'
     nfs_ro: no
     esxi_hostname: "{{ item.host_name }}"
     state: present
