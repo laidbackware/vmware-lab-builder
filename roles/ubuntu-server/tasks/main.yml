@@ -1,0 +1,67 @@
+---
+- name: Deploy Ubuntu OVA
+  vmware_deploy_ovf:
+    hostname: "{{ vcsa_hostname }}"
+    username: "{{ vcsa_username }}"
+    password: "{{ vcsa_password }}"
+    validate_certs: no
+    name: "{{ ubuntu_vm_name }}"
+    cluster: "{{ cluster }}"
+    datacenter: "{{ datacenter }}"
+    datastore: "{{ datastore }}"
+    disk_provisioning: thin
+    networks: "{u'VM Network':u'{{ ubuntu_vm_network }}'}"
+    ova: "{{ ubuntu_ova }}" 
+    allow_duplicates: no
+    power_on: no
+    fail_on_spec_warnings: no
+    wait: yes
+    wait_for_ip_address: yes
+    inject_ovf_env: yes
+    properties:
+      user-data: "{{ lookup('template', 'cloud_init_config.j2') | b64encode }}"
+  delegate_to: localhost
+  register: vm_instance_data
+
+- name: Get Ubuntu VM UUID 
+  set_fact:
+    vm_uuid: "{{ vm_instance_data.hw_product_uuid }}"
+
+- name: Configure Ubuntu VM resources
+  vmware_guest:
+    hostname: "{{ vcsa_hostname }}"
+    username: "{{ vcsa_username }}"
+    password: "{{ vcsa_password }}"
+    validate_certs: no
+    uuid: "{{ vm_uuid }}"
+    state: "present"
+    hardware:
+      memory_mb: "{{ ubuntu_vm_memory }}"
+      num_cpus: "{{ ubuntu_vm_cpus }}"
+    disk: 
+    - size_gb: "{{ ubuntu_vm_disk_size }}"
+  delegate_to: "localhost"
+
+- name: Power on Ubuntu VM
+  community.vmware.vmware_guest_powerstate:
+    hostname: "{{ vcsa_hostname }}"
+    username: "{{ vcsa_username }}"
+    password: "{{ vcsa_password }}"
+    validate_certs: no
+    uuid: "{{ vm_uuid }}"
+    state: powered-on
+  delegate_to: localhost
+
+- name: Wait for port 22 to become open and contain "OpenSSH"
+  wait_for:
+    port: 22
+    host: "{{ ubuntu_client_ip_address | ansible.netcommon.ipaddr('address')  }}"
+    search_regex: OpenSSH
+    delay: 10
+
+- name: Add host to harbor group
+  add_host:
+    name: "{{ ubuntu_client_ip_address | ansible.netcommon.ipaddr('address')  }}"
+    groups: "{{ inventory_host_group }}"
+    ansible_user: "{{ ubuntu_client_username }}"
+    ansible_password: "{{ ubuntu_client_password }}"
