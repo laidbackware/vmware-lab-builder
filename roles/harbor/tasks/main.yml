@@ -94,7 +94,7 @@
     dest: "{{ temp_dir.path }}/harbor/harbor.yml"
 
 - name: Install harbor
-  command: "{{ temp_dir.path }}/harbor/install.sh"
+  command: "{{ temp_dir.path }}/harbor/install.sh --with-chartmuseum"
 
 - name: Delete temporary dir
   file:
