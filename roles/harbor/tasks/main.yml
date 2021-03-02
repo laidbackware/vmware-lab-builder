@@ -1,4 +1,8 @@
 ---
+- name: upgrade apt repositories
+  apt:
+    update_cache: true
+
 - name: install docker CE dependencies
   apt:
     name:
@@ -100,3 +104,8 @@
   file:
     state: absent
     path: "{{temp_dir.path}}/"
+
+- name: cleanup apt packages
+  apt:
+    autoclean: true
+    autoremove: true

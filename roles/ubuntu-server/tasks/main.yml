@@ -63,5 +63,6 @@
   add_host:
     name: "{{ ubuntu_client_ip_address | ansible.netcommon.ipaddr('address')  }}"
     groups: "{{ inventory_host_group }}"
+    ansible_connection: ssh
     ansible_user: "{{ ubuntu_client_username }}"
     ansible_password: "{{ ubuntu_client_password }}"

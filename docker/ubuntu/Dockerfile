@@ -4,12 +4,17 @@ ENV ANSIBLE_VERSION=2.10.*
 
 ENV ANSIBLE_LIBRARY=/repos/ansible-for-nsxt:/repos/ansible-for-vsphere-tanzu
 ENV ANSIBLE_MODULE_UTILS=/repos/ansible-for-nsxt/module_utils
+ENV ANSIBLE_HOST_KEY_CHECKING=False
 
 RUN set -xe \
     && echo "****** Install system dependencies ******" \
     && apt update \
     && apt install -y --no-install-recommends \
-         python3 ca-certificates iputils-ping python3-apt libarchive-tools \
+         python3 python3-jmespath ca-certificates iputils-ping python3-apt libarchive-tools \
+    \
+    && echo "****** Install Ansible dependencies ******" \
+    && apt install -y \
+         sshpass \
     \
     && echo "****** Install Python dependencies ******" \
     && apt install -y --no-install-recommends \

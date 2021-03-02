@@ -1,6 +1,6 @@
 #cloud-config
-package_update: true
-package_upgrade: true
+package_update: false
+package_upgrade: false
 
 hostname: {{ ubuntu_client_hostname }}
 fqdn: {{ ubuntu_client_hostname}}
@@ -24,6 +24,7 @@ write_files:
         version: 2
         ethernets:
           ens192:
+            dhcp4: false
             addresses:
             - {{ ubuntu_client_ip_address }}
             gateway4: {{ ubuntu_client_gateway }}
