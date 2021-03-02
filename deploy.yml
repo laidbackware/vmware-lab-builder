@@ -48,9 +48,6 @@
     # Harbor section
     - role: harbor-vm
       when: 'harbor is defined'
-    
-    ### Show outputs at the end
-    - role: display-configuration
 
 - name:  Setup Harbor
   hosts: harbor
@@ -58,3 +55,10 @@
   roles:
     - role: harbor
       when: 'harbor is defined'
+
+- name: Display Summary
+  hosts: localhost
+  gather_facts: False
+  roles:
+    ### Show outputs at the end
+    - role: display-configuration
