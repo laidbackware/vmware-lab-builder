@@ -14,6 +14,7 @@ Infrastructure:
 Software downloads should be placed in a single directory:
 - [ESXi OVA images](https://www.virtuallyghetto.com/nested-virtualization/nested-esxi-virtual-appliance)
 - [vCenter ISO](https://my.vmware.com/en/group/vmware/downloads/info/slug/datacenter_cloud_infrastructure/vmware_vsphere/7_0)
+- [Ubuntu ISO](https://cloud-images.ubuntu.com/focal/current/focal-server-cloudimg-amd64.ova)
 
 ### Tested versions
 This release has been tested with the following components:
@@ -97,7 +98,7 @@ After cloneing the repo, you must update the relevant vars file yaml to point to
 
 Software dependencies for Linux:
 - Ansible 2.10 or higher
-- Linux tools `apt-get install libarchive-tools sshpass python3-pip git`
+- Linux tools `apt-get install libarchive-tools sshpass python3-pip git python3-jmespath sshpass`
 - Python modules `pip3 install pyvmomi ansible==2.10.* netaddr`
 - Install [vSphere Automation SDK](https://github.com/vmware/vsphere-automation-sdk-python)
     `pip install --upgrade pip setuptools`
@@ -123,5 +124,6 @@ export ANSIBLE_MODULE_UTILS=$HOME/workspace/ansible-for-nsxt/module_utils
 
 Once all setup run the playbooks can be run locally:
 ```
+export ANSIBLE_HOST_KEY_CHECKING=False
 ansible-playbook deploy.yml --extra-vars="@var-examples/base-vsphere/1host-minimal-opinionated.yml"
 ```

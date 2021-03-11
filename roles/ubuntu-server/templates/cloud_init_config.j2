@@ -1,0 +1,38 @@
+#cloud-config
+package_update: false
+package_upgrade: false
+
+hostname: {{ ubuntu_client_hostname }}
+fqdn: {{ ubuntu_client_hostname}}
+manage_etc_hosts: true
+
+users:
+- default
+- name: {{ ubuntu_client_username }}
+  passwd: "{{ ubuntu_client_password | password_hash('sha512') }}"
+  sudo: ALL=(ALL) NOPASSWD:ALL
+  groups: sudo
+  shell: /bin/bash
+  lock_passwd: False
+ssh_pwauth: yes
+
+write_files:
+  - path:  /etc/netplan/50-cloud-init.yaml
+    permissions: '0644'
+    content: |
+      network:
+        version: 2
+        ethernets:
+          ens192:
+            dhcp4: false
+            addresses:
+            - {{ ubuntu_client_ip_address }}
+            gateway4: {{ ubuntu_client_gateway }}
+            nameservers:
+              addresses:
+              - {{ ubuntu_client_nameserver }}
+
+runcmd:
+ - [sudo, ifconfig, ens192, up]
+ - [sudo, netplan, generate]
+ - [sudo, netplan, apply]

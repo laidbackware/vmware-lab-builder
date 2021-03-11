@@ -53,6 +53,15 @@
           {% endif %}
         },
         {% endif %}
+        {% if harbor is defined %}
+        "harbor": {
+          "ip": "{{ harbor.ip }}",
+          "vm_ssh_username": "{{ harbor.username }}",
+          "vm_ssh_password": "{{ harbor.password }}",
+          "admin_username": "admin",
+          "admin_password": "{{ harbor.password }}"
+        },
+        {% endif %}
 
       }
 

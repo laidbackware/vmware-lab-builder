@@ -1,0 +1,28 @@
+---
+- name: Prepare Ubuntu Server VM
+  include_role:
+    name: ubuntu-server
+  vars:
+    inventory_host_group: harbor
+
+    ubuntu_ova: "{{ ubuntu_ova }}"
+
+    vcsa_hostname: "{{ hosting_vcenter.ip }}"
+    vcsa_username: "{{ hosting_vcenter.username }}"
+    vcsa_password: "{{ hosting_vcenter.password }}"
+    datacenter   : "{{ hosting_vcenter.datacenter }}"
+    cluster      : "{{ harbor.hosting_cluster }}"
+    datastore    : "{{ harbor.hosting_datastore }}"
+
+    ubuntu_vm_name     : "{{ environment_tag }}-harbor"
+    ubuntu_vm_network  : "{{ harbor.hosting_network }}"
+    ubuntu_vm_memory   : "{{ harbor.memory }}"
+    ubuntu_vm_cpus     : "{{ harbor.cpus }}"
+    ubuntu_vm_disk_size: "{{ harbor.disk_size }}"
+
+    ubuntu_client_hostname      : "{{ harbor.host_name }}"
+    ubuntu_client_ip_address    : "{{ harbor.ip }}/{{ harbor.hosting_network_cidr | ansible.netcommon.ipaddr('prefix') }}"
+    ubuntu_client_gateway       : "{{ harbor.hosting_network_gateway }}"
+    ubuntu_client_nameserver    : "{{ dns_server }}"
+    ubuntu_client_username      : "{{ harbor.username }}" 
+    ubuntu_client_password      : "{{ harbor.password }}" 
