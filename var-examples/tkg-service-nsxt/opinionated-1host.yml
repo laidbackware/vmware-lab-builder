@@ -3,7 +3,7 @@ vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.2-17694817.iso"
 esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u2_Appliance_Template_v1.ova"
 nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-3.1.1.0.0.17483186.ova"
 
-environment_tag: "nsxt" # Used to prepend object names in hosting vCenter
+environment_tag: "tkg-nsxt" # Used to prepend object names in hosting vCenter
 dns_server: "192.168.0.1"
 dns_domain: "home.local"
 ntp_server_ip: "192.168.0.1" # Must be set to an IP address!
@@ -16,16 +16,15 @@ hosting_vcenter: # This is the vCenter which will be the target for nested vCent
   password: "{{ lookup('env', 'PARENT_VCENTER_PASSWORD') }}"
   datacenter: "Home" # Target for all VM deployment
 
-# This section is only referenced by other variables in this file
+# This section describes what will be created
 opinionated:
   master_password: "VMware1!"
-  number_of_hosts: 1 # number of ESXi VMs to deploy
   nested_hosts:
-    cpu_cores: 4 # CPU count per nested host
-    ram_in_gb: 32 # memory per nested host
-    local_disks: # (optional) this section can be removed to not modify local disks
-      - size_gb: 200
-        datastore_prefix: "datastore" # omit this to not have a datastore created
+    cpu_cores: 12 # CPU count per nested host
+    ram_in_gb: 96 # memory per nested host
+    local_disks:
+      - size_gb: 500
+        datastore_prefix: "datastore"
   hosting_cluster: Physical
   hosting_datastore: NVME
   hosting_network:
@@ -34,29 +33,22 @@ opinionated:
       cidr: "192.168.0.0/22"
       gateway: "192.168.0.1"
       # A NSX-T deployment requires 4 IPs, plus 1 per esxi host. They MUST be contiguous.
-      starting_addr: "192.168.0.120"
+      starting_addr: "192.168.0.160"
+    # nsxt tep pool will not be routed, but should not clash with routeable ranges
     nsxt_tep:
       port_group: TEP
       vlan_id: 0
-      cidr: "172.16.0.0/24" # IP calculation depends on this being a /24
-  nsxt:
-    tier0_gateway_name: test-t0
-    tier1_gateways:
-      - display_name: test-t1-1
-        route_advertisement_types:
-          - "TIER1_CONNECTED"
-          - "TIER1_NAT"
-        segments:
-          - display_name: test-seg-1
-            default_gateway_cidr: "172.20.0.1/24"
-      - display_name: test-t1-2
-        route_advertisement_types:
-          - "TIER1_CONNECTED"
-        segments:
-          - display_name: test-seg-2
-            default_gateway_cidr: "172.20.1.1/24"
-    standalone_overlay_segments:
-      - display_name: test-seg-3
+      cidr: "172.31.255.248/29" # Should be at least a 29 which supports up to 5 hosts and 1 edge
+  tkg_service:
+    # This network must be minimum of a /25
+    # 1/8 of the network will be used for the supervisor
+    # 3/8 of the network will be used for egress IP range
+    # 1/2 of the network will be used for ingress IP range
+    routeable_super_net: 172.20.0.0/22
+    # This network is private and should not overlap with any routeable networks
+    internal_pod_network: 172.20.4.0/22
+    # This network is private and should not overlap with any routeable networks 
+    internal_kubernetes_services_network: 172.20.8.0/22
 
 #####################################################################
 ### No need to edit below this line for an opinionated deployment ###
@@ -78,6 +70,7 @@ nested_vcenter: # the vCenter appliance that will be deployed
 nested_clusters: # You can add clusters in this section by duplicating the existing cluster
   compute: # This will be the name of the cluster in the nested  vCenter. Below are the minimum settings.
     enable_drs: True
+    enable_ha: True
     # Below are properties of the hosting cluster
     hosting_cluster: "{{ opinionated.hosting_cluster }}" # the cluster where physical ESXi is connected to. The nested VMs will be deployed here
     hosting_datastore: "{{ opinionated.hosting_datastore }}" # Datastore target for nested ESXi VMs
@@ -98,20 +91,12 @@ nested_clusters: # You can add clusters in this section by duplicating the exist
       - name: "{{ opinionated.hosting_network.nsxt_tep.port_group }}"
       - name: "{{ opinionated.hosting_network.nsxt_tep.port_group }}"
 
-opinionated_host_ip_ofset: 4
-# See the custom example for host to build hosts out manually
-nested_hosts: >-
-  [
-    {% for host_number in range(opinionated.number_of_hosts) %}
-    {
-      "name": "esx{{ host_number + 1 }}",
-      "ip": "{{ opinionated.hosting_network.base.starting_addr | ipmath(opinionated_host_ip_ofset + host_number) }}",
-      "mask": "{{ opinionated.hosting_network.base.cidr | ansible.netcommon.ipaddr('netmask') }}",
-      "gw": "{{ opinionated.hosting_network.base.gateway }}",
-      "nested_cluster": "compute"
-    },
-    {% endfor %}
-  ]
+nested_hosts: 
+  - name: "esx1"
+    ip: "{{ opinionated.hosting_network.base.starting_addr | ipmath(4) }}"
+    mask: "{{ opinionated.hosting_network.base.cidr | ansible.netcommon.ipaddr('netmask') }}"
+    gw: "{{ opinionated.hosting_network.base.gateway }}"
+    nested_cluster: compute
 
 distributed_switches: # (optional) - section can be removed to not create any distributed switches
   - vds_name: nsxt-vds
@@ -134,6 +119,61 @@ distributed_switches: # (optional) - section can be removed to not create any di
       - port_group_name: tep-pg
         vlan_id: "{{ opinionated.hosting_network.nsxt_tep.vlan_id |default(0) }}" 
 
+tspbm: # Tag-based Storage Policy Based Management
+  tag_categories:
+    - category_name: tkgs-storage-category
+      description: "TKGS tag category"
+      tags:
+        - tag_name: tkgs-storage-tag
+          description: "Tag for datastores used by TKGS"
+  datastore_tags:
+    - datastore_name: "{{ opinionated.nested_hosts.local_disks[0].datastore_prefix }}-esx1"
+      tag_names:
+        - tkgs-storage-tag
+  vm_storage_policies:
+    - storage_policy_name: tkgs-storage-policy
+      description: "TKGS storage performance policy"
+      tag_name: tkgs-storage-tag
+      tag_category: tkgs-storage-category
+
+tkg_service:
+  cluster_ip_services_cidr: "{{ opinionated.tkg_service.internal_kubernetes_services_network }}" # This will not be routed and is private within each cluster
+  content_library_datastore: "{{ opinionated.nested_hosts.local_disks[0].datastore_prefix }}-esx1"
+  content_library_name: tkgs-library
+  content_library_url: "http://wp-content.vmware.com/v2/latest/lib.json"
+  default_content_library: tkgs-library
+  dns_server_list: ["{{ dns_server }}"]
+  ephemeral_storage_policy: "{{ tspbm.vm_storage_policies[0].storage_policy_name }}"
+  fluentbit_enabled: false
+  image_storage_policy: "{{ tspbm.vm_storage_policies[0].storage_policy_name }}"
+  ntp_server_list: ["{{ ntp_server_ip }}"]
+  management_dns_servers: ["{{ dns_server }}"]
+  management_port_group: supervisor-seg
+  management_gateway: "{{ opinionated.tkg_service.routeable_super_net | ipmath(1) }}"
+  management_netmask: >-
+    {{ opinionated.tkg_service.routeable_super_net | 
+    ansible.netcommon.ipsubnet((opinionated.tkg_service.routeable_super_net.split('/')[1] |int)+3, 0) |
+    ansible.netcommon.ipaddr('netmask') }}
+  management_starting_address: "{{ opinionated.tkg_service.routeable_super_net | ipmath(2) }}"
+  master_storage_policy: "{{ tspbm.vm_storage_policies[0].storage_policy_name }}"
+  network_provider: NSXT_CONTAINER_PLUGIN
+  supervisor_size: tiny
+  vsphere_cluster: compute
+  workload_dns_servers: ["{{ dns_server }}"]
+
+  nsxt:
+    cluster_distributed_switch: "{{ distributed_switches[0].vds_name }}"
+    egress_cidrs:
+      - "{{ opinionated.tkg_service.routeable_super_net | ansible.netcommon.ipsubnet((opinionated.tkg_service.routeable_super_net.split('/')[1] |int)+3, 1) }}"
+      - "{{ opinionated.tkg_service.routeable_super_net | ansible.netcommon.ipsubnet((opinionated.tkg_service.routeable_super_net.split('/')[1] |int)+2, 1) }}"
+    ingress_cidrs:
+      - "{{ opinionated.tkg_service.routeable_super_net | ansible.netcommon.ipsubnet((opinionated.tkg_service.routeable_super_net.split('/')[1] |int)+1, 1) }}"
+    nsx_edge_cluster: "{{ nsxt.edge_clusters[0].edge_cluster_name}}"
+    pod_cidrs: "{{ opinionated.tkg_service.internal_pod_network }}"
+    # This is used by the task which checks if the supervisor network is online
+    t0_uplink_ip: "{{ opinionated.hosting_network.base.starting_addr | ipmath(3) }}"
+  
+
 nsxt: # (optional) - section can be removed to not create any nsxt objects
   manager:
     hostname: "{{ opinionated.hosting_network.base.starting_addr | ipmath(1) }}"
@@ -151,12 +191,21 @@ nsxt: # (optional) - section can be removed to not create any nsxt objects
     hosting_cluster: "{{ opinionated.hosting_cluster }}"
     license_key: "{{ lookup('env', 'NSXT_LICENSE_KEY') }}"
   
+  # If the section below is defined, the playbook will wait for the IP to become pingable
+  # For TKG service deployments this is the default gateway of the supervisor network
+  routing_test: 
+    ip_to_ping: "{{ opinionated.tkg_service.routeable_super_net | ipmath(1) }}"
+    # The playbook will present a message using the params below
+    # A static route must be made to the router uplink for nsxt_supernet
+    router_uplink: "{{ opinionated.hosting_network.base.starting_addr | ipmath(3) }}"
+    nsxt_supernet: "{{ opinionated.tkg_service.routeable_super_net }}"
+
   ip_pools:
     - display_name: tep-pool # This is a non-routable range which is used for the overlay tunnels.
       subnets:
         - allocation_ranges:
             - start: "{{ opinionated.hosting_network.nsxt_tep.cidr | ipmath(1) }}"
-              end: "{{ opinionated.hosting_network.nsxt_tep.cidr | ipmath(254) }}"
+              end: "{{ opinionated.hosting_network.nsxt_tep.cidr | ansible.netcommon.ipaddr('-2') | ipaddr('address') }}"
           cidr: "{{ opinionated.hosting_network.nsxt_tep.cidr }}"
   
   uplink_profiles:
@@ -261,7 +310,7 @@ nsxt: # (optional) - section can be removed to not create any nsxt objects
 
   # For full spec see - https://github.com/laidbackware/ansible-for-nsxt/blob/vmware-lab-builder/library/nsxt_policy_tier0.py
   tier_0:
-    display_name: "{{ opinionated.nsxt.tier0_gateway_name }}"
+    display_name: "tkgs-t0"
     ha_mode: ACTIVE_STANDBY
     uplink_ip: "{{ opinionated.hosting_network.base.starting_addr | ipmath(3) }}"
     disable_firewall: True
@@ -273,7 +322,7 @@ nsxt: # (optional) - section can be removed to not create any nsxt objects
           - ip_address: "{{ opinionated.hosting_network.base.gateway }}"
     locale_services:
       - state: present
-        display_name: "{{ opinionated.nsxt.tier0_gateway_name }}-ls"
+        display_name: "tkgs-t0-ls"
         edge_cluster_info:
           edge_cluster_display_name: edge-cluster-1
         interfaces:
@@ -288,40 +337,15 @@ nsxt: # (optional) - section can be removed to not create any nsxt objects
               edge_node_display_name: edge-node-1
             mtu: 1500
 
-  # build list of segments from opinionated section. See custom deployment for example of how to configurre
-  overlay_segments: >-
-    [
-      {% if "overlay_segment" in  opinionated.nsxt %}
-      {% for overlay_segment in opinionated.nsxt.standalone_overlay_segments %}
-      {
-        "display_name": "{{ overlay_segment.display_name }}",
-        "transport_zone_display_name": "tz-overlay"
-      },
-      {% endfor %}
-      {% endif %}
-      {% for tier1_gateway in opinionated.nsxt.tier1_gateways %}
-      {% if "segments" in  tier1_gateway %}
-      {% for segment in tier1_gateway.segments %}
-      {
-        "display_name": "{{ segment.display_name }}",
-        "transport_zone_display_name": "tz-overlay",
-        "tier1_display_name": "{{ tier1_gateway.display_name }}",
-        "subnets": [
-          {"gateway_address": "{{ segment.default_gateway_cidr }}"}
-        ]
-      },
-      {% endfor %}
-      {% endif %}
-      {% endfor %}
-    ]
+  overlay_segments:
+    - display_name: supervisor-seg
+      transport_zone_display_name: tz-overlay
+      tier1_display_name: supervisor-t1
+      subnets:
+        - gateway_address: "{{ opinionated.tkg_service.routeable_super_net | ipmath(1) }}/{{ opinionated.tkg_service.routeable_super_net.split('/')[1] |int +3 }}"
 
-  tier_1_gateways: >-
-    [
-      {% for tier1_gateway in opinionated.nsxt.tier1_gateways %}
-      {
-        "display_name": "{{ tier1_gateway.display_name }}",
-        "route_advertisement_types": "{{ tier1_gateway.route_advertisement_types }}",
-        "tier0_display_name": "{{ opinionated.nsxt.tier0_gateway_name }}"
-      },
-      {% endfor %}
-    ]
+  tier_1_gateways: 
+    - display_name: supervisor-t1
+      route_advertisement_types:
+        - "TIER1_CONNECTED"
+      tier0_display_name: tkgs-t0

@@ -1,0 +1,76 @@
+---
+- name: Create storage tag categories
+  community.vmware.vmware_category:
+    hostname: "{{ nested_vcenter.ip }}"
+    username: "{{ nested_vcenter.username }}"
+    password: "{{ nested_vcenter.password }}"
+    validate_certs: false
+    category_name: "{{ item.category_name }}"
+    category_description: "{{ item.description }}"
+    category_cardinality: 'multiple'
+    associable_object_types:
+      - Datastore
+    state: present
+  delegate_to: localhost
+  register: tag_category_result
+  loop: "{{ tspbm.tag_categories }}"
+
+# TODO, build lookup table for names to IDs
+
+- debug: msg="{{ tag_category_result }}"
+
+- name: Build device lookup table
+  set_fact: 
+    tag_category_map: >-
+      {
+      {% for tag_category in tag_category_result.results %}
+      "{{ tag_category.item.category_name }}": "{{ tag_category.category_results.category_id }}",
+      {% endfor %}
+      }
+
+- debug: msg="{{ tag_category_map }}"
+
+- debug: msg="{{tspbm.datastore_tags}}"
+
+- name: Add datastore tags
+  community.vmware.vmware_tag:
+    hostname: "{{ nested_vcenter.ip }}"
+    username: "{{ nested_vcenter.username }}"
+    password: "{{ nested_vcenter.password }}"
+    validate_certs: false
+    category_id: "{{ tag_category_map[item.0.category_name] }}"
+    tag_name: "{{ item.1.tag_name }}"
+    tag_description: "{{ item.1.description }}"
+    state: present
+  delegate_to: localhost
+  with_subelements:
+    - "{{ tspbm.tag_categories }}"
+    - "tags"
+
+- name: Add tags to datastores
+  community.vmware.vmware_tag_manager:
+    hostname: "{{ nested_vcenter.ip }}"
+    username: "{{ nested_vcenter.username }}"
+    password: "{{ nested_vcenter.password }}"
+    validate_certs: false
+    tag_names: "{{ item.tag_names }}"
+    object_name: "{{ item.datastore_name }}"
+    object_type: Datastore
+    state: add
+  delegate_to: localhost
+  loop: "{{ tspbm.datastore_tags }}"
+
+- name: Create or update a vSphere tag-based storage policy
+  community.vmware.vmware_vm_storage_policy:
+    hostname: "{{ nested_vcenter.ip }}"
+    username: "{{ nested_vcenter.username }}"
+    password: "{{ nested_vcenter.password }}"
+    validate_certs: false
+    name: "{{ item.storage_policy_name }}"
+    description: "{{ item.description }}"
+    tag_category: "{{ item.tag_category }}"
+    tag_name: "{{ item.tag_name }}"
+    tag_affinity: true
+    state: "present"
+  delegate_to: localhost
+  loop: "{{ tspbm.vm_storage_policies }}"

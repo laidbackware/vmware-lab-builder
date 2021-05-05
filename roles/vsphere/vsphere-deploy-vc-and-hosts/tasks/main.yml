@@ -2,6 +2,13 @@
 
 - debug: msg="Deploying the following ESXi hosts {{ nested_hosts }}"
 
+- stat: path={{ esxi_ova }}
+  register: esxi_image
+
+- debug: msg="ESXi OVA file at path {{ esxi_ova }} does not exist"
+  when: not esxi_image.stat.exists
+  failed_when: not esxi_image.stat.exists
+
 - name: Deploy ESXi
   community.vmware.vmware_deploy_ovf:
     hostname: "{{ hosting_vcenter.ip }}"
@@ -16,10 +23,10 @@
     disk_provisioning: "{{ disk_mode }}"
     networks:  
       "VM Network": "{{ nested_clusters[item.nested_cluster].vmnic_physical_portgroup_assignment[0].name }}"
-    ova: "{{ esxi_ova }}" 
+    ova: "{{ esxi_ova }}"
     allow_duplicates: no
     power_on: no
-    fail_on_spec_warnings: yes
+    fail_on_spec_warnings: no
     wait: yes
     wait_for_ip_address: no
     inject_ovf_env: yes
@@ -195,6 +202,13 @@
         - "Deploying vCenter to spec"
         - "{{ nested_vcenter }}"
 
+  - stat: path={{vc_iso}}
+    register: esxi_image
+
+  - debug: msg="vCenter ISO file at path {{vc_iso}} does not exist"
+    when: not esxi_image.stat.exists
+    failed_when: not esxi_image.stat.exists
+
   - name: Create temporary build directory
     tempfile:
       state: directory
@@ -268,7 +282,7 @@
       timeout: 30
 
   always:
-  - name: Use the registered var and the file module to remove the temporary file
+  - name: Remove the temp directory
     file:
       path: "{{ tmp_dir }}"
       state: absent

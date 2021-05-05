@@ -1,9 +1,7 @@
-# NSX-T
+# Tanzu Kubernetes for vSphere with Distributed Switching
+This will deploy using the standard 2 network topology
 
-## Depends on
-All base instructions. It is recommended to attempt a minimal deployment to first become comfortable with the processes.
-
-# Tested Versions
+## Tested Versions
 - NSX-T 3.1.1
 - vSphere 7.0 U2
 
@@ -19,7 +17,7 @@ Below is the layout of the opinionated deployment, which can be customized by ed
 - A single vCenter will be added.
 - All components will be added to a single nested ESXi host. This can be customized by editing the yaml.
 - A single T0 gataway will be deployed and the T0 uplink will share the same network as the management interfaces in vmnic0
-- If you want to have more that 1 nested host, then your tep network should be set to MTU of at least 1600 to allow the hosts to communicate.
+- If you want to have more that 1 nested host, then your tep network should be set to MTU of at least 1600 to allow the nested ESXi hosts to communicate.
 - The tep network is used twice on the nested ESXi hosts because the edge tep port group cannot be on the same VDS that will be used by the host transport nodes.
 
 ## Instructions
@@ -29,6 +27,18 @@ export NSXT_LICENSE_KEY=AAAAA-BBBBB-CCCCC-DDDDD-EEEEE
 ```
 You can now use the run command from the base instructions pointing to your updated nsxt vars file.
 
-## Known Issues
+## IP Assignment on opinionated deployment
+
+vCenter = `hosting_network.base.starting_addr`<br/>
+router uplink = `hosting_network.base.starting_addr + 1`<br/>
+first ESXi host = `hosting_network.base.starting_addr + 8`<br/>
+
+## Troubleshooting
+- During creation the API will return errors for an extended period. The module will accept up to 150 seconds of errors, if the playbook ends with an error, check the UI to see if the action is progressing.
 - At NSX-T 3.1.0 the edge cluster is created successfully but the creation of the t0 is blocked for a period of time. This is likely an ansible issues as it doesn't appear in the UI. Currently fixed by adding a 300 second delay. If a failure occurs, re-run the playbook.
 - A number of modules are not properly idempotent and report changed even though no change has been made.
+
+## Roadmap
+- Multi-host support
+- Manual configuration
+- 

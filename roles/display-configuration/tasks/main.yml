@@ -33,22 +33,22 @@
           {% endif %}
         },
         {% endif %}
-        {% if tkgs is defined %}
+        {% if tkg_service is defined %}
         "tanzu_kubernetes": {
-          {% if tkgs.router is defined %}
+          {% if tkg_router is defined %}
           "router" :{
-            "uplink_ip": "{{ tkgs.router.uplink_ip_cidr.split('/')[0] }}",
+            "uplink_ip": "{{ tkg_router.uplink_ip_cidr.split('/')[0] }}",
             "username": "vyos",
             "password": "vyos"
           },
           {% endif %}
-          {% if tkgs.router is defined %}
+          {% if tkg_haproxy is defined %}
           "haproxy": {
-            "username": "{{ tkgs.haproxy.username }}",
-            "password": "{{ tkgs.haproxy.password }}",
-            "root_password": "{{ tkgs.haproxy.root_pwd }}",
-            "management_ip": "{{ tkgs.haproxy.management_ip }}",
-            "management_port": "{{ tkgs.haproxy.management_port }}"
+            "username": "{{ tkg_haproxy.username }}",
+            "password": "{{ tkg_haproxy.password }}",
+            "root_password": "{{ tkg_haproxy.root_pwd }}",
+            "management_ip": "{{ tkg_haproxy.management_ip }}",
+            "management_port": "{{ tkg_haproxy.management_port }}"
           },
           {% endif %}
         },

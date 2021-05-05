@@ -1,0 +1,15 @@
+---
+- name: Create Subscribed Library
+  community.vmware.vmware_content_library_manager:
+    hostname: "{{ nested_vcenter.ip }}"
+    username: "{{ nested_vcenter.username }}"
+    password: "{{ nested_vcenter.password }}"
+    validate_certs: False
+    library_name: "{{ tkg_service.content_library_name }}"
+    library_type: subscribed
+    subscription_url: "{{ tkg_service.content_library_url }}"
+    update_on_demand: True
+    ssl_thumbprint: "{{ tkg_service.content_library_thumbprint | default(omit) }}"
+    datastore_name: "{{ tkg_service.content_library_datastore }}"
+    state: present
+  delegate_to: localhost

@@ -1,4 +1,11 @@
 ---
+- stat: path={{ nsxt_ova }}
+  register: esxi_image
+
+- debug: msg="NSX-T OVA file at path {{ nsxt_ova }} does not exist"
+  when: not esxi_image.stat.exists
+  failed_when: not esxi_image.stat.exists
+
 - name: Deploy NSX-T Manager OVA
   community.vmware.vmware_deploy_ovf:
     hostname: "{{ nsxt.manager.hosting_vcenter_ip }}"
@@ -12,7 +19,7 @@
     disk_provisioning: "{{ disk_mode }}"
     networks:  
       "Network 1": "{{ nsxt.manager.hosting_network }}"
-    ova: "{{ nsxt_ova }}" 
+    ova: "{{ nsxt_ova }}"
     allow_duplicates: no
     power_on: yes
     fail_on_spec_warnings: yes

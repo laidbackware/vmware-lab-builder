@@ -1,10 +1,10 @@
-# SOFTWARE_DIR must contain all needed software
+# SOFTWARE_DIR must contain all required software
 vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.1-17004997.iso"
 esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0.1_Appliance_Template_v1.ova"
 nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-3.1.0.0.0.17327517.ova"
 
-environment_tag: "nsxt" # Used to prepend object names
-dns_server: "192.168.0.110"
+environment_tag: "nsxt" # Used to prepend object names in hosting vCenter
+dns_server: "192.168.0.1"
 dns_domain: "home.local"
 ntp_server_ip: "192.168.0.1" # Must be set to an IP address!
 disk_mode: thin # How all disks should be deployed

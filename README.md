@@ -1,4 +1,4 @@
-# vsphere-ansible-lab-builder
+# vmware-lab-builder
 Build a nested vSphere lab with Ansible
 
 ## Description
@@ -14,13 +14,12 @@ Infrastructure:
 Software downloads should be placed in a single directory:
 - [ESXi OVA images](https://www.virtuallyghetto.com/nested-virtualization/nested-esxi-virtual-appliance)
 - [vCenter ISO](https://my.vmware.com/en/group/vmware/downloads/info/slug/datacenter_cloud_infrastructure/vmware_vsphere/7_0)
-- [Ubuntu ISO](https://cloud-images.ubuntu.com/focal/current/focal-server-cloudimg-amd64.ova)
 
 ### Tested versions
 This release has been tested with the following components:
-vSphere - 7.0.1c
-ESXi nested OVA - 7.0U1
-NSX-T - 3.1.0
+vSphere - 7.0.2
+ESXi nested OVA - 7.0U2
+NSX-T - 3.1.1
 
 ## Usage 
 Each deployment pattern has an opinionated and a custom example. The idea of the opinionated deployment is that the user has to proide the minimum of configuration and the remainder of the options are calculated from this. Whereas the custom example has to have all sections built up by hand. Either of the examples types can be fully customized.<br/>
@@ -43,12 +42,12 @@ docker run --rm \
     --env PARENT_VCENTER_PASSWORD=${PARENT_VCENTER_PASSWORD} \
     --env SOFTWARE_DIR='/software_dir' \
     --env ANSIBLE_FORCE_COLOR='true' \
-    --env NSXT_LICENSE_KEY=${NSXT_LICENSE_KEY} \
+    --env NSXT_LICENSE_KEY=${NSXT_LICENSE_KEY:-na} \
     --volume ${SOFTWARE_DIR}:/software_dir \
     --volume ${PWD}:/work \
-    laidbackware/vsphere-ansible \
+    laidbackware/vmware-lab-builder:v2 \
     ansible-playbook /work/deploy.yml \
-        --extra-vars '@/work/var-examples/base-vsphere/1host-minimal-opinionated.yml'
+        --extra-vars '@/work/var-examples/base-vsphere/minimal-opinionated.yml'
 ```
 
 ### Destroying
@@ -67,7 +66,7 @@ docker run  -it --rm \
     --env NSXT_LICENSE_KEY=${NSXT_LICENSE_KEY} \
     --volume ${SOFTWARE_DIR}:/software_dir \
     --volume ${PWD}:/work \
-    laidbackware/vsphere-ansible \
+    laidbackware/vmware-lab-builder:v2 \
     /bin/bash
 
 # Then the playbook can be triggered
@@ -77,19 +76,19 @@ If adding new variables to the vars file be sure to only use underscores as vari
 
 ## Roadmap
 For solution specifc features, check the relevant example directory.
-- Add output at the end showing all IP mappings
-- Add module to deploy TKGS with NSX-T
+- Add ability to create TKGS namespaces
+- Add ability to deploy TKGS embedded Harbor
+- Add ability to create guest clusters for TKGS
 - Add ability to deploy VMs to folders and resource pools on parent VC
-- Add NFS datastore creation
 - Add NFS server creation via Ubuntu VM
 - Add more examples for different topologies
 - Add support for VSAN configuration
 
 
 ## Docker Image Build
-From the root of the repo. Note no-cache flag used to force builds to pickup any changes to the Ansible repo.
+From the root of the repo. Note no-cache flag used to force builds to pickup any changes to the git repos.
 ```
-docker build --no-cache ./docker/ubuntu/. -t laidbackware/vsphere-ansible:latest
+docker build --no-cache ./docker/. -t laidbackware/vmware-lab-builder:v2
 ```
 
 ## Local Usage
@@ -103,27 +102,20 @@ Software dependencies for Linux:
 - Install [vSphere Automation SDK](https://github.com/vmware/vsphere-automation-sdk-python)
     `pip install --upgrade pip setuptools`
     `pip install --upgrade git+https://github.com/vmware/vsphere-automation-sdk-python.git`
+- Add vmware modules from Ansible Galaxy `ansible-galaxy collection install community.vmware:1.8.0`
 
-### vSphere Ansible mods
-If the vsphere collection has been previously added via ansible-galaxy, the directory should be removed.<br/>
-Currently the upstream vsphere community modules don't fully support all actions, so you must replace the the modules which ship with Ansible 2.10 with the ones provied. This only needs to be done after an install or upgrade of Ansible. The following will replace your local copy with the modified copy.
-```
-git clone --branch tkgs https://github.com/laidbackware/ansible-for-vsphere.git /tmp/ansible-for-vsphere
-# Below is an example which works for Ubuntu, the dist-packages location may differ for other distros.
-cp -rf /tmp/ansible-for-vsphere/* /usr/local/lib/python3.*/dist-packages/ansible_collections/community/vmware/
-```
 ### Cloning repos for the extra modules
-You will need to use git to clone ansible-for-nsxt and ansible-for-vsphere-tanzu, then export the location of the modules. A specific branch will be cloned for ansible-for-nsxt as it contains a necessary fix which has a pull request pending.
+You will need to use git to clone ansible-for-nsxt and ansible-for-vsphere-tanzu, then export the location of the modules. A specific branch will be cloned for ansible-for-nsxt as it contains a necessary fix which has a pull request pending. Below assumes a directory called workspace to host the modules.
 ```
 cd $HOME/workspace
-git clone --branch vmware-lab-builder https://github.com/laidbackware/ansible-for-nsxt.git
+git clone https://github.com/vmware/ansible-for-nsxt.git
 git clone https://github.com/laidbackware/ansible-for-vsphere-tanzu.git
 export ANSIBLE_LIBRARY=$HOME/workspace/ansible-for-nsxt:$HOME/workspace/ansible-for-vsphere-tanzu
 export ANSIBLE_MODULE_UTILS=$HOME/workspace/ansible-for-nsxt/module_utils
-```
-
-Once all setup run the playbooks can be run locally:
-```
 export ANSIBLE_HOST_KEY_CHECKING=False
+```
+It is recommended to use direnv and have the above export commands in a .envrc file.<br/>
+Once all is setup run the playbooks can be run locally:
+```
 ansible-playbook deploy.yml --extra-vars="@var-examples/base-vsphere/1host-minimal-opinionated.yml"
 ```

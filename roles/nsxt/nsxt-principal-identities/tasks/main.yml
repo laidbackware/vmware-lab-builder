@@ -1,0 +1,43 @@
+---
+- name: Super User Block
+  block:
+    - name: Create temporary certificate directory
+      tempfile:
+        state: directory
+        suffix: pi_cert
+      register: temp_dir_results
+    
+    - set_fact:
+        tmp_dir={{temp_dir_results.path}}
+
+    - name: Create temporary certificate file
+      copy:
+        dest: "{{ tmp_dir }}/{{ item.display_name }}.pem"
+        content: |
+          {{ item.public_key }}
+      loop: "{{ nsxt.principal_identities }}"
+      
+
+    - name: Register a TKGI Super User
+      nsxt_principal_identities:
+        hostname: "{{ nsxt.manager.hostname }}"
+        username: "{{ nsxt.manager.username }}"
+        password: "{{ nsxt.manager.password }}"
+        validate_certs: False
+        display_name: "{{ item.display_name }}"
+        name: "{{ item.display_name }}"
+        node_id: "node-1"
+        role: "{{ item.role }}"
+        certificate_pem_file: "{{ tmp_dir }}/{{ item.display_name }}.pem"
+        state: "present"
+      register: pi_result
+      loop: "{{ nsxt.principal_identities }}"
+    
+    - debug: msg="{{ pi_result }}"
+
+  always:
+  - name: Remove the temp directory
+    file:
+      path: "{{ tmp_dir }}"
+      state: absent
+    when: tmp_dir is defined

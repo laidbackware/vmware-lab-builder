@@ -1,0 +1,102 @@
+---
+- name: Disable fluentbit on vCenter server
+  community.vmware.vmware_vm_shell:
+    hostname: "{{ hosting_vcenter.ip }}"
+    username: "{{ hosting_vcenter.username }}"
+    password: "{{ hosting_vcenter.password }}"
+    datacenter: "{{ hosting_vcenter.datacenter }}"
+    validate_certs: false
+    vm_id: "{{ environment_tag }}-vcenter"
+    vm_username: "root"
+    vm_password: "{{ nested_vcenter.password }}"
+    vm_shell: /bin/bash
+    vm_shell_args: |-
+      -c "sed -i 's/fluentbit_enabled: true/fluentbit_enabled: false/' /etc/vmware/wcp/wcpsvc.yaml"
+    vm_shell_cwd: "/root"
+  when: "tkg_service.fluentbit_enabled is defined and not tkg_service.fluentbit_enabled"
+
+- name: Extract haproxy VM extra config
+  community.vmware.vmware_guest_info:
+    hostname: "{{ nested_vcenter.ip }}"
+    username: "{{ nested_vcenter.username }}" 
+    password: "{{ nested_vcenter.password }}" 
+    validate_certs: false
+    datacenter: "{{ nested_vcenter.datacenter }}"
+    name: tkg-haproxy
+    properties:
+      - config.extraConfig
+    schema: vsphere
+  delegate_to: localhost
+  register: vminfo
+  when: "tkg_haproxy is defined"
+
+- name: Extract certificate from haproxy output
+  set_fact:
+    haproxy_ca_cert_raw: >-
+      {
+      {% for item in vminfo.instance.config.extraConfig %}
+      {% if item.key == "guestinfo.dataplaneapi.cacert" %}
+      "public_key": "{{ item.value }}",
+      {% endif %}
+      {% endfor %}
+      }
+  when: "tkg_haproxy is defined"
+
+- name: Decode haproxy CA Cert
+  set_fact:
+    haproxy_ca_cert: "{{ haproxy_ca_cert_raw.public_key | b64decode }}"
+  when: "tkg_haproxy is defined"
+
+- debug: var=tkg_service
+
+- name: Create vsphere namespace cluster
+  vsphere_tanzu_cluster_manage:
+    hostname: "{{ nested_vcenter.ip }}"
+    username: "{{ nested_vcenter.username }}"
+    password: "{{ nested_vcenter.password }}"
+    validate_certs: false
+    cluster_distributed_switch: "{{ tkg_service.nsxt.cluster_distributed_switch | default(omit) }}"
+    cluster_name: "{{ tkg_service.vsphere_cluster }}"
+    default_content_library: "{{ tkg_service.default_content_library }}"
+    dns_search_domains: "{{ dns_domain }}"
+    egress_cidrs: "{{ tkg_service.nsxt.egress_cidrs | default(omit) }}"
+    ephemeral_storage_policy: "{{ tkg_service.ephemeral_storage_policy }}"
+    haproxy_ip_range_list: "{{ tkg_service.vsphere_networking.haproxy_ip_range_list | default(omit) }}"
+    haproxy_ca_chain: "{{ haproxy_ca_cert | default(omit) }}"
+    haproxy_management_ip: "{{ tkg_haproxy.management_ip | default(omit) }}"
+    haproxy_management_port: "{{ tkg_service.vsphere_networking.haproxy.management_port | default(omit) }}"
+    haproxy_password: "{{ tkg_haproxy.password | default(omit) }}"
+    haproxy_username: "{{ tkg_haproxy.username | default(omit) }}"
+    image_storage_policy: "{{ tkg_service.image_storage_policy }}"
+    ingress_cidrs: "{{ tkg_service.nsxt.ingress_cidrs | default(omit) }}"
+    management_address_count: "{{ tkg_service.management_address_count | default(5) }}"
+    management_dns_servers: "{{ tkg_service.management_dns_servers }}"
+    management_gateway: "{{ tkg_service.management_gateway }}"
+    management_starting_address: "{{ tkg_service.management_starting_address }}"
+    management_netmask: "{{ tkg_service.management_netmask }}"
+    management_ntp_servers: "{{ tkg_service.ntp_server_list }}"
+    management_port_group: "{{ tkg_service.management_port_group }}"
+    master_storage_policy: "{{ tkg_service.master_storage_policy }}"
+    network_provider: "{{ tkg_service.network_provider }}"
+    nsx_edge_cluster: "{{ tkg_service.nsxt.nsx_edge_cluster | default(omit) }}"
+    pod_cidrs: "{{ tkg_service.nsxt.pod_cidrs | default(omit) }}"
+    workload_dns_servers: "{{ tkg_service.workload_dns_servers }}"
+    workload_gateway: "{{ tkg_service.vsphere_networking.workload_gateway | default(omit) }}"
+    workload_ip_range_list: "{{ tkg_service.vsphere_networking.workload_ip_range_list | default(omit) }}"
+    workload_netmask: "{{ tkg_service.vsphere_networking.workload_netmask | default(omit) }}"
+    workload_ntp_servers: "{{ tkg_service.ntp_server_list }}"
+    workload_portgroup: "{{ tkg_service.vsphere_networking.workload_port_group | default(omit) }}"
+    services_cidr: "{{ tkg_service.cluster_ip_services_cidr }}"
+    supervisor_size: "{{ tkg_service.supervisor_size | upper }}"
+    state: present
+  async: 3600
+  poll: 0
+  register: cluster_results
+
+- name: Check on enable namespace job
+  async_status:
+    jid: "{{ cluster_results.ansible_job_id }}"
+  register: job_result
+  until: job_result.finished
+  retries: 720
+  delay: 5

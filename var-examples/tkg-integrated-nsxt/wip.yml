@@ -1,9 +1,9 @@
 # SOFTWARE_DIR must contain all required software
-vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.2-17694817.iso"
-esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u2_Appliance_Template_v1.ova"
-nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-3.1.1.0.0.17483186.ova"
+vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.1-17491101.iso"
+esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u1_Appliance_Template_v1.ova"
+nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-3.0.2.0.0.16887203.ova"
 
-environment_tag: "nsxt" # Used to prepend object names in hosting vCenter
+environment_tag: "tkgi" # Used to prepend object names in hosting vCenter
 dns_server: "192.168.0.1"
 dns_domain: "home.local"
 ntp_server_ip: "192.168.0.1" # Must be set to an IP address!
@@ -21,10 +21,10 @@ opinionated:
   master_password: "VMware1!"
   number_of_hosts: 1 # number of ESXi VMs to deploy
   nested_hosts:
-    cpu_cores: 4 # CPU count per nested host
-    ram_in_gb: 32 # memory per nested host
+    cpu_cores: 8 # CPU count per nested host
+    ram_in_gb: 128 # memory per nested host
     local_disks: # (optional) this section can be removed to not modify local disks
-      - size_gb: 200
+      - size_gb: 500
         datastore_prefix: "datastore" # omit this to not have a datastore created
   hosting_cluster: Physical
   hosting_datastore: NVME
@@ -34,29 +34,29 @@ opinionated:
       cidr: "192.168.0.0/22"
       gateway: "192.168.0.1"
       # A NSX-T deployment requires 4 IPs, plus 1 per esxi host. They MUST be contiguous.
-      starting_addr: "192.168.0.120"
+      starting_addr: "192.168.1.10"
     nsxt_tep:
       port_group: TEP
       vlan_id: 0
-      cidr: "172.16.0.0/24" # IP calculation depends on this being a /24
+      cidr: "172.31.253.0/24" # IP calculation depends on this being a /24
   nsxt:
     tier0_gateway_name: test-t0
     tier1_gateways:
-      - display_name: test-t1-1
+      - display_name: infra-t1
         route_advertisement_types:
           - "TIER1_CONNECTED"
           - "TIER1_NAT"
         segments:
-          - display_name: test-seg-1
-            default_gateway_cidr: "172.20.0.1/24"
-      - display_name: test-t1-2
-        route_advertisement_types:
-          - "TIER1_CONNECTED"
-        segments:
-          - display_name: test-seg-2
-            default_gateway_cidr: "172.20.1.1/24"
-    standalone_overlay_segments:
-      - display_name: test-seg-3
+          - display_name: infra-seg
+            default_gateway_cidr: "172.30.0.1/24"
+    ip_pools:
+      - display_name: floating-ips
+        subnets:
+        - allocation_ranges:
+            - start: "172.30.1.1"
+              end: "172.30.1.254"
+          cidr: "172.30.1.0/24"
+
 
 #####################################################################
 ### No need to edit below this line for an opinionated deployment ###
@@ -150,7 +150,29 @@ nsxt: # (optional) - section can be removed to not create any nsxt objects
     hosting_network: "{{ opinionated.hosting_network.base.port_group }}"
     hosting_cluster: "{{ opinionated.hosting_cluster }}"
     license_key: "{{ lookup('env', 'NSXT_LICENSE_KEY') }}"
-  
+
+  principal_identities:
+    - display_name: tkgi-super-user
+      role: "enterprise_admin"
+      public_key: |-
+        -----BEGIN CERTIFICATE-----
+        MIIC4TCCAcmgAwIBAgIUcUSVwH8oE8BTBrF9clFe3v64YYkwDQYJKoZIhvcNAQEL
+        BQAwHjEcMBoGA1UEAwwTcGtzLW5zeC10LXN1cGVydXNlcjAeFw0yMTA0MDExNjE3
+        MzhaFw0yMzA0MDExNjE3MzhaMB4xHDAaBgNVBAMME3Brcy1uc3gtdC1zdXBlcnVz
+        ZXIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC9lFGyhqKqjX4d4sg5
+        wpPmjlIQsbpwyu1r3Jpvk8b+3KdpejUcI0UlfUAYsshhv4+g8s1/CyV6/rR4nfnL
+        sj+Da8WaGZSxQAnaBQdZS+E+xQ6JqnCmrCGZwFaTuooTt2l/cPbIeOLy1aEFb5Oy
+        5QJH155KJnpSBQwwOceKsxeeCAX+lESg7jeM+IuE5Fpix9LFNCskUyWDWIOgsT0h
+        G2ybAgIMjaqCSjneEkQGkryorhSShffG8SkYx9g/AI0Es1J4CfTuxfZZDBIFMnij
+        gLmhXejXzqI69DK8PHiR9UYIuDROJl0nYelg4bih1b6DjAqLzxpeCNZE3VLIwES/
+        nSV1AgMBAAGjFzAVMBMGA1UdJQQMMAoGCCsGAQUFBwMCMA0GCSqGSIb3DQEBCwUA
+        A4IBAQAN7Zg5YCYtF8PPjjJSEwDJ3+kZGpvEeZpva4moJs741LF6BXlwl1bM2w7e
+        hc++zn4J5oNBPiGmfoNeIZVIJmKAJG/Sj1zIiboMLelxzTW2rZBXLPST/2Sm/edF
+        XgtZsI/yL2oh6lnlGXyQRvHdH185wC9LGYwWN+t2cv2VH2IqryrtmgGn5DNdREVK
+        QAxcle1oHgzTkA6cOE2nJSlzBw4V5kXP6cLMgr5XFjA7bnkBta3XFQubZdEUGdfd
+        xMWz87g/O6p9n8UtBfW/EfRQJswn3CMRPcOW8DaPoxTLSr/p8/Jbaji3UmcnfsKS
+        2ahXFX/S0BIbF2E57GVY5djChgzW
+        -----END CERTIFICATE-----
   ip_pools:
     - display_name: tep-pool # This is a non-routable range which is used for the overlay tunnels.
       subnets:
@@ -158,6 +180,14 @@ nsxt: # (optional) - section can be removed to not create any nsxt objects
             - start: "{{ opinionated.hosting_network.nsxt_tep.cidr | ipmath(1) }}"
               end: "{{ opinionated.hosting_network.nsxt_tep.cidr | ipmath(254) }}"
           cidr: "{{ opinionated.hosting_network.nsxt_tep.cidr }}"
+    - display_name: "{{ opinionated.nsxt.ip_pools[0].display_name }}"
+      subnets: "{{ opinionated.nsxt.ip_pools[0].subnets }}"
+
+  ip_blocks:
+    - display_name: tkgi-nodes # This is a non-routable range which is used for the overlay tunnels.
+      cidr: 172.30.32.0/19
+    - display_name: tkgi-pods
+      cidr: 172.30.64.0/19
   
   uplink_profiles:
     - display_name: host-tep-profile
@@ -187,12 +217,12 @@ nsxt: # (optional) - section can be removed to not create any nsxt objects
   transport_zones:
     - display_name: tz-overlay
       transport_type: OVERLAY
-      # host_switch_name: "{{ distributed_switches[0].vds_name }}"
+      host_switch_name: sw_overlay
       nested_nsx: True # Set this to True if you use NSX-T for your physical host networking
       description: "Overlay Transport Zone"
     - display_name: tz-vlan
       transport_type: VLAN
-      # host_switch_name: sw_vlan
+      host_switch_name: sw_vlan
       description: "Uplink Transport Zone"
 
   transport_node_profiles:
@@ -234,6 +264,7 @@ nsxt: # (optional) - section can be removed to not create any nsxt objects
       cluster_name: compute
       host_switches:
         tep:
+          host_switch_name: "sw_overlay"
           uplink_profile_name: edge-tep-profile
           ip_assignment_spec:
             resource_type: StaticIpPoolSpec
