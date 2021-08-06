@@ -1,0 +1,6 @@
+---
+
+- name: Create YAML template file for Tanzu Management Cluster
+  ansible.builtin.template:
+    src: management-cluster.yml
+    dest: "{{ playbook_dir }}/{{ tanzu_multi_cloud.generated_config_file_name }}"

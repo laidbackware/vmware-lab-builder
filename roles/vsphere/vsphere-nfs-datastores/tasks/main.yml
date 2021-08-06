@@ -1,7 +1,7 @@
 ---
 # Build a list of each datastore to add to each host
 - name: Build datastores to add
-  set_fact: 
+  set_fact:
     datastores_to_add: >-
       [
       {% for host in nested_hosts %}
@@ -23,12 +23,12 @@
     hostname: "{{ nested_vcenter.ip }}"
     username: "{{ nested_vcenter.username }}"
     password: "{{ nested_vcenter.password }}"
-    validate_certs: False
+    validate_certs: false
     datastore_name: "{{ item.datastore_name }}"
     datastore_type: "nfs"
     nfs_server: '{{ item.nfs_server }}'
     nfs_path: '{{ item.nfs_path }}'
-    nfs_ro: no
+    nfs_ro: false
     esxi_hostname: "{{ item.host_name }}"
     state: present
   delegate_to: localhost

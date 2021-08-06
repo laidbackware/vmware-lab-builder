@@ -1,0 +1,161 @@
+---
+
+- name: Create a VMWare cloud with write access mode
+  avi_cloud:
+    avi_credentials: "{{ avi_credentials }}"
+    apic_mode: false
+    dhcp_enabled: true
+    enable_vip_static_routes: false
+    name: Default-Cloud
+    prefer_static_routes: false
+    vcenter_configuration:
+      datacenter: "{{ cloud_vcenter_datacenter }}"
+      management_network: /api/vimgrnwruntime/?name={{ se_management_port_group }}
+      password: "{{ cloud_vcenter_password }}"
+      privilege: WRITE_ACCESS
+      username: "{{ cloud_vcenter_username }}"
+      vcenter_url: "{{ cloud_vcenter_url }}"
+    vtype: CLOUD_VCENTER
+  register: cloud_config
+
+- name: Set Management Network Default Gateway
+  avi_vrfcontext:
+    avi_credentials: "{{ avi_credentials }}"
+    cloud_ref: "/api/cloud?name=Default-Cloud"
+    name: "management"
+    static_routes:
+      - route_id: "1"
+        prefix:
+          mask: 0
+          ip_addr:
+            type: "V4"
+            addr: "0.0.0.0"
+        next_hop:
+          type: "V4"
+          addr: "{{ se_management_network_gateway }}"
+
+- name: Wait for cloud to configure
+  pause:
+    echo: false
+    seconds: 30
+  when: cloud_config.changed
+
+- name: Check to ensure that cloud is in a sync'd state
+  avi_api_session:
+    avi_credentials: "{{ avi_credentials }}"
+    http_method: get
+    path: cloudruntime
+    params:
+      name: Default-Cloud
+  register: cloud_status
+
+- name: Abort on sync error
+  fail:
+    msg:
+      - "The cloud is still not synchronised"
+      - "Check the status of the cloud in the console using https://{{ controller_ip }}"
+  when: not cloud_status.obj.results[0].network_sync_complete
+
+- name: Update Management Network with CIDR and range
+  avi_network:
+    avi_credentials: "{{ avi_credentials }}"
+    name: "{{ se_management_port_group }}"
+    dhcp_enabled: false
+    configured_subnets:
+      - prefix:
+          ip_addr:
+            addr: "{{ se_management_network_cidr.split('/')[0] }}"
+            type: V4
+          mask: "{{ se_management_network_cidr.split('/')[1] }}"
+        static_ranges:
+          - begin:
+              addr: "{{ se_management_network_range.split('-')[0] }}"
+              type: "V4"
+            end:
+              addr: "{{ se_management_network_range.split('-')[1] }}"
+              type: "V4"
+  register: management_network_result
+
+- name: Create IPAM provider
+  avi_ipamdnsproviderprofile:
+    avi_credentials: "{{ avi_credentials }}"
+    internal_profile:
+      usable_network_refs:
+        - /api/network/?name={{ se_vip_port_group }}
+      ttl: 30
+    name: tkg-ipam-profile
+    type: IPAMDNS_TYPE_INTERNAL
+  register: ipam_profile_results
+
+- name: Configure SE Group
+  avi_serviceenginegroup:
+    avi_credentials: "{{ avi_credentials }}"
+    name: "Default-Group"
+    cloud_ref: "/api/cloud?name=Default-Cloud"
+    se_name_prefix: "{{ seg_prefix | default('Avi') }}"
+    vcpus_per_se: "{{ se_vcpu | default(1) }}"
+    ha_mode: "{{ ha_mode | default('HA_MODE_LEGACY_ACTIVE_STANDBY') }}"  # Defaults to for Essential
+    mem_reserve: true
+    memory_per_se: "{{ se_memory | default(2048) }}"
+    disk_per_se: "{{ se_disk | default(15) }}"
+    min_se: "{{ se_minse | default(1) }}"
+    max_se: "{{ se_maxse | default(6) }}"
+    min_scaleout_per_vs: "{{ se_min_scaleoue | default(1) }}"
+    max_scaleout_per_vs: "{{ se_min_scaleout | default(4) }}"
+    dedicated_dispatcher_core: "{{ dispatcher | default(omit) }}"
+    vcenter_folder: "{{ se_vcenter_folder | default('AviSeFolder') }}"
+    vcenter_clusters:
+      cluster_refs:
+        - "/api/vimgrclusterruntime?name={{ se_vcenter_cluster }}"
+      include: true
+  register: se_group_result
+
+- name: Update Default cloud with IPAM/DNS profiles
+  avi_cloud:
+    avi_credentials: "{{ avi_credentials }}"
+    apic_mode: false
+    dhcp_enabled: false
+    enable_vip_static_routes: false
+    ipam_provider_ref: /api/ipamdnsproviderprofile/?name=tkg-ipam-profile
+    name: Default-Cloud
+    prefer_static_routes: false
+    vcenter_configuration:
+      datacenter: Lab
+      management_network: /api/vimgrnwruntime/?name={{ se_management_port_group }}
+      password: "{{ cloud_vcenter_password }}"
+      privilege: WRITE_ACCESS
+      username: "{{ cloud_vcenter_username }}"
+      vcenter_url: "{{ cloud_vcenter_url }}"
+      management_ip_subnet:
+        ip_addr:
+          addr: "{{ se_management_network_cidr.split('/')[0] }}"
+          type: V4
+        mask: "{{ se_management_network_cidr.split('/')[1] }}"
+    vtype: CLOUD_VCENTER
+  register: cloud_config
+
+- name: Wait for cloud to configure
+  pause:
+    echo: false
+    seconds: 30
+  when: cloud_config.changed
+
+- name: Update VIP network
+  avi_network:
+    avi_credentials: "{{ avi_credentials }}"
+    name: "{{ se_vip_port_group }}"
+    dhcp_enabled: false
+    configured_subnets:
+      - prefix:
+          ip_addr:
+            addr: "{{ se_vip_network_cidr.split('/')[0] }}"
+            type: V4
+          mask: "{{ se_vip_network_cidr.split('/')[1] }}"
+        static_ranges:
+          - begin:
+              addr: "{{ se_vip_network_range.split('-')[0] }}"
+              type: "V4"
+            end:
+              addr: "{{ se_vip_network_range.split('-')[1] }}"
+              type: "V4"
+  register: vip_network_result

@@ -6,9 +6,9 @@
     password: "{{ nested_vcenter.password }}"
     datacenter_name: "{{ nested_vcenter.datacenter }}"
     cluster_name: "{{ item.key }}"
-    validate_certs: False
-    enable_ha: "{{ item.value.enable_ha }}" 
-    ha_host_monitoring: "{{ item.value.ha_host_monitoring | default('disabled')}}" 
+    validate_certs: false
+    enable_ha: "{{ item.value.enable_ha }}"
+    ha_host_monitoring: "{{ item.value.ha_host_monitoring | default('disabled')}}"
   with_dict: "{{ nested_clusters }}"
   when: '"enable_ha" in item.value'
 
@@ -19,8 +19,8 @@
     password: "{{ nested_vcenter.password }}"
     datacenter_name: "{{ nested_vcenter.datacenter }}"
     cluster_name: "{{ item.key }}"
-    validate_certs: False
-    enable_drs: "{{ item.value.enable_drs }}" 
+    validate_certs: false
+    enable_drs: "{{ item.value.enable_drs }}"
     drs_default_vm_behavior: "{{ item.value.drs_default_vm_behavior | default(omit)}}"
   with_dict: "{{ nested_clusters }}"
   when: '"enable_drs" in item.value'

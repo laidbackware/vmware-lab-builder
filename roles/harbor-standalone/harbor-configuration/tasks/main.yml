@@ -11,7 +11,7 @@
       - curl
       - gnupg-agent
       - software-properties-common
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Add an docker CE Apt signing key
   apt_key:
@@ -38,11 +38,11 @@
   user:
     name: harbor
     group: docker
-  
+
 - name: Get docker compose github release info
   uri:
     url: https://api.github.com/repos/docker/compose/releases/latest
-    return_content: yes
+    return_content: true
     body_format: json
   register: docker_compose_release_info
 
@@ -64,7 +64,7 @@
 - name: Get harbor github release info
   uri:
     url: https://api.github.com/repos/goharbor/harbor/releases/latest
-    return_content: yes
+    return_content: true
     body_format: json
   register: harbor_release_info
 

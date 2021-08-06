@@ -1,5 +1,8 @@
-dump/*
 .envrc
+temp/*
+
+# Tanzu Multi-cloud outputs
+cluster-config.yml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

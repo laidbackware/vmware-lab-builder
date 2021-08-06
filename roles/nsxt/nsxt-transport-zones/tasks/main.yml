@@ -1,10 +1,10 @@
 ---
 - name: Create transport zone
-  nsxt_transport_zones:
+  vmware.ansible_for_nsxt.nsxt_transport_zones:
     hostname: "{{ nsxt.manager.hostname }}"
     username: "{{ nsxt.manager.username }}"
     password: "{{ nsxt.manager.password }}"
-    validate_certs: False
+    validate_certs: false
     resource_type: "TransportZone"
     display_name: "{{ item.display_name }}"
     description: "{{ item.description }}"

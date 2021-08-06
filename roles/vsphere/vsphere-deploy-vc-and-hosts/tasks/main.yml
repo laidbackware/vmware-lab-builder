@@ -12,24 +12,24 @@
 - name: Deploy ESXi
   community.vmware.vmware_deploy_ovf:
     hostname: "{{ hosting_vcenter.ip }}"
-    username: "{{ hosting_vcenter.username }}" 
-    password: "{{ hosting_vcenter.password }}" 
-    validate_certs: no
+    username: "{{ hosting_vcenter.username }}"
+    password: "{{ hosting_vcenter.password }}"
+    validate_certs: false
     name: "{{ environment_tag }}-{{ item.name }}"
     datacenter: "{{ hosting_vcenter.datacenter }}"
     # folder: /SG1/vm
     cluster: "{{ nested_clusters[item.nested_cluster].hosting_cluster }}"
     datastore: "{{ nested_clusters[item.nested_cluster].hosting_datastore }}"
     disk_provisioning: "{{ disk_mode }}"
-    networks:  
+    networks:
       "VM Network": "{{ nested_clusters[item.nested_cluster].vmnic_physical_portgroup_assignment[0].name }}"
     ova: "{{ esxi_ova }}"
-    allow_duplicates: no
-    power_on: no
-    fail_on_spec_warnings: no
-    wait: yes
-    wait_for_ip_address: no
-    inject_ovf_env: yes
+    allow_duplicates: false
+    power_on: false
+    fail_on_spec_warnings: false
+    wait: true
+    wait_for_ip_address: false
+    inject_ovf_env: true
     properties:
       guestinfo.hostname: "{{ environment_tag }}-{{ item.name }}"
       guestinfo.ipaddress: "{{ item.ip }} "
@@ -60,25 +60,25 @@
 - name: Gather disk info from virtual machine using name
   community.vmware.vmware_guest_disk_info:
     hostname: "{{ hosting_vcenter.ip }}"
-    username: "{{ hosting_vcenter.username }}" 
-    password: "{{ hosting_vcenter.password }}" 
+    username: "{{ hosting_vcenter.username }}"
+    password: "{{ hosting_vcenter.password }}"
     datacenter: "{{ hosting_vcenter.datacenter }}"
-    validate_certs: no
+    validate_certs: false
     name: "{{ environment_tag }}-{{ item.name }}"
   delegate_to: localhost
   register: disk_info
   loop: "{{ nested_hosts }}"
 
 
-- debug: 
-    msg: 
+- debug:
+    msg:
       - "Configuring ESXi hosts to cluster spec"
       - "{{ nested_clusters }}"
 
 # Build list of hosts with disks to be added, inlcuding the 3 base disks
 # This is because the base ESXi OVA comes with 2 extra disks which might not be needed
 - name: Build list of disks to remove
-  set_fact: 
+  set_fact:
     disks_to_remove: >-
       [
       {% for host_result in disk_info.results  %}
@@ -93,7 +93,6 @@
                       "scsi_controller": "{{ disk.controller_bus_number }}",
                       "unit_number": "{{ disk.unit_number }}"
                     },
-                  
                   {% endif %}
                   {% endfor %}
                   ]
@@ -106,10 +105,10 @@
 - name: Remove disks from virtual machine using name
   community.vmware.vmware_guest_disk:
     hostname: "{{ hosting_vcenter.ip }}"
-    username: "{{ hosting_vcenter.username }}" 
-    password: "{{ hosting_vcenter.password }}" 
+    username: "{{ hosting_vcenter.username }}"
+    password: "{{ hosting_vcenter.password }}"
     datacenter: "{{ hosting_vcenter.datacenter }}"
-    validate_certs: no
+    validate_certs: false
     name: "{{ item.esxi_vm_name }}"
     disk: "{{ item.disks }}"
   delegate_to: localhost
@@ -117,34 +116,42 @@
 
 # Build list of hosts with disks to be added, including the base disk
 - name: Build list of disks to add/modify
-  set_fact: 
+  set_fact:
     disks_to_add: >-
       [{% for host in nested_hosts  %}
       {% if "nested_hosts_disks" in  nested_clusters[host.nested_cluster] %}
       {
       "name": "{{ environment_tag }}-{{ host.name }}",
-      "disks" : [{"size_gb": 4, "type": "{{ disk_mode }}", "scsi_type": "paravirtual", "scsi_controller": 0, "unit_number": 0, "datastore": "{{ nested_clusters[host.nested_cluster].hosting_datastore }}"},
-                {% for disk in nested_clusters[host.nested_cluster].nested_hosts_disks  %}
+      "disks" : [
                   {
-                    "size_gb": {{ disk.size_gb }}, 
+                    "size_kb": "{{ disk_info.results[0].guest_disk_info['0'].capacity_in_kb }}",
                     "type": "{{ disk_mode }}",
-                    "datastore": "{{ nested_clusters[host.nested_cluster].hosting_datastore }}",
                     "scsi_type": "paravirtual",
                     "scsi_controller": 0,
-                    "unit_number": {{loop.index0}} + 1
+                    "unit_number": 0,
+                    "datastore": "{{ nested_clusters[host.nested_cluster].hosting_datastore }}"
                   },
-                {% endfor %}
+                  {% for disk in nested_clusters[host.nested_cluster].nested_hosts_disks  %}
+                    {
+                      "size_gb": {{ disk.size_gb }},
+                      "type": "{{ disk_mode }}",
+                      "datastore": "{{ nested_clusters[host.nested_cluster].hosting_datastore }}",
+                      "scsi_type": "paravirtual",
+                      "scsi_controller": 0,
+                      "unit_number": {{loop.index0}} + 1
+                    },
+                  {% endfor %}
                 ]
       },
       {% endif %}
       {% endfor %}]
-      
+
 - name: Add/modify disks
   community.vmware.vmware_guest_disk:
     hostname: "{{ hosting_vcenter.ip }}"
-    username: "{{ hosting_vcenter.username }}" 
-    password: "{{ hosting_vcenter.password }}" 
-    validate_certs: no
+    username: "{{ hosting_vcenter.username }}"
+    password: "{{ hosting_vcenter.password }}"
+    validate_certs: false
     datacenter: "{{ hosting_vcenter.datacenter }}"
     name: "{{ item.name }}"
     disk: "{{ item.disks }}"
@@ -155,9 +162,9 @@
 - name: Edit VM CPU, Memory and networks
   community.vmware.vmware_guest:
     hostname: "{{ hosting_vcenter.ip }}"
-    username: "{{ hosting_vcenter.username }}" 
-    password: "{{ hosting_vcenter.password }}" 
-    validate_certs: no
+    username: "{{ hosting_vcenter.username }}"
+    password: "{{ hosting_vcenter.password }}"
+    validate_certs: false
     datacenter: "{{ hosting_vcenter.datacenter }}"
     name: "{{ environment_tag }}-{{ item.name }}"
     hardware:
@@ -170,9 +177,9 @@
 - name: Set the state of a virtual machine to power on
   community.vmware.vmware_guest_powerstate:
     hostname: "{{ hosting_vcenter.ip }}"
-    username: "{{ hosting_vcenter.username }}" 
-    password: "{{ hosting_vcenter.password }}" 
-    validate_certs: no
+    username: "{{ hosting_vcenter.username }}"
+    password: "{{ hosting_vcenter.password }}"
+    validate_certs: false
     name: "{{ environment_tag }}-{{ item.name }}"
     state: powered-on
   delegate_to: localhost
@@ -187,8 +194,8 @@
     method: GET
     status_code: 200
     timeout: 2
-    validate_certs: False
-  ignore_errors: True
+    validate_certs: false
+  ignore_errors: true
   register: vcenter_response
 
 - set_fact:
@@ -196,97 +203,98 @@
 
 - name: vCenter install and configure tasks
   when: not vcenter_exists
-  block: 
-  - debug: 
-      msg:
-        - "Deploying vCenter to spec"
-        - "{{ nested_vcenter }}"
+  block:
+    - debug:
+        msg:
+          - "Deploying vCenter to spec"
+          - "{{ nested_vcenter }}"
 
-  - stat: path={{vc_iso}}
-    register: esxi_image
+    - stat: path={{vc_iso}}
+      register: esxi_image
 
-  - debug: msg="vCenter ISO file at path {{vc_iso}} does not exist"
-    when: not esxi_image.stat.exists
-    failed_when: not esxi_image.stat.exists
+    - debug: msg="vCenter ISO file at path {{vc_iso}} does not exist"
+      when: not esxi_image.stat.exists
+      failed_when: not esxi_image.stat.exists
 
-  - name: Create temporary build directory
-    tempfile:
-      state: directory
-      suffix: build
-    register: temp_dir_results
+    - name: Create temporary build directory
+      tempfile:
+        state: directory
+        suffix: build
+      register: temp_dir_results
 
-  - set_fact:
-      tmp_dir={{temp_dir_results.path}}
+    - set_fact:
+        tmp_dir={{temp_dir_results.path}}
 
-  - name: Create directory for VCSA extraction
-    file:
-      path: '{{tmp_dir}}/vcsa'
-      state: directory
-      mode: '0766'
+    - name: Create directory for VCSA extraction
+      file:
+        path: '{{tmp_dir}}/vcsa'
+        state: directory
+        mode: '0766'
 
-  - name: Extract VCSA ISO image
-    command: bsdtar -xf {{vc_iso}} -C {{tmp_dir}}/vcsa
-  
-  - name: Set permissions
-    file: dest={{tmp_dir}}/vcsa mode=777 recurse=yes
+    - name: Extract VCSA ISO image
+      command: bsdtar -xf {{vc_iso}} -C {{tmp_dir}}/vcsa
 
-  - name: Create JSON template file for VCSA 6.7 with embeded PSC
-    template: 
-      src=embedded_vCSA_on_VC_6.7.json
-      dest={{tmp_dir}}/vCSA_on_ESXi.json 
-    when: vc_iso is search("-6.7.")
+    - name: Set permissions
+      file: dest={{tmp_dir}}/vcsa mode=777 recurse=yes
 
-  - name: Create JSON template file for VCSA 7.0 with embeded PSC
-    template: 
-      src=embedded_vCSA_on_VC_7.0.json
-      dest={{tmp_dir}}/vCSA_on_ESXi.json
-    when: vc_iso is search("-7.0.")
+    - name: Create JSON template file for VCSA 6.7 with embeded PSC
+      template:
+        src=embedded_vCSA_on_VC_6.7.json
+        dest={{tmp_dir}}/vCSA_on_ESXi.json
+      when: vc_iso is search("-6.7.")
 
-  - name: Perform VC CLI Install
-    command: "bash ./vcsa-deploy install --accept-eula --no-esx-ssl-verify {{tmp_dir}}/vCSA_on_ESXi.json"
-    args:
-      chdir: '{{tmp_dir}}/vcsa/vcsa-cli-installer/lin64/'
-    async: 9000
-    poll: 0
-    register: vcenter_result
+    - name: Create JSON template file for VCSA 7.0 with embeded PSC
+      template:
+        src=embedded_vCSA_on_VC_7.0.json
+        dest={{tmp_dir}}/vCSA_on_ESXi.json
+      when: vc_iso is search("-7.0.")
 
-  - debug: 
-      msg:
-      - "The vCenter deployment can take a long time."
-      - "You can check progress at https://{{nested_vcenter.ip}}:5480 after the vCenter VM has booted."
-      - "For detailed output browse to the most recent folder starting with vcsaCliInstaller under /tmp and follow vcsa-cli-installer.log "
+    - name: Perform VC CLI Install
+      command: "bash ./vcsa-deploy install --accept-eula --no-esx-ssl-verify {{tmp_dir}}/vCSA_on_ESXi.json"
+      args:
+        chdir: '{{tmp_dir}}/vcsa/vcsa-cli-installer/lin64/'
+      async: 9000
+      poll: 0
+      register: vcenter_result
 
-  - name: Result check for deployment of vCenter task
-    async_status:
-      jid: "{{ vcenter_result.ansible_job_id }}"
-    register: job_result
-    until: job_result.finished    
-    retries: 600
-    delay: 15
-  
-  - name: Check if the vSphere API is online
-    uri:
-      url: "https://{{ nested_vcenter.ip }}/ui/"
-      method: GET
-      status_code: 200
-      timeout: 2
-      validate_certs: False
-      return_content: True
-    retries: 60
-    delay: 10
-    until: result_vc_check.content.find("<title>vSphere Client</title>") != -1
-    register: result_vc_check
+    - debug:
+        msg:
+          - "The vCenter deployment can take a long time."
+          - "You can check progress at https://{{nested_vcenter.ip}}:5480 after the vCenter VM has booted."
+          - "For detailed output browse to the most recent folder starting with vcsaCliInstaller under"
+          - "/tmp and follow vcsa-cli-installer.log "
 
-  - name: Wait 30 seconds for the vCenter to settle
-    wait_for:
-      timeout: 30
+    - name: Result check for deployment of vCenter task
+      async_status:
+        jid: "{{ vcenter_result.ansible_job_id }}"
+      register: job_result
+      until: job_result.finished
+      retries: 600
+      delay: 15
+
+    - name: Check if the vSphere API is online
+      uri:
+        url: "https://{{ nested_vcenter.ip }}/ui/"
+        method: GET
+        status_code: 200
+        timeout: 2
+        validate_certs: false
+        return_content: true
+      retries: 60
+      delay: 10
+      until: result_vc_check.content.find("<title>vSphere Client</title>") != -1
+      register: result_vc_check
+
+    - name: Wait 30 seconds for the vCenter to settle
+      wait_for:
+        timeout: 30
 
   always:
-  - name: Remove the temp directory
-    file:
-      path: "{{ tmp_dir }}"
-      state: absent
-    when: tmp_dir is defined
+    - name: Remove the temp directory
+      file:
+        path: "{{ tmp_dir }}"
+        state: absent
+      when: tmp_dir is defined
 
 - name: Result check for deployment of host power on
   async_status:
@@ -303,7 +311,7 @@
     method: GET
     status_code: 200
     timeout: 2
-    validate_certs: False
+    validate_certs: false
   retries: 60
   delay: 10
   register: result_host_check

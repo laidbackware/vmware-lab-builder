@@ -1,0 +1,141 @@
+---
+
+- debug: msg="{{nsx_alb}}"
+
+- name: Deploy Avi Controller
+  community.vmware.vmware_deploy_ovf:
+    hostname: "{{ controller_vcenter_ip }}"
+    username: "{{ controller_vcenter_username }}"
+    password: "{{ controller_vcenter_password }}"
+    validate_certs: false
+    name: "{{ environment_tag }}-controller"
+    datacenter: "{{ controller_vcenter_datacenter }}"
+    # folder: /SG1/vm
+    cluster: "{{ controller_vcenter_cluster }}"
+    datastore: "{{ controller_vcenter_datastore }}"
+    disk_provisioning: "thin"
+    networks:
+      "Management": "{{ controller_port_group }}"
+    ova: "{{ controller_ova }}"
+    allow_duplicates: false
+    power_on: true
+    fail_on_spec_warnings: false
+    wait: true
+    wait_for_ip_address: true
+    inject_ovf_env: true
+    properties:
+      avi.mgmt-ip.CONTROLLER: "{{ controller_ip }}"
+      avi.mgmt-mask.CONTROLLER: "{{ controller_netmask }} "
+      avi.default-gw.CONTROLLER: "{{ controller_gateway }}"
+      avi.sysadmin-public-key.CONTROLLER: "{{ controller_ssh_public_key }}"
+  register: controller_results
+
+- name: Wait for Controller be ready
+  uri:
+    validate_certs: false
+    url: "http://{{ controller_ip }}/"
+    method: GET
+    status_code: 200,302,301,503
+  register: statusCode_output
+  until: statusCode_output.status == 200
+  retries: 120
+  delay: 60
+
+- name: Check Cluster Status
+  uri:
+    validate_certs: false
+    url: "https://{{ controller_ip }}/api/cluster/runtime"
+    method: GET
+    status_code: 200,302,301,503
+  register: cluster_status
+  until: cluster_status.json.cluster_state.progress == 100
+  retries: 120
+  delay: 60
+
+- name: Wait to all services be ready
+  pause:
+    echo: false
+    seconds: 60
+  when: controller_results.changed
+
+- name: Get main Cluster Information using avi_api_session
+  avi_api_session:
+    avi_credentials: "{{ avi_credentials }}"
+    http_method: get
+    path: cluster
+  register: access_test
+  ignore_errors: true
+
+- fail:
+    msg:
+      - "The controller default password is empty"
+      - "If you are using environmental variables, check it is exported"
+  when: >
+    controller_default_password == "" and
+    "access_test.module_stderr is defined and
+    'Invalid credentials' in access_test.module_stderr"
+
+- name: Change admin default password
+  avi_useraccount:
+    controller: "{{ controller_ip }}"
+    username: "{{ controller_username }}"
+    password: "{{ controller_password }}"
+    api_version: "{{ api_version }}"
+    old_password: "{{ controller_default_password }}"
+  when: "access_test.module_stderr is defined and 'Invalid credentials' in access_test.module_stderr"
+
+- name: Create a SSL Key and Certificate
+  avi_sslkeyandcertificate:
+    avi_credentials: "{{ avi_credentials }}"
+    type: SSL_CERTIFICATE_TYPE_SYSTEM
+    name: "{{ controller_ip }}"
+    certificate:
+      self_signed: true
+      days_until_expire: 730
+      signature_algorithm: sha256WithRSAEncryption
+      subject:
+        common_name: "{{ controller_ip }}"
+        distinguished_name: "CN={{ controller_ip }}"
+  register: controller_cert_result
+
+- name: Basic Controller Config
+  avi_systemconfiguration:
+    avi_credentials: "{{ avi_credentials }}"
+    default_license_tier: ESSENTIALS
+    email_configuration:
+      smtp_type: SMTP_NONE
+    global_tenant_config:
+      se_in_provider_context: true
+      tenant_access_to_provider_se: true
+      tenant_vrf: false
+    dns_configuration:
+      server_list:
+        - type: V4
+          addr: "{{ dns_server }}"
+    ntp_configuration:
+      ntp_servers:
+        - server:
+            type: DNS
+            addr: "{{ ntp_server }}"
+    portal_configuration:
+      sslkeyandcertificate_refs:
+        - /api/sslkeyandcertificate/?name={{ controller_ip }}
+  register: system_config_result
+
+- name: Wait for server to restart with new certificate
+  pause:
+    echo: false
+    seconds: 15
+  when: system_config_result.changed
+
+# Backup configuration currently broken
+- name: Example to create BackupConfiguration object
+  avi_backupconfiguration:
+    avi_credentials: "{{ avi_credentials }}"
+    # state: present
+    name: Backup-Configuration
+    backup_passphrase: VMware1!
+    upload_to_remote_host: false
+  register: backup
+
+- debug: msg="{{ backup }}"

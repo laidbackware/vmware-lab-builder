@@ -1,24 +1,25 @@
 ---
+
+- debug: msg="{{ nsxt }}"
 - name: Create T0 uplink segments
-  nsxt_policy_segment:
+  vmware.ansible_for_nsxt.nsxt_policy_segment:
     hostname: "{{ nsxt.manager.hostname }}"
     username: "{{ nsxt.manager.username }}"
     password: "{{ nsxt.manager.password }}"
-    validate_certs: False
+    validate_certs: false
     display_name: "{{ item.display_name }}"
     state: present
     transport_zone_display_name: "{{ item.transport_zone_display_name }}"
     vlan_ids: "{{ item.vlan_ids }}"
     tags: "{{ item.tags | default(omit) }}"
   loop: "{{ nsxt.uplink_segments }}"
-    
 
 - name: Create Tier 0 Gateway
-  nsxt_policy_tier0:
+  vmware.ansible_for_nsxt.nsxt_policy_tier0:
     hostname: "{{ nsxt.manager.hostname }}"
     username: "{{ nsxt.manager.username }}"
     password: "{{ nsxt.manager.password }}"
-    validate_certs: False
+    validate_certs: false
     display_name: "{{ nsxt.tier_0.display_name }}"
     state: present
     ha_mode: "{{ nsxt.tier_0.ha_mode }}"
@@ -36,11 +37,11 @@
 - debug: var=nsxt.tier_1_gateways
 
 - name: Create Tier 1 Gateways
-  nsxt_policy_tier1:
+  vmware.ansible_for_nsxt.nsxt_policy_tier1:
     hostname: "{{ nsxt.manager.hostname }}"
     username: "{{ nsxt.manager.username }}"
     password: "{{ nsxt.manager.password }}"
-    validate_certs: False
+    validate_certs: false
     display_name: "{{ item.display_name }}"
     state: "{{ item.state | default('present') }}"
     failover_mode: "{{ item.failover_mode | default(omit) }}"
@@ -55,11 +56,11 @@
   loop: "{{ nsxt.tier_1_gateways }}"
 
 - name: Create overlay segments
-  nsxt_policy_segment:
+  vmware.ansible_for_nsxt.nsxt_policy_segment:
     hostname: "{{ nsxt.manager.hostname }}"
     username: "{{ nsxt.manager.username }}"
     password: "{{ nsxt.manager.password }}"
-    validate_certs: False
+    validate_certs: false
     display_name: "{{ item.display_name }}"
     state: present
     subnets: "{{ item.subnets | default(omit) }}"
@@ -68,7 +69,7 @@
     tags: "{{ item.tags | default(omit) }}"
   loop: "{{ nsxt.overlay_segments }}"
 
-- debug: 
+- debug:
     msg:
       - The next step will check and wait for NSX-T networks to be available
       - You must add a static route to {{ nsxt.routing_test.nsxt_supernet }} with next hop {{ nsxt.routing_test.router_uplink }}

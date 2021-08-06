@@ -1,14 +1,14 @@
 ---
 - name: Create uplink profile
-  nsxt_uplink_profiles:
+  vmware.ansible_for_nsxt.nsxt_uplink_profiles:
     hostname: "{{ nsxt.manager.hostname }}"
     username: "{{ nsxt.manager.username }}"
     password: "{{ nsxt.manager.password }}"
-    validate_certs: False
+    validate_certs: false
     resource_type: UplinkHostSwitchProfile
     display_name: "{{ item.display_name }}"
     mtu: "{{ item.mtu | default(omit)}}"
     teaming: "{{ item.teaming }}"
     transport_vlan: "{{ item.transport_vlan }}"
     state: "present"
-  loop: "{{ nsxt.uplink_profiles }}"  
+  loop: "{{ nsxt.uplink_profiles }}"

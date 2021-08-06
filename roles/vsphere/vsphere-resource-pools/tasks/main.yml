@@ -1,7 +1,7 @@
 ---
 # Build a list of resource pools to add and ignore cluster if none specified
 - name: Build resource pools to add
-  set_fact: 
+  set_fact:
     resource_pools_to_add: >-
       [
       {% for cluster_name, cluster_spec in nested_clusters.items()  %}
@@ -21,7 +21,7 @@
     hostname: "{{ nested_vcenter.ip }}"
     username: "{{ nested_vcenter.username }}"
     password: "{{ nested_vcenter.password }}"
-    validate_certs: False
+    validate_certs: false
     datacenter: "{{ nested_vcenter.datacenter }}"
     cluster: "{{ item.cluster_name }}"
     resource_pool: "{{ item.resource_pool }}"

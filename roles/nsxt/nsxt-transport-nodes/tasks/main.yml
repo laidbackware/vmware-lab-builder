@@ -1,19 +1,19 @@
 ---
 - name: Deploy compute manager
-  nsxt_fabric_compute_managers:
-      hostname: "{{ nsxt.manager.hostname }}"
-      username: "{{ nsxt.manager.username }}"
-      password: "{{ nsxt.manager.password }}"
-      validate_certs: False
-      display_name: "vCenter"
-      server: "{{ nested_vcenter.ip }}"
-      origin_type: "vCenter"
-      credential:
-        credential_type: UsernamePasswordLoginCredential
-        username: "{{ nested_vcenter.username }}"
-        password: "{{ nested_vcenter.password }}"
-      set_as_oidc_provider: true
-      state: present
+  vmware.ansible_for_nsxt.nsxt_fabric_compute_managers:
+    hostname: "{{ nsxt.manager.hostname }}"
+    username: "{{ nsxt.manager.username }}"
+    password: "{{ nsxt.manager.password }}"
+    validate_certs: false
+    display_name: "vCenter"
+    server: "{{ nested_vcenter.ip }}"
+    origin_type: "vCenter"
+    credential:
+      credential_type: UsernamePasswordLoginCredential
+      username: "{{ nested_vcenter.username }}"
+      password: "{{ nested_vcenter.password }}"
+    set_as_oidc_provider: true
+    state: present
   retries: 12
   delay: 10
   register: result
@@ -22,34 +22,34 @@
 - debug: msg="Creating edge nodes {{ nsxt.edge_nodes }}"
 
 - name: Create transport node
-  nsxt_transport_nodes:
+  vmware.ansible_for_nsxt.nsxt_transport_nodes:
     hostname: "{{ nsxt.manager.hostname }}"
     username: "{{ nsxt.manager.username }}"
     password: "{{ nsxt.manager.password }}"
-    validate_certs: False
+    validate_certs: false
     display_name: "{{ item.display_name }}"
     host_switch_spec:
       resource_type: "StandardHostSwitchSpec"
       host_switches:
-      - host_switch_profiles:
-        - name: "{{ item.host_switches.tep.uplink_profile_name }}"
-          type: UplinkHostSwitchProfile
-        host_switch_name: "{{ item.host_switches.tep.host_switch_name | default('defaultHostSwitch') }}"
-        host_switch_mode: STANDARD
-        transport_zone_endpoints: "{{ item.host_switches.tep.transport_zone_endpoints }}"
-        pnics:
-        - device_name: "fp-eth2"
-          uplink_name: "uplink-1"
-        ip_assignment_spec: "{{ item.host_switches.tep.ip_assignment_spec }}"
-      - host_switch_profiles:
-        - name: "{{ item.host_switches.uplink.uplink_profile_name }}"
-          type: UplinkHostSwitchProfile
-        host_switch_name: "{{ item.host_switches.uplink.host_switch_name }}"
-        host_switch_mode: STANDARD
-        transport_zone_endpoints: "{{ item.host_switches.uplink.transport_zone_endpoints }}"
-        pnics:
-        - device_name: "fp-eth0"
-          uplink_name: "uplink-1"
+        - host_switch_profiles:
+            - name: "{{ item.host_switches.tep.uplink_profile_name }}"
+              type: UplinkHostSwitchProfile
+          host_switch_name: "{{ item.host_switches.tep.host_switch_name | default('defaultHostSwitch') }}"
+          host_switch_mode: STANDARD
+          transport_zone_endpoints: "{{ item.host_switches.tep.transport_zone_endpoints }}"
+          pnics:
+            - device_name: "fp-eth2"
+              uplink_name: "uplink-1"
+          ip_assignment_spec: "{{ item.host_switches.tep.ip_assignment_spec }}"
+        - host_switch_profiles:
+            - name: "{{ item.host_switches.uplink.uplink_profile_name }}"
+              type: UplinkHostSwitchProfile
+          host_switch_name: "{{ item.host_switches.uplink.host_switch_name }}"
+          host_switch_mode: STANDARD
+          transport_zone_endpoints: "{{ item.host_switches.uplink.transport_zone_endpoints }}"
+          pnics:
+            - device_name: "fp-eth0"
+              uplink_name: "uplink-1"
     node_deployment_info:
       resource_type: EdgeNode
       deployment_config:
@@ -64,18 +64,18 @@
           allow_ssh_root_login: true
           compute: "{{ item.cluster_name }}"
           data_networks:
-          - "{{ item.network_uplink_name }}"
-          - "{{ item.network_tep_name }}"
-          - "{{ item.network_tep_name }}"
+            - "{{ item.network_uplink_name }}"
+            - "{{ item.network_tep_name }}"
+            - "{{ item.network_tep_name }}"
           default_gateway_addresses:
-          - "{{ item.mgmt_default_gateway }}"
+            - "{{ item.mgmt_default_gateway }}"
           enable_ssh: true
           hostname: "{{ item.mgmt_ip_address }}"
           management_network: "{{ item.network_management_name }}"
           management_port_subnets:
-          - ip_addresses:
-            - "{{ item.mgmt_ip_address }}"
-            prefix_length: "{{ item.mgmt_prefix_length }}"
+            - ip_addresses:
+                - "{{ item.mgmt_ip_address }}"
+              prefix_length: "{{ item.mgmt_prefix_length }}"
           placement_type: VsphereDeploymentConfig
           storage: "{{ item.datastore_name }}"
           vc_name: vCenter
@@ -93,11 +93,11 @@
 - debug: msg="Creating transport node profiles {{ nsxt.transport_node_profiles }}"
 
 - name: Create transport node profile
-  nsxt_transport_node_profiles:
+  vmware.ansible_for_nsxt.nsxt_transport_node_profiles:
     hostname: "{{ nsxt.manager.hostname }}"
     username: "{{ nsxt.manager.username }}"
     password: "{{ nsxt.manager.password }}"
-    validate_certs: False
+    validate_certs: false
     resource_type: TransportNodeProfile
     display_name: "{{ item.display_name}}"
     description: "{{ item.description}}"
@@ -111,18 +111,18 @@
 - debug: msg="Attaching transport node profiles {{ nsxt.cluster_attach }}"
 
 - name: Attach Transport node profile to cluster
-  nsxt_transport_node_collections:
+  vmware.ansible_for_nsxt.nsxt_transport_node_collections:
     hostname: "{{ nsxt.manager.hostname }}"
     username: "{{ nsxt.manager.username }}"
     password: "{{ nsxt.manager.password }}"
-    validate_certs: False
+    validate_certs: false
     display_name: "{{ item.display_name }}"
     resource_type: "TransportNodeCollection"
     description: "{{ item.description }}"
     compute_manager_name: "{{ item.compute_manager_name }}"
     cluster_name: "{{ item.cluster_name }}"
     transport_node_profile_name: "{{ item.transport_node_profile_name }}"
-    state: present      
+    state: present
   loop: "{{ nsxt.cluster_attach }}"
 
 - name: Result check for deployment of edge nodes

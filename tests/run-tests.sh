@@ -9,6 +9,7 @@ echo $script_dir
 function run_playbook() {
   vars_file=$1
   action=$2
+  echo "running $action for $vars_file"
   docker run --rm \
     --env PARENT_VCENTER_USERNAME=${PARENT_VCENTER_USERNAME} \
     --env PARENT_VCENTER_PASSWORD=${PARENT_VCENTER_PASSWORD} \
@@ -42,10 +43,10 @@ function run_test() {
 }
 
 function test_opinionated_examples() {
-  # run_test base-vsphere/minimal-opinionated
-  # run_test nsxt/opinionated
-  run_test tkg-service-vds/opinionated-1host-haproxy
-  run_test tkg-service-nsxt/opinionated-1host
+  run_test base-vsphere/minimal-opinionated
+  run_test nsxt/opinionated
+  run_test tanzu/vsphere-vds/opinionated-1host-haproxy
+  run_test tanzu/vsphere-nsxt/opinionated-1host
 }
 
 test_opinionated_examples

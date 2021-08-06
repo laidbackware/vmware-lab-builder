@@ -1,7 +1,10 @@
 ---
 - name: Deploy VC and Hosts
   hosts: localhost
-  gather_facts: False
+  gather_facts: false
+  collections:
+  - vmware.alb
+  - vmware.ansible_for_nsxt
   roles:
     # Base vsphere section
     - role: vsphere/vsphere-deploy-vc-and-hosts
@@ -37,24 +40,34 @@
     - role: nsxt/nsxt-switching-routing
       when: 'nsxt is defined'
 
+    # NSX-ALB (Avi) Section
+    - role: nsx-alb/deploy-controller
+      when: 'nsx_alb is defined'
+    - role: nsx-alb/configure-cloud
+      when: 'nsx_alb is defined'
+
+    # Tanzu Multi-Cloud Secton
+    - role: tanzu/multi-cloud-generate-config
+      when: 'tanzu_multi_cloud.generated_config_file_name is defined'
+
     # vSphere with Kubernetes Section
     - role: vsphere/vsphere-storage-based-policy-management
       when: 'tspbm is defined'
-    - role: tkg-service/vsphere-content-library
-      when: 'tkg_service is defined'
-    - role: tkg-service/tkgs-vyos-router
+    - role: tanzu/vsphere-content-library
+      when: 'tanzu_vsphere is defined'
+    - role: tanzu/vyos-router
       when: 'tkg_router is defined'
-    - role: tkg-service/tkgs-ha-proxy
+    - role: tanzu/ha-proxy
       when: 'tkg_haproxy is defined'
-    - role: tkg-service/tkgs-enable-cluster
-      when: 'tkg_service is defined'
-     
+    - role: tanzu/vsphere-enable-cluster
+      when: 'tanzu_vsphere is defined'
+
     # Harbor section
     - role: harbor-standalone/harbor-vm
       when: 'harbor_standalone is defined'
 
 # Separate section to run commands inside harbor VM if created
-- name:  Setup Standalone Harbor
+- name: Setup Standalone Harbor
   hosts: harbor
   become: true
   roles:
@@ -63,7 +76,7 @@
 
 - name: Display Summary
   hosts: localhost
-  gather_facts: False
+  gather_facts: false
   roles:
     ### Show outputs at the end
     - role: display-configuration

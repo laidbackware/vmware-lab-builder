@@ -20,7 +20,7 @@
 - debug: msg="{{ tag_category_result }}"
 
 - name: Build device lookup table
-  set_fact: 
+  set_fact:
     tag_category_map: >-
       {
       {% for tag_category in tag_category_result.results %}

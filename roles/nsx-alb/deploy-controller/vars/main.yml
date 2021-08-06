@@ -1,0 +1,27 @@
+---
+controller_ova: "{{ nsx_alb_controller_ova }}"
+controller_vcenter_ip: "{{ nsx_alb.controller_vcenter_ip }}"
+controller_vcenter_username: "{{ nsx_alb.controller_vcenter_username }}"
+controller_vcenter_password: "{{ nsx_alb.controller_vcenter_password }}"
+controller_vcenter_datacenter: "{{ nsx_alb.controller_vcenter_datacenter }}"
+controller_vcenter_cluster: "{{ nsx_alb.controller_vcenter_cluster }}"
+controller_vcenter_datastore: "{{ nsx_alb.controller_vcenter_datastore }}"
+
+ntp_server: "{{ nsx_alb.ntp_server }}"
+dns_server: "{{ nsx_alb.dns_server }}"
+
+controller_ip: "{{ nsx_alb.controller_ip }}"
+controller_netmask: "{{ nsx_alb.controller_netmask }}"
+controller_gateway: "{{ nsx_alb.controller_gateway }}"
+controller_port_group: "{{ nsx_alb.controller_port_group }}"
+controller_ssh_public_key: "{{ nsx_alb.controller_ssh_public_key }}"
+controller_default_password: "{{ nsx_alb.controller_default_password }}"
+controller_username: "{{ nsx_alb.controller_username }}"
+controller_password: "{{ nsx_alb.controller_password }}"
+api_version: "{{ nsx_alb.api_version }}"
+
+avi_credentials:
+  controller: "{{ controller_ip }}"
+  username: "{{ controller_username }}"
+  password: "{{ controller_password }}"
+  api_version: "{{ api_version }}"

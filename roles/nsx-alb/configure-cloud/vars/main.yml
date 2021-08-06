@@ -1,0 +1,28 @@
+---
+controller_ip: "{{ nsx_alb.controller_ip }}"
+controller_username: "{{ nsx_alb.controller_username }}"
+controller_password: "{{ nsx_alb.controller_password }}"
+api_version: "{{ nsx_alb.api_version }}"
+
+avi_credentials:
+  controller: "{{ controller_ip }}"
+  username: "{{ controller_username }}"
+  password: "{{ controller_password }}"
+  api_version: "{{ api_version }}"
+
+# The cloud vCenter will host the service engines and Tanzu clusters
+cloud_vcenter_username: "{{ nsx_alb.cloud_vcenter_username }}"
+cloud_vcenter_password: "{{ nsx_alb.cloud_vcenter_password }}"
+cloud_vcenter_url: "{{ nsx_alb.cloud_vcenter_url }}"
+cloud_vcenter_datacenter: "{{ nsx_alb.cloud_vcenter_datacenter }}"
+
+se_vcenter_cluster: "{{ nsx_alb.se_vcenter_cluster }}"
+# The management network will host he service engine management interface
+se_management_port_group: "{{ nsx_alb.se_management_port_group }}"
+se_management_network_cidr: "{{ nsx_alb.se_management_network_cidr }}"
+se_management_network_range: "{{ nsx_alb.se_management_network_range }}"
+se_management_network_gateway: "{{ nsx_alb.se_management_network_gateway }}"
+# The vip network will contain the virtual servers created by Avi
+se_vip_port_group: "{{ nsx_alb.se_vip_port_group }}"
+se_vip_network_cidr: "{{ nsx_alb.se_vip_network_cidr }}"
+se_vip_network_range: "{{ nsx_alb.se_vip_network_range }}"

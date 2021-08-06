@@ -1,7 +1,7 @@
 ---
 # Build of host to vds mapping buy using the nest_cluster field in the host spec
 - name: Build list of port groups to add to each vds
-  set_fact: 
+  set_fact:
     vds_port_groups: >-
       [
       {% for distributed_switch in distributed_switches %}
@@ -33,4 +33,3 @@
   loop: "{{ vds_port_groups }}"
   delegate_to: localhost
   when: 'distributed_switches is defined'
-    

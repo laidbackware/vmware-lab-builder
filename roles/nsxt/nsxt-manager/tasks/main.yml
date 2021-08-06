@@ -9,23 +9,23 @@
 - name: Deploy NSX-T Manager OVA
   community.vmware.vmware_deploy_ovf:
     hostname: "{{ nsxt.manager.hosting_vcenter_ip }}"
-    username: "{{ nsxt.manager.hosting_vcenter_username }}" 
-    password: "{{ nsxt.manager.hosting_vcenter_password }}" 
-    validate_certs: no
+    username: "{{ nsxt.manager.hosting_vcenter_username }}"
+    password: "{{ nsxt.manager.hosting_vcenter_password }}"
+    validate_certs: false
     name: "{{ environment_tag }}-nsxt-manager"
     datacenter: "{{ nsxt.manager.hosting_datacenter }}"
     cluster: "{{ nsxt.manager.hosting_cluster }}"
     datastore: "{{ nsxt.manager.hosting_datastore }}"
     disk_provisioning: "{{ disk_mode }}"
-    networks:  
+    networks:
       "Network 1": "{{ nsxt.manager.hosting_network }}"
     ova: "{{ nsxt_ova }}"
-    allow_duplicates: no
-    power_on: yes
-    fail_on_spec_warnings: yes
-    wait: yes
-    wait_for_ip_address: yes
-    inject_ovf_env: yes
+    allow_duplicates: false
+    power_on: true
+    fail_on_spec_warnings: true
+    wait: true
+    wait_for_ip_address: true
+    inject_ovf_env: true
     deployment_option: small
     properties:
       nsx_ip_0: "{{ nsxt.manager.ip }}"
@@ -34,8 +34,8 @@
       nsx_dns1_0: "{{ dns_server }}"
       nsx_domain_0: "{{ dns_domain }}"
       nsx_ntp_0: "{{ ntp_server_ip }}"
-      nsx_isSSHEnabled: True
-      nsx_allowSSHRootLogin: True
+      nsx_isSSHEnabled: true
+      nsx_allowSSHRootLogin: true
       nsx_hostname: "{{ nsxt.manager.ip }}"
       nsx_passwd_0: "{{ nsxt.manager.password }}"
       nsx_cli_passwd_0: "{{ nsxt.manager.password }}"
@@ -44,7 +44,7 @@
   async: 1800
   poll: 0
   register: nsxt_manager_results
-  
+
 - name: Check on NSX-T Manager Deploy Job
   async_status:
     jid: "{{ nsxt_manager_results.ansible_job_id }}"
@@ -54,11 +54,11 @@
   delay: 10
 
 - name: Check manager status
-  nsxt_manager_status:
+  vmware.ansible_for_nsxt.nsxt_manager_status:
     hostname: "{{ nsxt.manager.hostname }}"
     username: "{{ nsxt.manager.username }}"
     password: "{{ nsxt.manager.password }}"
-    validate_certs: False
+    validate_certs: false
     wait_time: 50
 
 - name: Check all services are up
@@ -67,20 +67,20 @@
     user: "{{ nsxt.manager.username }}"
     password: "{{ nsxt.manager.password }}"
     method: GET
-    force_basic_auth: yes
-    validate_certs: False
-    return_content: yes
+    force_basic_auth: true
+    validate_certs: false
+    return_content: true
   retries: 60
   delay: 10
   register: result
   until: "'UNKNOWN' not in result.content and 'DOWN' not in result.content"
 
 - name: Add license
-  nsxt_licenses:
+  vmware.ansible_for_nsxt.nsxt_licenses:
     hostname: "{{ nsxt.manager.hostname }}"
     username: "{{ nsxt.manager.username }}"
     password: "{{ nsxt.manager.password }}"
-    validate_certs: False
+    validate_certs: false
     license_key: "{{nsxt.manager.license_key}}"
     state: present
   when: 'nsxt.manager.license_key is defined'

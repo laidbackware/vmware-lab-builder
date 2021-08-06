@@ -2,9 +2,9 @@
 - name: Remove the vCenter VM
   community.vmware.vmware_guest:
     hostname: "{{ hosting_vcenter.ip }}"
-    username: "{{ hosting_vcenter.username }}" 
-    password: "{{ hosting_vcenter.password }}" 
-    validate_certs: no
+    username: "{{ hosting_vcenter.username }}"
+    password: "{{ hosting_vcenter.password }}"
+    validate_certs: false
     name: "{{ environment_tag }}-vcenter"
     state: absent
     force: true
@@ -13,9 +13,9 @@
 - name: Remove ESXi hosts VMs
   community.vmware.vmware_guest:
     hostname: "{{ hosting_vcenter.ip }}"
-    username: "{{ hosting_vcenter.username }}" 
-    password: "{{ hosting_vcenter.password }}" 
-    validate_certs: no
+    username: "{{ hosting_vcenter.username }}"
+    password: "{{ hosting_vcenter.password }}"
+    validate_certs: false
     name: "{{ environment_tag }}-{{ item.name }}"
     state: absent
     force: true
@@ -25,9 +25,9 @@
 - name: Remove NSX-T Manager VM
   community.vmware.vmware_guest:
     hostname: "{{ hosting_vcenter.ip }}"
-    username: "{{ hosting_vcenter.username }}" 
-    password: "{{ hosting_vcenter.password }}" 
-    validate_certs: no
+    username: "{{ hosting_vcenter.username }}"
+    password: "{{ hosting_vcenter.password }}"
+    validate_certs: false
     name: "{{ environment_tag }}-nsxt-manager"
     state: absent
     force: true

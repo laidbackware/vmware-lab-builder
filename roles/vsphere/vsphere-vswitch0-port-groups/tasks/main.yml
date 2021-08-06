@@ -4,7 +4,7 @@
     hostname: "{{ nested_vcenter.ip }}"
     username: "{{ nested_vcenter.username }}"
     password: "{{ nested_vcenter.password }}"
-    validate_certs: False
+    validate_certs: false
     cluster_name: "{{ item.key }}"
     switch_name: vSwitch0
     portgroup_name: "VM Network"
@@ -18,7 +18,7 @@
     hostname: "{{ nested_vcenter.ip }}"
     username: "{{ nested_vcenter.username }}"
     password: "{{ nested_vcenter.password }}"
-    validate_certs: False
+    validate_certs: false
     cluster_name: "{{item.key}}"
     switch_name: vSwitch0
     portgroup_name: "{{ item.value.vswitch0_vm_port_group_name }}"

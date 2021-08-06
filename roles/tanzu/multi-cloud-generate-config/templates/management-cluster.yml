@@ -1,0 +1,57 @@
+---
+AVI_CA_DATA_B64: ""
+AVI_CLOUD_NAME: "{{ tanzu_multi_cloud.avi_cloud_name }}"
+AVI_CONTROLLER: "{{ tanzu_multi_cloud.avi_controller }}"
+AVI_DATA_NETWORK: "{{ tanzu_multi_cloud.avi_data_network }}"
+AVI_DATA_NETWORK_CIDR: "{{ tanzu_multi_cloud.avi_data_network_cidr }}"
+AVI_ENABLE: "true"
+AVI_LABELS: ""
+AVI_PASSWORD: "{{ tanzu_multi_cloud.avi_password }}"
+AVI_SERVICE_ENGINE_GROUP: "{{ tanzu_multi_cloud.avi_service_engine_group | default('Default-Group') }}"
+AVI_USERNAME: "{{ tanzu_multi_cloud.avi_username }}"
+CLUSTER_CIDR: 100.96.0.0/11
+CLUSTER_PLAN: dev
+ENABLE_CEIP_PARTICIPATION: "false"
+ENABLE_MHC: "true"
+IDENTITY_MANAGEMENT_TYPE: none
+INFRASTRUCTURE_PROVIDER: vsphere
+LDAP_BIND_DN: ""
+LDAP_BIND_PASSWORD: ""
+LDAP_GROUP_SEARCH_BASE_DN: ""
+LDAP_GROUP_SEARCH_FILTER: ""
+LDAP_GROUP_SEARCH_GROUP_ATTRIBUTE: ""
+LDAP_GROUP_SEARCH_NAME_ATTRIBUTE: cn
+LDAP_GROUP_SEARCH_USER_ATTRIBUTE: DN
+LDAP_HOST: ""
+LDAP_ROOT_CA_DATA_B64: ""
+LDAP_USER_SEARCH_BASE_DN: ""
+LDAP_USER_SEARCH_FILTER: ""
+LDAP_USER_SEARCH_NAME_ATTRIBUTE: ""
+LDAP_USER_SEARCH_USERNAME: userPrincipalName
+OIDC_IDENTITY_PROVIDER_CLIENT_ID: ""
+OIDC_IDENTITY_PROVIDER_CLIENT_SECRET: ""
+OIDC_IDENTITY_PROVIDER_GROUPS_CLAIM: ""
+OIDC_IDENTITY_PROVIDER_ISSUER_URL: ""
+OIDC_IDENTITY_PROVIDER_NAME: ""
+OIDC_IDENTITY_PROVIDER_SCOPES: ""
+OIDC_IDENTITY_PROVIDER_USERNAME_CLAIM: ""
+SERVICE_CIDR: 100.64.0.0/13
+TKG_HTTP_PROXY_ENABLED: "false"
+VSPHERE_CONTROL_PLANE_DISK_GIB: "40"
+VSPHERE_CONTROL_PLANE_ENDPOINT: "{{ tanzu_multi_cloud.vsphere_control_plane_endpoint }}"
+VSPHERE_CONTROL_PLANE_MEM_MIB: "8192"
+VSPHERE_CONTROL_PLANE_NUM_CPUS: "2"
+VSPHERE_DATACENTER: "{{ tanzu_multi_cloud.vsphere_datacenter }}"
+VSPHERE_DATASTORE: "{{ tanzu_multi_cloud.vsphere_datastore }}"
+DEPLOY_TKG_ON_VSPHERE7: true
+VSPHERE_FOLDER: "{{ tanzu_multi_cloud.vsphere_folder }}"
+VSPHERE_INSECURE: true
+VSPHERE_NETWORK: "{{ tanzu_multi_cloud.vsphere_network }}"
+VSPHERE_PASSWORD: "{{ tanzu_multi_cloud.vsphere_password }}"
+VSPHERE_RESOURCE_POOL: "{{ tanzu_multi_cloud.vsphere_resource_pool }}"
+VSPHERE_SERVER: "{{ tanzu_multi_cloud.vsphere_server }}"
+VSPHERE_SSH_AUTHORIZED_KEY: "{{ tanzu_multi_cloud.vsphere_ssh_authorized_key }}"
+VSPHERE_USERNAME: "{{ tanzu_multi_cloud.vsphere_username }}"
+VSPHERE_WORKER_DISK_GIB: "40"
+VSPHERE_WORKER_MEM_MIB: "8192"
+VSPHERE_WORKER_NUM_CPUS: "2"

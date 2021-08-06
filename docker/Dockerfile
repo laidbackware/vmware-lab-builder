@@ -1,9 +1,8 @@
 FROM ubuntu:20.04
 
-ENV ANSIBLE_VERSION=2.10.*
+ENV ANSIBLE_VERSION=2.11.*
 
-ENV ANSIBLE_LIBRARY=/repos/ansible-for-nsxt:/repos/ansible-for-vsphere-tanzu
-ENV ANSIBLE_MODULE_UTILS=/repos/ansible-for-nsxt/module_utils
+ENV ANSIBLE_LIBRARY=/repos/ansible-for-vsphere-tanzu
 ENV ANSIBLE_HOST_KEY_CHECKING=False
 
 RUN set -xe \
@@ -16,17 +15,20 @@ RUN set -xe \
         python3-pip python3-dev git  \
     \
     && echo "****** Installing Python modules ******" \
-    && pip3 install ansible pyvmomi netaddr \
+    && pip3 install ansible pyvmomi netaddr requests \
         git+https://github.com/vmware/vsphere-automation-sdk-python.git \
     \
     && echo "****** Adding community.vmware from Ansible Galaxy ******" \
-    && ansible-galaxy collection install community.vmware:1.8.0 \
+    && ansible-galaxy collection install community.vmware:1.11.0 \
     \
-    && echo "****** Cloning ansible-for-nsxt ******" \
-    && mkdir /repos \
-    && git clone https://github.com/vmware/ansible-for-nsxt.git /repos/ansible-for-nsxt \
+    && echo "****** Adding vmware.avi from Ansible Galaxy ******" \
+    && ansible-galaxy collection install vmware.alb:21.1.1-beta4 \
+    \
+    && echo "****** Adding ansible-for-nsxt from Github ******" \
+    && ansible-galaxy collection install git+https://github.com/vmware/ansible-for-nsxt.git \
     \
     && echo "****** Cloning ansible-for-vsphere-tanzu ******" \
+    && mkdir /repos \
     && git clone https://github.com/laidbackware/ansible-for-vsphere-tanzu.git /repos/ansible-for-vsphere-tanzu \
     \
     && echo "****** Removing build tools ******" \

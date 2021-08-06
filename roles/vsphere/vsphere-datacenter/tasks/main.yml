@@ -6,4 +6,4 @@
     password: "{{ nested_vcenter.password }}"
     datacenter_name: "{{ nested_vcenter.datacenter }}"
     state: present
-    validate_certs: False
+    validate_certs: false

@@ -11,13 +11,13 @@
   with_dict: "{{ nested_clusters }}"
 
 - name: Build device lookup table
-  set_fact: 
+  set_fact:
     host_disk_map: >-
       {
       {% for cluster in cluster_host_disks.results %}
       {% for host_name, disks in cluster.hosts_disk_info.items() %}
       {% for disk in disks %}
-      "{{cluster.invocation.module_args.cluster_name}}_{{host_name}}_{{disk.device_ctd_list[0]}}": 
+      "{{cluster.invocation.module_args.cluster_name}}_{{host_name}}_{{disk.device_ctd_list[0]}}":
         "{{disk.canonical_name}}",
       {% endfor %}
       {% endfor %}
@@ -26,7 +26,7 @@
 
 # Build a list of each datastore to add to each host
 - name: Build datastores to add
-  set_fact: 
+  set_fact:
     datastores_to_add: >-
       [
       {% for host in nested_hosts %}
@@ -49,7 +49,7 @@
     hostname: "{{ nested_vcenter.ip }}"
     username: "{{ nested_vcenter.username }}"
     password: "{{ nested_vcenter.password }}"
-    validate_certs: False
+    validate_certs: false
     datastore_name: "{{ item.datastore_prefix }}"
     datastore_type: "vmfs"
     vmfs_device_name: "{{host_disk_map[item.disk_reference]}}"

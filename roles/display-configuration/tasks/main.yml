@@ -1,5 +1,9 @@
 ---
 
+# - name: Get TKGS endpoint
+
+#   when: tanzu_vsphere is defined
+
 - name: Build outputs
   set_fact:
     build_outputs: >-
@@ -16,7 +20,7 @@
             "ip": "{{ host.ip }}",
             "root_password": "{{ nested_host_password }}"
           },
-          {% endfor %} 
+          {% endfor %}
         ],
         {% if nsxt is defined %}
         "nsxt": {
@@ -24,7 +28,7 @@
           "edge_ips": [
             {% for edge in nsxt.edge_nodes %}
             "{{ edge.mgmt_ip_address }}",
-            {% endfor %} 
+            {% endfor %}
           ],
           "username": "{{ nsxt.manager.username }}",
           "password": "{{ nsxt.manager.password }}",
@@ -33,8 +37,8 @@
           {% endif %}
         },
         {% endif %}
-        {% if tkg_service is defined %}
-        "tanzu_kubernetes": {
+        {% if tanzu_vsphere is defined %}
+        "tanzu_vsphere": {
           {% if tkg_router is defined %}
           "router" :{
             "uplink_ip": "{{ tkg_router.uplink_ip_cidr.split('/')[0] }}",
@@ -60,6 +64,11 @@
           "vm_ssh_password": "{{ harbor.password }}",
           "admin_username": "admin",
           "admin_password": "{{ harbor.password }}"
+        },
+        {% endif %}
+        {% if tanzu_multi_cloud.generated_config_file_name is defined %}
+        "tanzu_multi_cloud": {
+          "config_file": "{{ playbook_dir }}/{{ tanzu_multi_cloud.generated_config_file_name }}"
         },
         {% endif %}
 

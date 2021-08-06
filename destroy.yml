@@ -1,7 +1,7 @@
 ---
 - name: Delete Deployment
   hosts: localhost
-  gather_facts: False
+  gather_facts: false
   strategy: free
-  roles: 
+  roles:
     - role: delete-deployment
