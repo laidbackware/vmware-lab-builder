@@ -48,9 +48,9 @@ alias lab-builder="docker run --rm \
     --volume ${SOFTWARE_DIR}:/software_dir \
     --volume ${PWD}:/work \
     laidbackware/vmware-lab-builder:v2 \
-    ansible-playbook /work/deploy.yml"
+    ansible-playbook"
 
-lab-deploy --extra-vars '@/work/var-examples/base-vsphere/minimal-opinionated.yml'
+lab-builder /work/deploy.yml --extra-vars '@/work/var-examples/base-vsphere/minimal-opinionated.yml'
 ```
 
 ### Destroying
