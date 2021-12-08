@@ -14,3 +14,10 @@
     state: "present"
     tags: "{{ item.tags | default(omit) }}"
   loop: "{{ nsxt.transport_zones }}"
+  register: tz_results
+
+- name: Waiting 20 seconds for transport zone to configured before creating VLAN segments
+  pause:
+    echo: false
+    seconds: 20
+  when: tz_results.changed

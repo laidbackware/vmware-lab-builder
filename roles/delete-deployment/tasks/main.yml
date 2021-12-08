@@ -40,7 +40,7 @@
     username: "{{ hosting_vcenter.username }}"
     password: "{{ hosting_vcenter.password }}"
     validate_certs: false
-    name: "{{ environment_tag }}-avi-controller"
+    name: "{{ environment_tag }}-controller"
     state: absent
     force: true
   delegate_to: localhost

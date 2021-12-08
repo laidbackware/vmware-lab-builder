@@ -1,19 +1,5 @@
 ---
 
-- debug: msg="{{ nsxt }}"
-- name: Create T0 uplink segments
-  vmware.ansible_for_nsxt.nsxt_policy_segment:
-    hostname: "{{ nsxt.manager.hostname }}"
-    username: "{{ nsxt.manager.username }}"
-    password: "{{ nsxt.manager.password }}"
-    validate_certs: false
-    display_name: "{{ item.display_name }}"
-    state: present
-    transport_zone_display_name: "{{ item.transport_zone_display_name }}"
-    vlan_ids: "{{ item.vlan_ids }}"
-    tags: "{{ item.tags | default(omit) }}"
-  loop: "{{ nsxt.uplink_segments }}"
-
 - name: Create Tier 0 Gateway
   vmware.ansible_for_nsxt.nsxt_policy_tier0:
     hostname: "{{ nsxt.manager.hostname }}"

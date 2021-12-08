@@ -1,8 +1,8 @@
 ---
 # SOFTWARE_DIR must contain all required software
-vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.2-17920168.iso"
-esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u2_Appliance_Template_v1.ova"
-nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-3.1.1.0.0.17483186.ova"
+vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.3-18778458.iso"
+esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u3_Appliance_Template_v1.ova"
+nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-3.1.3.1.0.18504672.ova"
 
 environment_tag: "tanzu-vsphere-nsxt"  # Used to prepend object names in hosting vCenter
 dns_server: "192.168.0.1"
@@ -90,7 +90,6 @@ nested_clusters:  # You can add clusters in this section by duplicating the exis
     vmnic_physical_portgroup_assignment:
       - name: "{{ opinionated.hosting_network.base.port_group }}"
       - name: "{{ opinionated.hosting_network.nsxt_tep.port_group }}"
-      - name: "{{ opinionated.hosting_network.nsxt_tep.port_group }}"
 
 nested_hosts:
   - name: "esx1"
@@ -108,17 +107,7 @@ distributed_switches:  # (optional) - section can be removed to not create any d
     uplink_quantity: 1
     vmnics:
       - vmnic1
-  - vds_name: nsxt-edge-tep
-    mtu: 1600
-    vds_version: 7.0.0  # Should be 7.0.0, 6.7.0
-    clusters:  # distributed switch will be attached to all hosts in the clusters listed
-      - compute
-    uplink_quantity: 1
-    vmnics:
-      - vmnic2
-    distributed_port_groups:  # (optional) - section can be removed to not create any distributed port groups
-      - port_group_name: tep-pg
-        vlan_id: "{{ opinionated.hosting_network.nsxt_tep.vlan_id |default(0) }}"
+
 
 tspbm:  # Tag-based Storage Policy Based Management
   tag_categories:
@@ -221,7 +210,7 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
           - uplink_name: "uplink-1"
             uplink_type: PNIC
         policy: FAILOVER_ORDER
-      transport_vlan: 0
+      transport_vlan: "{{ opinionated.hosting_network.nsxt_tep.vlan_id }}"
     - display_name: edge-tep-profile
       mtu: 9000
       teaming:
@@ -229,7 +218,7 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
           - uplink_name: "uplink-1"
             uplink_type: PNIC
         policy: FAILOVER_ORDER
-      transport_vlan: 0
+      transport_vlan: "{{ opinionated.hosting_network.nsxt_tep.vlan_id }}"
     - display_name: edge-uplink-profile
       mtu: 1500
       teaming:
@@ -264,6 +253,7 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
             ip_pool_name: "tep-pool"
           transport_zone_endpoints:
             - transport_zone_name: "tz-overlay"
+            - transport_zone_name: "tz-vlan"
           uplinks:
             - uplink_name: "uplink-1"
               vds_uplink_name: "Uplink 1"
@@ -284,7 +274,7 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
       mgmt_default_gateway: "{{ opinionated.hosting_network.base.gateway }}"
       network_management_name: vm-network
       network_uplink_name: vm-network
-      network_tep_name: tep-pg
+      network_tep_name: edge-tep-seg
       datastore_name: datastore-esx1
       cluster_name: compute
       host_switches:
@@ -309,8 +299,11 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
       edge_cluster_members:
         - transport_node_name: edge-node-1
 
-  uplink_segments:
+  vlan_segments:
     - display_name: t0-uplink
+      vlan_ids: [0]
+      transport_zone_display_name: tz-vlan
+    - display_name: edge-tep-seg
       vlan_ids: [0]
       transport_zone_display_name: tz-vlan
 

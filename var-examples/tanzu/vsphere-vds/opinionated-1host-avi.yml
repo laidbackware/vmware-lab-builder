@@ -36,7 +36,7 @@ opinionated:
       cidr: "192.168.0.0/22"
       gateway: "192.168.0.1"
       # A TKGS deployment requires 8 IPs, plus 1 per esxi host. They MUST be contiguous.
-      starting_addr: "192.168.1.450"
+      starting_addr: "192.168.1.50"
     # If using your own network you must provide at least a /24.
     workload:
       port_group: trunk
@@ -48,7 +48,6 @@ opinionated:
       vlan_id: 13
       cidr: "172.18.13.0/24"
       # gateway: "172.18.11.1"
-  # This public key will be assigned to the created VMs, so you must have the private key to be able to use SSH
 
 #####################################################################
 ### No need to edit below this line for an opinionated deployment ###

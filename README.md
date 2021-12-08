@@ -22,7 +22,7 @@ ESXi nested OVA - 7.0U2a
 NSX-T - 3.1.2
 NSX-ALB (Avi) - 20.1.3
 
-## Usage 
+## Usage with Docker
 Each deployment pattern has an opinionated and a custom example. The idea of the opinionated deployment is that the user has to proide the minimum of configuration and the remainder of the options are calculated from this. Whereas the custom example has to have all sections built up by hand. Either of the examples types can be fully customized.<br/>
 
 You must export the credentials to you existing vCenter as environmental variables along with the path on your local machine which contains the software listed above.
@@ -32,7 +32,7 @@ export PARENT_VCENTER_PASSWORD="VMware1!"
 export SOFTWARE_DIR="$HOME/Downloads/vmware-products" 
 ```
 
-### Docker Usage 
+### Deploying
 After cloning the repo, you should make a copy and update the relevant vars yaml from the var-examples directory, making sure to include your ova and iso file names, and to change any IP addresses and credentials.<br/>
 Check the readme file in the example directory for any additional steps which may be needed for that solution.<br/>
 
@@ -44,25 +44,20 @@ alias lab-builder="docker run --rm \
     --env SOFTWARE_DIR='/software_dir' \
     --env ANSIBLE_FORCE_COLOR='true' \
     --env NSXT_LICENSE_KEY=${NSXT_LICENSE_KEY:-na} \
-    --env AVI_DEFAULT_PASSWORD=${AVI_DEFAULT_PASSWORD:-na} \
+    --env AVI_DEFAULT_PASSWORD=\"${AVI_DEFAULT_PASSWORD:-na}\" \
     --volume ${SOFTWARE_DIR}:/software_dir \
     --volume ${PWD}:/work \
-    laidbackware/vmware-lab-builder:v2 \
+    laidbackware/vmware-lab-builder:v3 \
     ansible-playbook"
 
 lab-builder /work/deploy.yml --extra-vars '@/work/var-examples/base-vsphere/minimal-opinionated.yml'
 ```
 
 ### Destroying
-To delete the nested lab use destroy.yml, which will delete all VMs from the parent vCenter.
+To delete the nested lab use destroy.yml, which will delete all VMs from the parent vCenter.</br/>
+This requires the `lab-builder` alias is set from 
 ```
-docker run --rm \
-    --env PARENT_VCENTER_USERNAME=${PARENT_VCENTER_USERNAME} \
-    --env PARENT_VCENTER_PASSWORD=${PARENT_VCENTER_PASSWORD} \
-    --env ANSIBLE_FORCE_COLOR='true' \
-    --volume ${PWD}:/work \
-    laidbackware/vmware-lab-builder:v2 \
-    ansible-playbook /work/destroy.yml \
+lab-builder /work/destroy.yml \
     --extra-vars '@/work/var-examples/base-vsphere/minimal-opinionated.yml'
 ```
 
@@ -80,7 +75,7 @@ docker run  -it --rm \
     --env AVI_DEFAULT_PASSWORD=${AVI_DEFAULT_PASSWORD:-na} \
     --volume ${SOFTWARE_DIR}:/software_dir \
     --volume ${PWD}:/work \
-    laidbackware/vmware-lab-builder:v2 \
+    laidbackware/vmware-lab-builder:v3 \
     /bin/bash
 
 # Then the playbook can be triggered
@@ -102,7 +97,7 @@ For solution specifc features, check the relevant example directory.
 ## Docker Image Build
 From the root of the repo. Note no-cache flag used to force builds to pickup any changes to the git repos.
 ```
-docker build --no-cache ./docker/. -t laidbackware/vmware-lab-builder:v2
+docker build --no-cache ./docker/. -t laidbackware/vmware-lab-builder:v4
 ```
 
 ## Local Usage
@@ -122,7 +117,7 @@ Software dependencies for Linux:
    ```
    ansible-galaxy collection install community.vmware --force
    ansible-galaxy collection install vmware.alb:21.1.1-beta4 --force
-   ansible-galaxy collection install git+https://github.com/vmware/ansible-for-nsxt.git --force
+   ansible-galaxy collection install git+https://github.com/vmware/ansible-for-nsxt.git,5b2a785b4ba67098e75a0db28410be83c8e09332 --force
    ```
 
 ### Cloning repos for the extra modules

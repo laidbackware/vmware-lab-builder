@@ -1,23 +1,49 @@
 ---
-- name: Deploy compute manager
-  vmware.ansible_for_nsxt.nsxt_fabric_compute_managers:
+- debug: msg="Creating transport node profiles {{ nsxt.transport_node_profiles }}"
+
+- name: Create transport node profile
+  vmware.ansible_for_nsxt.nsxt_transport_node_profiles:
     hostname: "{{ nsxt.manager.hostname }}"
     username: "{{ nsxt.manager.username }}"
     password: "{{ nsxt.manager.password }}"
     validate_certs: false
-    display_name: "vCenter"
-    server: "{{ nested_vcenter.ip }}"
-    origin_type: "vCenter"
-    credential:
-      credential_type: UsernamePasswordLoginCredential
-      username: "{{ nested_vcenter.username }}"
-      password: "{{ nested_vcenter.password }}"
-    set_as_oidc_provider: true
+    resource_type: TransportNodeProfile
+    display_name: "{{ item.display_name}}"
+    description: "{{ item.description}}"
+    host_switch_spec:
+      resource_type: StandardHostSwitchSpec
+      host_switches: "{{ item.host_switches }}"
+    transport_zone_endpoints: "{{ item.transport_zone_endpoints | default(omit)}}"
     state: present
-  retries: 12
+  loop: "{{ nsxt.transport_node_profiles }}"
+
+- debug: msg="Attaching transport node profiles {{ nsxt.cluster_attach }}"
+
+- name: Attach Transport node profile to cluster
+  vmware.ansible_for_nsxt.nsxt_transport_node_collections:
+    hostname: "{{ nsxt.manager.hostname }}"
+    username: "{{ nsxt.manager.username }}"
+    password: "{{ nsxt.manager.password }}"
+    validate_certs: false
+    display_name: "{{ item.display_name }}"
+    resource_type: "TransportNodeCollection"
+    description: "{{ item.description }}"
+    compute_manager_name: "{{ item.compute_manager_name }}"
+    cluster_name: "{{ item.cluster_name }}"
+    transport_node_profile_name: "{{ item.transport_node_profile_name }}"
+    state: present
+  loop: "{{ nsxt.cluster_attach }}"
+
+- name: Waiting for cluster to configure
+  vmware.ansible_for_nsxt.nsxt_transport_nodes_facts:
+    hostname: "{{ nsxt.manager.hostname }}"
+    username: "{{ nsxt.manager.username }}"
+    password: "{{ nsxt.manager.password }}"
+    validate_certs: false
+  register: transport_node_results
+  retries: 120
   delay: 10
-  register: result
-  until: result is not failed
+  until: transport_node_results.results and transport_node_results.results[0].node_deployment_info.discovered_ip_addresses
 
 - debug: msg="Creating edge nodes {{ nsxt.edge_nodes }}"
 
@@ -90,42 +116,7 @@
   loop: "{{ nsxt.edge_nodes }}"
   register: edge_node_results
 
-- debug: msg="Creating transport node profiles {{ nsxt.transport_node_profiles }}"
-
-- name: Create transport node profile
-  vmware.ansible_for_nsxt.nsxt_transport_node_profiles:
-    hostname: "{{ nsxt.manager.hostname }}"
-    username: "{{ nsxt.manager.username }}"
-    password: "{{ nsxt.manager.password }}"
-    validate_certs: false
-    resource_type: TransportNodeProfile
-    display_name: "{{ item.display_name}}"
-    description: "{{ item.description}}"
-    host_switch_spec:
-      resource_type: StandardHostSwitchSpec
-      host_switches: "{{ item.host_switches }}"
-    transport_zone_endpoints: "{{ item.transport_zone_endpoints | default(omit)}}"
-    state: present
-  loop: "{{ nsxt.transport_node_profiles }}"
-
-- debug: msg="Attaching transport node profiles {{ nsxt.cluster_attach }}"
-
-- name: Attach Transport node profile to cluster
-  vmware.ansible_for_nsxt.nsxt_transport_node_collections:
-    hostname: "{{ nsxt.manager.hostname }}"
-    username: "{{ nsxt.manager.username }}"
-    password: "{{ nsxt.manager.password }}"
-    validate_certs: false
-    display_name: "{{ item.display_name }}"
-    resource_type: "TransportNodeCollection"
-    description: "{{ item.description }}"
-    compute_manager_name: "{{ item.compute_manager_name }}"
-    cluster_name: "{{ item.cluster_name }}"
-    transport_node_profile_name: "{{ item.transport_node_profile_name }}"
-    state: present
-  loop: "{{ nsxt.cluster_attach }}"
-
-- name: Result check for deployment of edge nodes
+- name: Result check for deployment of transport node configuration
   async_status:
     jid: "{{ item.ansible_job_id }}"
   register: job_result

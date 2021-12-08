@@ -1,0 +1,20 @@
+---
+- name: Deploy compute manager
+  vmware.ansible_for_nsxt.nsxt_fabric_compute_managers:
+    hostname: "{{ nsxt.manager.hostname }}"
+    username: "{{ nsxt.manager.username }}"
+    password: "{{ nsxt.manager.password }}"
+    validate_certs: false
+    display_name: "vCenter"
+    server: "{{ nested_vcenter.ip }}"
+    origin_type: "vCenter"
+    credential:
+      credential_type: UsernamePasswordLoginCredential
+      username: "{{ nested_vcenter.username }}"
+      password: "{{ nested_vcenter.password }}"
+    set_as_oidc_provider: true
+    state: present
+  retries: 12
+  delay: 10
+  register: compute_manager_result
+  until: compute_manager_result is not failed

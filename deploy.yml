@@ -27,11 +27,15 @@
       when: 'nsxt is defined'
     - role: nsxt/nsxt-ip-blocks
       when: 'nsxt.ip_blocks is defined'
-    - role: nsxt/nsxt-principal-identities
-      when: 'nsxt.principal_identities is defined'
     - role: nsxt/nsxt-uplink-profiles
       when: 'nsxt is defined'
     - role: nsxt/nsxt-transport-zones
+      when: 'nsxt is defined'
+    - role: nsxt/nsxt-compute-manager
+      when: 'nsxt is defined'
+    - role: nsxt/nsxt-principal-identities
+      when: 'nsxt.principal_identities is defined'
+    - role: nsxt/nsxt-vlan-segments
       when: 'nsxt is defined'
     - role: nsxt/nsxt-transport-nodes
       when: 'nsxt is defined'
