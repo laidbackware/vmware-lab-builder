@@ -1,7 +1,7 @@
 ---
 # SOFTWARE_DIR must contain all required software
-vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.2-17694817.iso"
-esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u2_Appliance_Template_v1.ova"
+vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.3-18778458.iso"
+esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u3_Appliance_Template_v1.ova"
 
 environment_tag: "minimal"  # Used to prepend object names in hosting vCenter
 dns_server: "192.168.0.1"

@@ -23,7 +23,7 @@ opinionated:
   master_password: "VMware1!"
   number_of_hosts: 1  # number of ESXi VMs to deploy
   nested_hosts:
-    cpu_cores: 10  # CPU count per nested host
+    cpu_cores: 12  # CPU count per nested host
     ram_in_gb: 96  # memory per nested host
     local_disks:  # (optional) this section can be removed to not modify local disks
       - size_gb: 400

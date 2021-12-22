@@ -25,7 +25,7 @@ RUN set -xe \
     && ansible-galaxy collection install vmware.alb \
     \
     && echo "****** Adding ansible-for-nsxt from Github ******" \
-    && ansible-galaxy collection install git+https://github.com/vmware/ansible-for-nsxt.git,5b2a785b4ba67098e75a0db28410be83c8e09332 \
+    && ansible-galaxy collection install git+https://github.com/vmware/ansible-for-nsxt.git,0e3cf74ace9cf3f22099415787e7fe62a487225a \
     \
     && echo "****** Cloning ansible-for-vsphere-tanzu ******" \
     && mkdir /repos \

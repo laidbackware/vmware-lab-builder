@@ -1,6 +1,6 @@
 ---
 # SOFTWARE_DIR must contain all required software
-vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.2-17958471.iso"
+vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.3-18778458.iso"
 esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u2_Appliance_Template_v1.ova"
 nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-3.1.3.1.0.18504672.ova"
 

@@ -10,34 +10,49 @@ Infrastructure:
 - A licensed vSphere cluster.
 - A datastore to host VMs of at least 200GB.
 - An NTP server which is reachable by IP.
-- All port groups assigned to ESXi host which are in tern used by VMs should have promiscuous or [Mac Learning](https://www.virtuallyghetto.com/2018/04/native-mac-learning-in-vsphere-6-7-removes-the-need-for-promiscuous-mode-for-nested-esxi.html) enabled on the parent port group.
+- All port groups assigned to nested ESXi VMs should have promiscuous or [Mac Learning](https://www.virtuallyghetto.com/2018/04/native-mac-learning-in-vsphere-6-7-removes-the-need-for-promiscuous-mode-for-nested-esxi.html) enabled on the parent port group.
 Software downloads should be placed in a single directory:
 - [ESXi OVA images](https://williamlam.com/nested-virtualization/nested-esxi-virtual-appliance)
-- [vCenter ISO](https://my.vmware.com/en/group/vmware/downloads/info/slug/datacenter_cloud_infrastructure/vmware_vsphere/7_0)
+- [vCenter ISO](https://my.vmware.com/en/group/vmware/downloads/info/slug/datacenter_cloud_infrastructure/vmware_vsphere/7_0) - For command line downloading see [vmd](https://github.com/laidbackware/vmd)
 
-### Tested versions
-This release has been tested with the following components:
-vSphere - 7.0.2a
-ESXi nested OVA - 7.0U2a
-NSX-T - 3.1.2
-NSX-ALB (Avi) - 20.1.3
+## Status and Versions
+This release has been tested with the following components and should be backwards compatible.</br>
+| vCenter Version | ESXi Version |
+| --------------- | ------------ |
+| 7.0U3           | 7.0U3        |
+
+The pattern name below is matches the sub-directory under `var-examples`.</br>
+
+| Pattern Name       | Product Versions | Status                  |
+| ------------------ | ---------------- | ----------------------- |
+| base-vsphere       | n/a              | Stable                  |
+| nsxt               | NSX-T 3.1.3.1    | Stable                  |
+| tanzu/multi-cloud  | NSX-ALB 20.1.6   | Beta                    |
+| tanzu/vsphere-nsxt | NSX-T 3.1.3.1    | Beta                    |
+| tanzu/integrated   | NSX-T 3.0        | Work in progress/broken |
+| tanzu/vsphere-vds  | NSX-ALB 20.1.3   | Work in progress/broken |
+| tanzu/vsphere-vds  | haproxy          | Deprecated              |
+
 
 ## Usage with Docker
-Each deployment pattern has an opinionated and a custom example. The idea of the opinionated deployment is that the user has to proide the minimum of configuration and the remainder of the options are calculated from this. Whereas the custom example has to have all sections built up by hand. Either of the examples types can be fully customized.<br/>
+Each deployment pattern has an opinionated and some have a custom example(which may be out of date). The idea of the opinionated deployment is that the user has to provide the minimum of configuration and the remainder of the options are calculated for them. Whereas the custom example has to have all sections built up by hand. Either of the examples types can be fully customized.<br/>
 
-You must export the credentials to you existing vCenter as environmental variables along with the path on your local machine which contains the software listed above.
+You must export the credentials to you existing vCenter as environmental variables along with the path on your local machine which contains the software listed above.</br>
 ```
 export PARENT_VCENTER_USERNAME="administrator@vsphere.local"
 export PARENT_VCENTER_PASSWORD="VMware1!"
 export SOFTWARE_DIR="$HOME/Downloads/vmware-products" 
 ```
+It is recommended to use [direnv](https://direnv.net/) and have the above export commands in a .envrc file.<br/>
 
 ### Deploying
-After cloning the repo, you should make a copy and update the relevant vars yaml from the var-examples directory, making sure to include your ova and iso file names, and to change any IP addresses and credentials.<br/>
-Check the readme file in the example directory for any additional steps which may be needed for that solution.<br/>
+After cloning this repo, you should copy and update the relevant vars yaml from the var-examples directory, making sure to include your ova and iso file names, and to change any IP addresses and credentials.<br/>
 
-The example below will deploy a single host and a vCenter, plus create a cluster with the minimum feature set. It should be run from the root of this repo and will map the repo in as `/work` within the container.
+Check the readme file in the example directory for any additional steps which may be needed for that pattern.<br/>
+
+The example below will deploy a single host and a vCenter, plus create a cluster with the minimum feature set. It should be run from the root of this repo and will map the repo directories under `/work` within the container.<br/>
 ```
+# This setups up the alias, which handles environment variables and volumes
 alias lab-builder="docker run --rm \
     --env PARENT_VCENTER_USERNAME=${PARENT_VCENTER_USERNAME} \
     --env PARENT_VCENTER_PASSWORD=${PARENT_VCENTER_PASSWORD} \
@@ -47,15 +62,16 @@ alias lab-builder="docker run --rm \
     --env AVI_DEFAULT_PASSWORD=\"${AVI_DEFAULT_PASSWORD:-na}\" \
     --volume ${SOFTWARE_DIR}:/software_dir \
     --volume ${PWD}:/work \
-    laidbackware/vmware-lab-builder:v3 \
+    laidbackware/vmware-lab-builder:v5 \
     ansible-playbook"
 
+# This command is run inside the container, so point to the `/work` directory within the container.
 lab-builder /work/deploy.yml --extra-vars '@/work/var-examples/base-vsphere/minimal-opinionated.yml'
 ```
 
 ### Destroying
 To delete the nested lab use destroy.yml, which will delete all VMs from the parent vCenter.</br/>
-This requires the `lab-builder` alias is set from 
+This requires the `lab-builder` alias is set from the [Deploying](#deploying) 
 ```
 lab-builder /work/destroy.yml \
     --extra-vars '@/work/var-examples/base-vsphere/minimal-opinionated.yml'
@@ -63,6 +79,7 @@ lab-builder /work/destroy.yml \
 
 ## Troubleshooting
 The vCenter install can take a long time. You can check the progress by browsing to https://<vcenter IP>:5480. If the vCenter install fails, check the `vcsa-cli-installer.log` file which can be found in a created directory under /tmp.<br/>
+
 To debug in docker, first enter the container with bash, then run the playbook. This way the vCenter build logs will be avaible after the failure.
 ```
 # This command will start a bash shell within the container
@@ -75,7 +92,7 @@ docker run  -it --rm \
     --env AVI_DEFAULT_PASSWORD=${AVI_DEFAULT_PASSWORD:-na} \
     --volume ${SOFTWARE_DIR}:/software_dir \
     --volume ${PWD}:/work \
-    laidbackware/vmware-lab-builder:v3 \
+    laidbackware/vmware-lab-builder:v5 \
     /bin/bash
 
 # Then the playbook can be triggered
@@ -97,40 +114,32 @@ For solution specifc features, check the relevant example directory.
 ## Docker Image Build
 From the root of the repo. Note no-cache flag used to force builds to pickup any changes to the git repos.
 ```
-docker build --no-cache ./docker/. -t laidbackware/vmware-lab-builder:v4
+docker build --no-cache ./docker/. -t laidbackware/vmware-lab-builder:v5
 ```
 
 ## Local Usage
-At the current time it's advised against trying to run locally as modifications are needed to the vSphere community modules, which have pull requests pending.<br/>
-After cloneing the repo, you must update the relevant vars file yaml to point to your ova and iso file, plus change any IP addresses or credentials.<br/>
-
 Software dependencies for Linux:
-- Ansible 2.10 or higher
+- Ansible 2.10 or higher.
 - Linux tools `apt-get install libarchive-tools sshpass python3-pip git python3-jmespath sshpass`
-- Python modules `pip3 install pyvmomi ansible==2.10.* netaddr`
-- Install [vSphere Automation SDK](https://github.com/vmware/vsphere-automation-sdk-python)
+- Install all necessary Python modules
     ```
-    pip install --upgrade pip setuptools
-    pip install --upgrade pyvmomi netaddr requests git+https://github.com/vmware/vsphere-automation-sdk-python.git
+    pip install -r requirements.txt
     ```
-- Add necessary Ansible collections. Force switch will ensure an upgrade.
+- Add necessary Ansible collections. Force switch will ensure it is upgraded.
    ```
    ansible-galaxy collection install community.vmware --force
-   ansible-galaxy collection install vmware.alb:21.1.1-beta4 --force
-   ansible-galaxy collection install git+https://github.com/vmware/ansible-for-nsxt.git,5b2a785b4ba67098e75a0db28410be83c8e09332 --force
+   ansible-galaxy collection install vmware.alb --force
+   ansible-galaxy collection install git+https://github.com/vmware/ansible-for-nsxt.git,0e3cf74ace9cf3f22099415787e7fe62a487225a --force
    ```
 
 ### Cloning repos for the extra modules
 You will need to use git to clone ansible-for-nsxt and ansible-for-vsphere-tanzu, then export the location of the modules. A specific branch will be cloned for ansible-for-nsxt as it contains a necessary fix which has a pull request pending. Below assumes a directory called workspace to host the modules.
 ```
 cd $HOME/workspace
-git clone https://github.com/vmware/ansible-for-nsxt.git
 git clone https://github.com/laidbackware/ansible-for-vsphere-tanzu.git
-export ANSIBLE_LIBRARY=$HOME/workspace/ansible-for-nsxt:$HOME/workspace/ansible-for-vsphere-tanzu
-export ANSIBLE_MODULE_UTILS=$HOME/workspace/ansible-for-nsxt/module_utils
+export ANSIBLE_LIBRARY=$HOME/workspace/ansible-for-vsphere-tanzu
 export ANSIBLE_HOST_KEY_CHECKING=False
 ```
-It is recommended to use direnv and have the above export commands in a .envrc file.<br/>
 Once all is setup run the playbooks can be run locally:
 ```
 ansible-playbook deploy.yml --extra-vars="@var-examples/base-vsphere/1host-minimal-opinionated.yml"

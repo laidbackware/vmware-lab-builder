@@ -7,14 +7,15 @@ All base instructions. It is recommended to attempt a minimal deployment to firs
 - NSX-T 3.1.1
 - vSphere 7.0 U2
 
-## Dependencies
+## Additional Dependencies
 - The NSX-T ISO must be added to your software directory and the filename updated in the vars file.  
 - You need a valid NSX-T license.
-- On top of the standard routed network, you need a port group to use for the overlay, which does not need to be routable.
+- On top of the standard routed network, you need a port group to use for the overlay, which does not need to be routable unless you want to run multiple nested ESXi hosts.
 - After the deployment you will need to add a static route to the T0 gateway uplink for any addresses that will be behind NSX-T.
 
-## Layout
-Below is the layout of the opinionated deployment, which can be customized by editing the vars file.
+## Architecture
+Below is the layout of the opinionated deployment, which can be customized by editing the vars file.</br></br>
+![Architecture Diagram](architecture-nsx-t.png)
 - The NSX-T Manager VM will be deployed as a standard VM on your physical host.
 - A single vCenter will be added.
 - All components will be added to a single nested ESXi host. This can be customized by editing the yaml.
@@ -29,6 +30,13 @@ export NSXT_LICENSE_KEY=AAAAA-BBBBB-CCCCC-DDDDD-EEEEE
 ```
 You can now use the run command from the base instructions pointing to your updated nsxt vars file.
 
+## IP Assignment on opinionated deployment
+
+vCenter = `hosting_network.base.starting_addr`<br/>
+NSX Manager = `hosting_network.base.starting_addr + 1`<br/>
+router uplink = `hosting_network.base.starting_addr + 3`<br/>
+First ESXi host = `hosting_network.base.starting_addr + 8`<br/>
+
 ## Known Issues
-- At NSX-T 3.1.0 the edge cluster is created successfully but the creation of the t0 is blocked for a period of time. This is likely an ansible issues as it doesn't appear in the UI. Currently fixed by adding a 300 second delay. If a failure occurs, re-run the playbook.
-- A number of modules are not properly idempotent and report changed even though no change has been made.
+- Creation of the first VLAN segments can take some time whilst the Transport Zones are configured.
+- A number of Ansible for NSX-T modules are not properly idempotent and report changed even though no change has been made.

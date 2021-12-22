@@ -14,6 +14,6 @@
     tags: "{{ item.tags | default(omit) }}"
   loop: "{{ nsxt.vlan_segments }}"
   register: vlan_segment_results
-  retries: 12
+  retries: 24
   delay: 5
   until: vlan_segment_results is success
