@@ -22,16 +22,7 @@ This release has been tested with the following components and should be backwar
 | 7.0U3           | 7.0U3        |
 
 The pattern name below is matches the sub-directory under `var-examples`.</br>
-
-| Pattern Name       | Product Versions | Status                  |
-| ------------------ | ---------------- | ----------------------- |
-| base-vsphere       | n/a              | Stable                  |
-| nsxt               | NSX-T 3.1.3.1    | Stable                  |
-| tanzu/multi-cloud  | NSX-ALB 20.1.6   | Beta                    |
-| tanzu/vsphere-nsxt | NSX-T 3.1.3.1    | Beta                    |
-| tanzu/integrated   | NSX-T 3.0        | Work in progress/broken |
-| tanzu/vsphere-vds  | NSX-ALB 20.1.3   | Work in progress/broken |
-| tanzu/vsphere-vds  | haproxy          | Deprecated              |
+doc-updates
 
 
 ## Usage with Docker
@@ -44,6 +35,9 @@ export PARENT_VCENTER_PASSWORD="VMware1!"
 export SOFTWARE_DIR="$HOME/Downloads/vmware-products" 
 ```
 It is recommended to use [direnv](https://direnv.net/) and have the above export commands in a .envrc file.<br/>
+
+### Known Issues
+Docker Desktop on Mac has network performance issues resulting in very slow OVA upload speeds. It's recommended to use docker-ce natively from a Linux machine/VM or to run the playbooks locally - see [Local Usage](#local-usage).
 
 ### Deploying
 After cloning this repo, you should copy and update the relevant vars yaml from the var-examples directory, making sure to include your ova and iso file names, and to change any IP addresses and credentials.<br/>

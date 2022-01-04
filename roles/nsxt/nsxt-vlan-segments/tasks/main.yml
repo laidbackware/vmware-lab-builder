@@ -12,6 +12,7 @@
     transport_zone_display_name: "{{ item.transport_zone_display_name }}"
     vlan_ids: "{{ item.vlan_ids }}"
     tags: "{{ item.tags | default(omit) }}"
+    do_wait_till_create: true
   loop: "{{ nsxt.vlan_segments }}"
   register: vlan_segment_results
   retries: 24

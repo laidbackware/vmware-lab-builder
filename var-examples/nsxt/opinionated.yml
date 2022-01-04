@@ -148,6 +148,17 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
               end: "{{ opinionated.hosting_network.nsxt_tep.cidr | ipmath(254) }}"
           cidr: "{{ opinionated.hosting_network.nsxt_tep.cidr }}"
 
+  policy_ip_pools:
+    - display_name: tep-pool  # This is a non-routable range which is used for the overlay tunnels.
+      pool_static_subnets:
+        - id: tep-pool-1
+          state: present
+          allocation_ranges:
+            - start: "{{ opinionated.hosting_network.nsxt_tep.cidr | ipmath(1) }}"
+              end: "{{ opinionated.hosting_network.nsxt_tep.cidr | ansible.netcommon.ipaddr('-2') | ipaddr('address') }}"
+          cidr: "{{ opinionated.hosting_network.nsxt_tep.cidr }}"
+          do_wait_till_create: true
+
   uplink_profiles:
     - display_name: host-tep-profile
       teaming:

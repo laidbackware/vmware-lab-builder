@@ -33,6 +33,9 @@
     transport_node_profile_name: "{{ item.transport_node_profile_name }}"
     state: present
   loop: "{{ nsxt.cluster_attach }}"
+  register: tnp_attach_result
+
+
 
 - name: Waiting for cluster to configure
   vmware.ansible_for_nsxt.nsxt_transport_nodes_facts:
@@ -40,12 +43,18 @@
     username: "{{ nsxt.manager.username }}"
     password: "{{ nsxt.manager.password }}"
     validate_certs: false
-  register: transport_node_results
+  register: host_transport_node_facts
   retries: 120
   delay: 10
-  until: transport_node_results.results and transport_node_results.results[0].node_deployment_info.discovered_ip_addresses
+  until: host_transport_node_facts.results and host_transport_node_facts.results[0].node_deployment_info.discovered_ip_addresses
 
 - debug: msg="Creating edge nodes {{ nsxt.edge_nodes }}"
+
+- name: Waiting 30 seconds for vlan segments to propagate to the cluster
+  pause:
+    echo: false
+    seconds: 30
+  when: tnp_attach_result.changed
 
 - name: Create transport node
   vmware.ansible_for_nsxt.nsxt_transport_nodes:
@@ -113,8 +122,11 @@
     state: present
   async: 1800
   poll: 0
-  loop: "{{ nsxt.edge_nodes }}"
   register: edge_node_results
+  # retries: 12
+  # delay: 5
+  # until: "'msg' not in edge_node_results"
+  loop: "{{ nsxt.edge_nodes }}"
 
 - name: Result check for deployment of transport node configuration
   async_status:

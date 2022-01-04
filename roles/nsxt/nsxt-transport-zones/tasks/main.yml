@@ -16,7 +16,7 @@
   loop: "{{ nsxt.transport_zones }}"
   register: tz_results
 
-- name: Waiting 20 seconds for transport zone to configured before creating VLAN segments
+- name: Waiting 20 seconds for transport zone to configured
   pause:
     echo: false
     seconds: 20

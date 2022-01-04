@@ -195,13 +195,16 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
     router_uplink: "{{ opinionated.hosting_network.base.starting_addr | ipmath(3) }}"
     nsxt_supernet: "{{ opinionated.tanzu_vsphere.routeable_super_net }}"
 
-  ip_pools:
+  policy_ip_pools:
     - display_name: tep-pool  # This is a non-routable range which is used for the overlay tunnels.
-      subnets:
-        - allocation_ranges:
+      pool_static_subnets:
+        - id: tep-pool-1
+          state: present
+          allocation_ranges:
             - start: "{{ opinionated.hosting_network.nsxt_tep.cidr | ipmath(1) }}"
               end: "{{ opinionated.hosting_network.nsxt_tep.cidr | ansible.netcommon.ipaddr('-2') | ipaddr('address') }}"
           cidr: "{{ opinionated.hosting_network.nsxt_tep.cidr }}"
+          do_wait_till_create: true
 
   uplink_profiles:
     - display_name: host-tep-profile
@@ -234,10 +237,10 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
       # host_switch_name: "{{ distributed_switches[0].vds_name }}"
       nested_nsx: true  # Set this to true if you use NSX-T for your physical host networking
       description: "Overlay Transport Zone"
-    - display_name: tz-vlan
-      transport_type: VLAN
-      # host_switch_name: sw_vlan
-      description: "Uplink Transport Zone"
+    # - display_name: nsx-vlan-transportzone
+    #   transport_type: VLAN
+    #   # host_switch_name: sw_vlan
+    #   description: "Uplink Transport Zone"
 
   transport_node_profiles:
     - display_name: tnp1
@@ -253,7 +256,7 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
             ip_pool_name: "tep-pool"
           transport_zone_endpoints:
             - transport_zone_name: "tz-overlay"
-            - transport_zone_name: "tz-vlan"
+            - transport_zone_name: "nsx-vlan-transportzone"
           uplinks:
             - uplink_name: "uplink-1"
               vds_uplink_name: "Uplink 1"
@@ -289,10 +292,10 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
           host_switch_name: "sw_vlan"
           uplink_profile_name: edge-uplink-profile
           transport_zone_endpoints:
-            - transport_zone_name: "tz-vlan"
+            - transport_zone_name: "nsx-vlan-transportzone"
       transport_zone_endpoints:
         - transport_zone_name: "tz-overlay-2"
-        - transport_zone_name: "tz-vlan"
+        - transport_zone_name: "nsx-vlan-transportzone"
 
   edge_clusters:
     - edge_cluster_name: edge-cluster-1
@@ -302,10 +305,10 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
   vlan_segments:
     - display_name: t0-uplink
       vlan_ids: [0]
-      transport_zone_display_name: tz-vlan
+      transport_zone_display_name: nsx-vlan-transportzone
     - display_name: edge-tep-seg
       vlan_ids: [0]
-      transport_zone_display_name: tz-vlan
+      transport_zone_display_name: nsx-vlan-transportzone
 
   # For full spec see - https://github.com/laidbackware/ansible-for-nsxt/blob/vmware-lab-builder/library/nsxt_policy_tier0.py
   tier_0:
