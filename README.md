@@ -37,7 +37,7 @@ export SOFTWARE_DIR="$HOME/Downloads/vmware-products"
 It is recommended to use [direnv](https://direnv.net/) and have the above export commands in a .envrc file.<br/>
 
 ### Known Issues
-Docker Desktop on Mac has network performance issues resulting in very slow OVA upload speeds. It's recommended to use docker-ce natively from a Linux machine/VM or to run the playbooks locally - see [Local Usage](#local-usage).
+Docker Desktop on Mac has known network performance issues resulting in very slow OVA upload speeds. It's recommended to use docker-ce natively from a Linux machine/VM or to run the playbooks locally - see [Local Usage](#local-usage).
 
 ### Deploying
 After cloning this repo, you should copy and update the relevant vars yaml from the var-examples directory, making sure to include your ova and iso file names, and to change any IP addresses and credentials.<br/>
