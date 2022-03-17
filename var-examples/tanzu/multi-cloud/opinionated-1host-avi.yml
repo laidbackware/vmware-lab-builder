@@ -136,6 +136,10 @@ tanzu_multi_cloud:
   avi_service_engine_group: "{{ nsx_alb.se_group_name | default('Default-Group') }}"
   avi_username: "{{ nsx_alb.controller_username }}"
 
+  vcenter_datacenter: "{{ nested_vcenter.datacenter }}"
+  vcenter_datastore: "datastore-esx1"
+
+  # used in TKGM cluster config yaml
   vsphere_control_plane_endpoint: "{{ opinionated.hosting_network.workload.cidr | ipmath(2) }}"
   vsphere_datacenter: "/{{ nested_vcenter.datacenter }}"
   vsphere_datastore: "/{{ nested_vcenter.datacenter }}/datastore/datastore-esx1"

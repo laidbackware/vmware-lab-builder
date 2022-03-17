@@ -55,6 +55,8 @@
     # Tanzu Multi-Cloud Secton
     - role: tanzu/multi-cloud-generate-config
       when: 'tanzu_multi_cloud.generated_config_file_name is defined'
+    - role: tanzu/vsphere-multi-cloud-base-image-template
+      when: 'tkgm_os_kubernetes_ova is defined'
 
     # vSphere with Kubernetes Section
     - role: vsphere/vsphere-storage-based-policy-management
