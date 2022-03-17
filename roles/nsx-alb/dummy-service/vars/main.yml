@@ -10,12 +10,6 @@ avi_credentials:
   password: "{{ controller_password }}"
   api_version: "{{ api_version }}"
 
-# The cloud vCenter will host the service engines and Tanzu clusters
-cloud_vcenter_username: "{{ nsx_alb.cloud_vcenter_username }}"
-cloud_vcenter_password: "{{ nsx_alb.cloud_vcenter_password }}"
-cloud_vcenter_url: "{{ nsx_alb.cloud_vcenter_url }}"
-cloud_vcenter_datacenter: "{{ nsx_alb.cloud_vcenter_datacenter }}"
-
 se_vcenter_cluster: "{{ nsx_alb.se_vcenter_cluster }}"
 # The management network will host he service engine management interface
 se_management_port_group: "{{ nsx_alb.se_management_port_group }}"
@@ -27,3 +21,7 @@ se_vip_port_group: "{{ nsx_alb.se_vip_port_group }}"
 se_vip_network_cidr: "{{ nsx_alb.se_vip_network_cidr }}"
 se_vip_network_range: "{{ nsx_alb.se_vip_network_range }}"
 se_vip_network_gateway: "{{ nsx_alb.se_vip_network_gateway }}"
+
+dummy_service_subnet_addr: "{{ nsx_alb.dummy_service.subnet_addr }}"
+dummy_service_subnet_mask: "{{ nsx_alb.dummy_service.subnet_mask }}"
+dummy_service_network_name: "{{ nsx_alb.dummy_service.network_name }}"

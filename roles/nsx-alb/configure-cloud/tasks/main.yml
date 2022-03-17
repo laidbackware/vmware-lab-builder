@@ -56,6 +56,23 @@
       - "Check the status of the cloud in the console using https://{{ controller_ip }}"
   when: not cloud_status.obj.results[0].network_sync_complete
 
+- name: Set VIP Network Default Gateway
+  avi_vrfcontext:
+    avi_credentials: "{{ avi_credentials }}"
+    cloud_ref: "/api/cloud?name=Default-Cloud"
+    name: "global"
+    static_routes:
+      - route_id: "1"
+        prefix:
+          mask: 0
+          ip_addr:
+            type: "V4"
+            addr: "0.0.0.0"
+        next_hop:
+          type: "V4"
+          addr: "{{ se_vip_network_gateway }}"
+    system_default: true
+
 - name: Update Management Network with CIDR and range
   avi_network:
     avi_credentials: "{{ avi_credentials }}"
@@ -108,6 +125,7 @@
       cluster_refs:
         - "/api/vimgrclusterruntime?name={{ se_vcenter_cluster }}"
       include: true
+    se_deprovision_delay: 0 # never delete SEs.
   register: se_group_result
 
 - name: Update Default cloud with IPAM/DNS profiles

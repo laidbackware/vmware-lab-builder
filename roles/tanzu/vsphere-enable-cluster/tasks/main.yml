@@ -15,6 +15,22 @@
     vm_shell_cwd: "/root"
   when: "tanzu_vsphere.fluentbit_enabled is defined and not tanzu_vsphere.fluentbit_enabled"
 
+- name: Set Supervisor disk mode
+  community.vmware.vmware_vm_shell:
+    hostname: "{{ hosting_vcenter.ip }}"
+    username: "{{ hosting_vcenter.username }}"
+    password: "{{ hosting_vcenter.password }}"
+    datacenter: "{{ hosting_vcenter.datacenter }}"
+    validate_certs: false
+    vm_id: "{{ environment_tag }}-vcenter"
+    vm_username: "root"
+    vm_password: "{{ nested_vcenter.password }}"
+    vm_shell: /bin/bash
+    vm_shell_args: |-
+      -c "sed -i 's/controlplane_vm_disk_provisioning: \"thick\"/controlplane_vm_disk_provisioning: \"thin\"/' /etc/vmware/wcp/wcpsvc.yaml"
+    vm_shell_cwd: "/root"
+  when: "tanzu_vsphere.supervisor_thin_disk_mode is defined and not tanzu_vsphere.supervisor_thin_disk_mode"
+
 - name: Extract haproxy VM extra config
   community.vmware.vmware_guest_info:
     hostname: "{{ nested_vcenter.ip }}"

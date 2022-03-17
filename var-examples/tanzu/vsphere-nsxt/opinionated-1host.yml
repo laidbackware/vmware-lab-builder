@@ -1,7 +1,7 @@
 ---
 # SOFTWARE_DIR must contain all required software
-vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.3-18778458.iso"
-esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u3_Appliance_Template_v1.ova"
+vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.3-19234570.iso"
+esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u3c_Appliance_Template_v1.ova"
 nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-3.1.3.1.0.18504672.ova"
 
 environment_tag: "tanzu-vsphere-nsxt"  # Used to prepend object names in hosting vCenter
@@ -12,7 +12,7 @@ disk_mode: thin  # How all disks should be deployed
 nested_host_password: "{{ opinionated.master_password }}"
 
 hosting_vcenter:  # This is the vCenter which will be the target for nested vCenters and ESXi hosts
-  ip: "192.168.0.113"
+  ip: "vcsa.lab"
   username: "{{ lookup('env', 'PARENT_VCENTER_USERNAME') }}"
   password: "{{ lookup('env', 'PARENT_VCENTER_PASSWORD') }}"
   datacenter: "Home"  # Target for all VM deployment
@@ -22,7 +22,7 @@ opinionated:
   master_password: "VMware1!"
   nested_hosts:
     cpu_cores: 12  # CPU count per nested host
-    ram_in_gb: 96  # memory per nested host
+    ram_in_gb: 128  # memory per nested host
     local_disks:
       - size_gb: 500
         datastore_prefix: "datastore"

@@ -97,7 +97,6 @@ If adding new variables to the vars file be sure to only use underscores as vari
 ## Roadmap
 For solution specifc features, check the relevant example directory.
 - Add ability to create TKGS namespaces
-- Add ability to deploy TKGS embedded Harbor
 - Add ability to create guest clusters for TKGS
 - Add ability to deploy VMs to folders and resource pools on parent VC
 - Add NFS server creation via Ubuntu VM

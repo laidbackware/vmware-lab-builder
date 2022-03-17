@@ -51,6 +51,8 @@
       when: 'nsx_alb is defined'
     - role: nsx-alb/configure-cloud
       when: 'nsx_alb is defined'
+    - role: nsx-alb/dummy-service
+      when: 'nsx_alb.dummy_service is defined'
 
     # Tanzu Multi-Cloud Secton
     - role: tanzu/multi-cloud-generate-config
