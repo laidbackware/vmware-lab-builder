@@ -19,6 +19,8 @@
       when: 'distributed_switches is defined'
     - role: vsphere/vsphere-distributed-port-groups
       when: 'distributed_switches is defined'
+    - role: vsphere/vsphere-import-vm-template
+      when: 'vm_templates is defined'
 
     # NSX-T Section
     - role: nsxt/nsxt-manager

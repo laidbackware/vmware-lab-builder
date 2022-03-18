@@ -1,0 +1,35 @@
+---
+- name: Deploy OVA that will be imported as a template
+  vmware_deploy_ovf:
+    hostname: "{{ item.0.vcenter_server }}"
+    username: "{{ item.0.vcenter_username }}"
+    password: "{{ item.0.vcenter_password }}"
+    validate_certs: false
+    cluster: "{{ item.1 }}"
+    datacenter: "{{ item.0.vcenter_datacenter }}"
+    datastore: "{{ item.0.vcenter_datastore }}"
+    disk_provisioning: thin
+    networks: 
+      nic0: "{{ item.0.vcenter_network }}"
+    ova: "{{ item.0.local_path }}"
+    allow_duplicates: false
+    power_on: false
+    fail_on_spec_warnings: false
+    wait: false
+  delegate_to: localhost
+  with_subelements:
+    - "{{ vm_templates }}"
+    - "vsphere_clusters"
+  register: vm_instance_data
+
+- name: Import Base Image Template into vSphere
+  vmware_guest:
+    hostname: "{{ item.item.0.vcenter_server }}"
+    username: "{{ item.item.0.vcenter_username }}"
+    password: "{{ item.item.0.vcenter_password }}"
+    validate_certs: false
+    name: "{{ item.instance.hw_name }}"
+    state: "present"
+    is_template: true
+  delegate_to: localhost
+  loop: "{{ vm_instance_data.results }}"

@@ -3,6 +3,7 @@
 vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.3-19234570.iso"
 esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u3c_Appliance_Template_v1.ova"
 nsx_alb_controller_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/controller-20.1.6-9132.ova"
+tkgm_os_kubernetes_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/photon-3-kube-v1.22.5+vmware.1-tkg.2-790a7a702b7fa129fb96be8699f5baa4.ova"
 
 environment_tag: "tanzu-multi-cloud-avi"  # Used to prepend object names in hosting vCenter
 dns_server: "192.168.0.1"
@@ -123,6 +124,16 @@ distributed_switches:  # To not create any distributed switches, comment this se
       - port_group_name: workload-pg
         vlan_id: "{{ opinionated.hosting_network.workload.vlan_id |default(0) }}"
 
+vm_templates:
+  - local_path: "{{ tkgm_os_kubernetes_ova }}"
+    vcenter_server: "{{ nested_vcenter.ip }}"
+    vcenter_username: "{{ nested_vcenter.username }}"
+    vcenter_password: "{{ nested_vcenter.password }}"
+    vcenter_datacenter: "{{ nested_vcenter.datacenter }}"
+    vcenter_datastore: datastore-esx1
+    vcenter_network: workload-pg
+    vsphere_clusters: "{{ nested_clusters.keys() | list }}"
+
 tanzu_multi_cloud:
   generated_config_file_name: cluster-config.yml
 
@@ -134,13 +145,14 @@ tanzu_multi_cloud:
   avi_service_engine_group: "{{ nsx_alb.se_group_name | default('Default-Group') }}"
   avi_username: "{{ nsx_alb.controller_username }}"
 
+  # used in TKGM cluster config yaml
   vsphere_control_plane_endpoint: "{{ opinionated.hosting_network.workload.cidr | ipmath(2) }}"
-  vsphere_datacenter: "/{{ nested_vcenter.datacenter }}"
-  vsphere_datastore: "/{{ nested_vcenter.datacenter }}/datastore/datastore-esx1"
-  vsphere_folder: "/{{ nested_vcenter.datacenter }}/vm"
+  vsphere_datacenter_path: "/{{ nested_vcenter.datacenter }}"
+  vsphere_datastore_path: "/{{ nested_vcenter.datacenter }}/datastore/datastore-esx1"
+  vsphere_folder_path: "/{{ nested_vcenter.datacenter }}/vm"
   vsphere_network: workload-pg
   vsphere_password: "{{ nested_vcenter.password }}"
-  vsphere_resource_pool: "/{{ nested_vcenter.datacenter }}/host/compute/Resources"
+  vsphere_resource_pool_path: "/{{ nested_vcenter.datacenter }}/host/compute/Resources"
   vsphere_server: "{{ nested_vcenter.ip }}"
   vsphere_ssh_authorized_key: "{{ opinionated.ssh_public_key }}"
   vsphere_username: "{{ nested_vcenter.username }}"
