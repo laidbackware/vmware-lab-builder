@@ -19,6 +19,8 @@
       when: 'distributed_switches is defined'
     - role: vsphere/vsphere-distributed-port-groups
       when: 'distributed_switches is defined'
+    - role: vsphere/vsphere-import-vm-template
+      when: 'vm_templates is defined'
 
     # NSX-T Section
     - role: nsxt/nsxt-manager
@@ -55,8 +57,6 @@
     # Tanzu Multi-Cloud Secton
     - role: tanzu/multi-cloud-generate-config
       when: 'tanzu_multi_cloud.generated_config_file_name is defined'
-    - role: tanzu/vsphere-multi-cloud-base-image-template
-      when: 'tkgm_os_kubernetes_ova is defined'
 
     # vSphere with Kubernetes Section
     - role: vsphere/vsphere-storage-based-policy-management
