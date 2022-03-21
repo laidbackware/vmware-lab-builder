@@ -48,6 +48,7 @@ opinionated:
       cidr: "172.19.10.0/24"
       gateway: "172.19.10.1"
       vip_ip_range: "172.19.10.128-172.19.10.254"
+  management_cluster_controlplane_endpoint_provider: "avi"   # possible values: "avi" or "kube-vip"
   # This public key will be assigned to the created VMs, so you must have the private key to be able to use SSH
   ssh_public_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC/qMIbcfUkClzrBi7QjUmtdfpjDlTSXsPcJsmdmezbem2SboQPujpFUGmzFXi5PqhPa3QOxvMn8oJpozlJYydDspFAAqX+0u8n0FrwMMn0ckwUtF4zxz/AnI8tUltjeN67M7mG+3W8ooRFeaY6nrjxEIXbkMOzSbeTaFcB9cDzRXcMmFiuoeDhUonEYbClrsPzLdzscw7Vz6BLMHwo9SBOqlaL25aG/DtZPB7jobQRh48q3RW+Hb29nH18biJNLiBDsRu1SJIzw7Dl+rNSX9Va56vX0cz5CDiTg9A69WgySDx7oZFZM3W6jyHCN0fQbw/OxE/2MemhfQbdJqgffA7zE0qx+/DVIoT5bBP7FPpQSxkMjC+AEAH4PPsDIP0KJH9do6+T/g/Mf6725IOaPSJyV0bAkz1T57T1ty19KdhvPVfjrMnCap+pLvD6Qd/lxzY9uFF4oOwWmo4xQ6hQXZ9oJUhrRsG2A5LF7XGXwOb8mHSG4InfUfjaov4gjLl5tN0=
 
@@ -144,6 +145,8 @@ tanzu_multi_cloud:
   avi_password: "{{ nsx_alb.controller_password }}"
   avi_service_engine_group: "{{ nsx_alb.se_group_name | default('Default-Group') }}"
   avi_username: "{{ nsx_alb.controller_username }}"
+
+  management_cluster_controlplane_endpoint_provider: "{{ opinionated.management_cluster_controlplane_endpoint_provider | default('kube-vip') }}"
 
   # used in TKGM cluster config yaml
   vsphere_control_plane_endpoint: "{{ opinionated.hosting_network.workload.cidr | ipmath(2) }}"
