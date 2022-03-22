@@ -11,16 +11,16 @@
     name: vsvip-dummy
     cloud_ref: /api/cloud/?name=Default-Cloud
     vip:
-    - vip_id: '1'
-      auto_allocate_ip_type: V4_ONLY
-      auto_allocate_ip: true
-      ipam_network_subnet: 
-        network_ref: "/api/network?name={{ dummy_service_network_name }}"
-        subnet: 
-          ip_addr: 
-            addr: "{{ dummy_service_subnet_addr }}"
-            type: "V4"
-          mask: "{{ dummy_service_subnet_mask }}"
+      - vip_id: '1'
+        auto_allocate_ip_type: V4_ONLY
+        auto_allocate_ip: true
+        ipam_network_subnet:
+          network_ref: "/api/network?name={{ dummy_service_network_name }}"
+          subnet:
+            ip_addr:
+              addr: "{{ dummy_service_subnet_addr }}"
+              type: "V4"
+            mask: "{{ dummy_service_subnet_mask }}"
 
 - name: Create dummy Virtual Service to force SE creation
   avi_virtualservice:
@@ -28,7 +28,7 @@
     name: dummy-vip
     state: present
     services:
-        - port: 80
+      - port: 80
     application_profile_ref: '/api/applicationprofile?name=System-L4-Application'
     type: VS_TYPE_NORMAL
     cloud_ref: "/api/cloud?name=Default-Cloud"

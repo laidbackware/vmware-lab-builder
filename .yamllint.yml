@@ -12,3 +12,4 @@ rules:
 ignore: |
   temp/*
   .github/workflows/*
+  roles/tanzu/multi-cloud-generate-config/templates/management-cluster.yml

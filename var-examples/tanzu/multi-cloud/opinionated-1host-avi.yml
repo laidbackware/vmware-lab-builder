@@ -44,7 +44,7 @@ opinionated:
     # TKG needs DHCP to be configured for the first half of the subnet
     workload:
       port_group: trunk
-      vlan_id: 10 # Optional. If unset VLAN 0 will be used
+      vlan_id: 10  # Optional. If unset VLAN 0 will be used
       cidr: "172.19.10.0/24"
       gateway: "172.19.10.1"
       vip_ip_range: "172.19.10.128-172.19.10.254"
