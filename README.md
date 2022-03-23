@@ -120,7 +120,7 @@ Software dependencies for Linux:
     ```
 - Add necessary Ansible collections. Force switch will ensure it is upgraded.
    ```
-   ansible-galaxy collection install community.vmware --force
+   ansible-galaxy collection install community.vmware:1.17.1 --force
    ansible-galaxy collection install vmware.alb --force
    ansible-galaxy collection install git+https://github.com/vmware/ansible-for-nsxt.git,0e3cf74ace9cf3f22099415787e7fe62a487225a --force
    ```
