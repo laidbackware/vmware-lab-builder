@@ -19,7 +19,7 @@ RUN set -xe \
         git+https://github.com/vmware/vsphere-automation-sdk-python.git \
     \
     && echo "****** Adding community.vmware from Ansible Galaxy ******" \
-    && ansible-galaxy collection install community.vmware \
+    && ansible-galaxy collection install community.vmware:1.17.1 \
     \
     && echo "****** Adding vmware.avi from Ansible Galaxy ******" \
     && ansible-galaxy collection install vmware.alb \
