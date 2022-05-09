@@ -1,4 +1,8 @@
 ---
+- name: Pause for 60 seconds for system to stabilize 
+  pause:
+    seconds: 60
+
 - name: Create dummy Pool to force SE creation
   avi_pool:
     avi_credentials: "{{ avi_credentials }}"
@@ -35,9 +39,9 @@
     pool_ref: '/api/pool?name=dummy-pool'
     vsvip_ref: /api/vsvip/?name=vsvip-dummy
 
-- name: Pause for 10 seconds ensure SE is created
+- name: Pause for 60 seconds ensure SE is created
   pause:
-    seconds: 10
+    seconds: 60
 
 - name: Delete dummy Virtual Service to force SE creation
   avi_virtualservice:

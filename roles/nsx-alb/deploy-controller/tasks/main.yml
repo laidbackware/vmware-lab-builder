@@ -129,7 +129,7 @@
   when: system_config_result.changed
 
 # Backup configuration currently broken
-- name: Example to create BackupConfiguration object
+- name: Create BackupConfiguration object
   avi_backupconfiguration:
     avi_credentials: "{{ avi_credentials }}"
     # state: present

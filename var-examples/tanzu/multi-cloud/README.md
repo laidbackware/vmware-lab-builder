@@ -3,7 +3,7 @@ This will deploy using the standard 2 network topology
 
 ## Tested Versions
 - Avi Controller 20.1.6
-- Tanzu Kubernetes Grid 1.4.0
+- Tanzu Kubernetes Grid 1.5.1
 
 ## Additional Dependencies
 In addition to the base dependencies, you will need to download and store the NSX-ALB OVA file in your software directory:
