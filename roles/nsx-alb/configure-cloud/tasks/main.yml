@@ -125,7 +125,7 @@
       cluster_refs:
         - "/api/vimgrclusterruntime?name={{ se_vcenter_cluster }}"
       include: true
-    se_deprovision_delay: 0  # never delete SEs.
+    se_deprovision_delay: "{{ se_deprovision_delay | default(0) }}" # never delete SEs if set to 0.
   register: se_group_result
 
 - name: Update Default cloud with IPAM/DNS profiles

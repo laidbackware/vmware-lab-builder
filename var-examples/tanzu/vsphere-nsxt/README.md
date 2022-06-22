@@ -3,7 +3,7 @@ This will deploy NSX-T and enable Workload Management, aka deploy the Supervisor
 
 ## Tested Versions
 - NSX-T 3.1.3
-- vSphere 7.0 U3
+- vSphere 7.0 U3c
 
 ## Dependencies
 - The NSX-T ISO must be added to your software directory and the filename updated in the vars file.  
