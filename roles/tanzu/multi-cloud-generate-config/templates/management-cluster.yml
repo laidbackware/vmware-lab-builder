@@ -9,6 +9,11 @@ AVI_LABELS: ""
 AVI_PASSWORD: "{{ tanzu_multi_cloud.avi_password }}"
 AVI_SERVICE_ENGINE_GROUP: "{{ tanzu_multi_cloud.avi_service_engine_group | default('Default-Group') }}"
 AVI_USERNAME: "{{ tanzu_multi_cloud.avi_username }}"
+{% if tanzu_multi_cloud.management_cluster_controlplane_endpoint_provider == "avi" %}
+AVI_CONTROL_PLANE_HA_PROVIDER: true
+{% else %}
+AVI_CONTROL_PLANE_HA_PROVIDER: false
+{% endif %}
 CLUSTER_CIDR: 100.96.0.0/11
 CLUSTER_PLAN: dev
 ENABLE_CEIP_PARTICIPATION: "false"
@@ -38,7 +43,11 @@ OIDC_IDENTITY_PROVIDER_USERNAME_CLAIM: ""
 SERVICE_CIDR: 100.64.0.0/13
 TKG_HTTP_PROXY_ENABLED: "false"
 VSPHERE_CONTROL_PLANE_DISK_GIB: "40"
+{% if tanzu_multi_cloud.management_cluster_controlplane_endpoint_provider == "kube-vip" %}
 VSPHERE_CONTROL_PLANE_ENDPOINT: "{{ tanzu_multi_cloud.vsphere_control_plane_endpoint }}"
+{% else %}
+# VSPHERE_CONTROL_PLANE_ENDPOINT not specified as AVI_CONTROL_PLANE_HA_PROVIDER has been set
+{% endif %}
 VSPHERE_CONTROL_PLANE_MEM_MIB: "8192"
 VSPHERE_CONTROL_PLANE_NUM_CPUS: "2"
 VSPHERE_DATACENTER: "{{ tanzu_multi_cloud.vsphere_datacenter_path }}"

@@ -237,10 +237,10 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
       # host_switch_name: "{{ distributed_switches[0].vds_name }}"
       nested_nsx: true  # Set this to true if you use NSX-T for your physical host networking
       description: "Overlay Transport Zone"
-    # - display_name: nsx-vlan-transportzone
-    #   transport_type: VLAN
-    #   # host_switch_name: sw_vlan
-    #   description: "Uplink Transport Zone"
+      # - display_name: nsx-vlan-transportzone
+      #   transport_type: VLAN
+      #   # host_switch_name: sw_vlan
+      #   description: "Uplink Transport Zone"
 
   transport_node_profiles:
     - display_name: tnp1
