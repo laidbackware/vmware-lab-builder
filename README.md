@@ -1,5 +1,11 @@
 # vmware-lab-builder
-Build a nested vSphere lab with Ansible
+Build a nested vSphere lab with Ansible.
+
+## <span style="color:red">Breaking Changes</span>
+
+The vSphere with Tanzu modules have been converted to Ansible Galaxy modules, meaning the role have changed, so you must update to use version 6 of the build container.
+
+When pulling this repo, be sure to use the latest version of the container image or check the dependency setup, to ensure the the roles have all the required dependencies.
 
 ## Description
 You can use the ansible playbooks in this repo to build out nested ESXi hosts, deploy a vCenter and configure clusters. ESXi/vCenter 6.7 and 7.0 are supported. The main design goal of this project is to be able to provide both opinionated deployment with few variables and to have the ability to fully customize the deployment.
@@ -21,9 +27,17 @@ This release has been tested with the following components and should be backwar
 | --------------- | ------------ |
 | 7.0U3           | 7.0U3        |
 
-The pattern name below is matches the sub-directory under `var-examples`.</br>
-doc-updates
+The pattern names below match the sub-directory under `var-examples` where examples can be found.</br>
 
+| Pattern Name              | Product Versions | Status                  |
+| ------------------------- | ---------------- | ----------------------- |
+| base-vsphere              | n/a              | Stable                  |
+| nsxt                      | NSX-T 3.1.3.1    | Stable                  |
+| tanzu/multi-cloud         | NSX-ALB 20.1.7   | Stable                  |
+| tanzu/vsphere-nsxt        | NSX-T 3.1.3.1    | Stable                  |
+| tanzu/vsphere-vds-alb     | NSX-ALB 20.1.7   | Stable                  |
+| tanzu/vsphere-vds-haproxy | haproxy          | Stable                  |
+| tanzu/integrated          | NSX-T 3.0        | Work in progress/broken |
 
 ## Usage with Docker
 Each deployment pattern has an opinionated and some have a custom example(which may be out of date). The idea of the opinionated deployment is that the user has to provide the minimum of configuration and the remainder of the options are calculated for them. Whereas the custom example has to have all sections built up by hand. Either of the examples types can be fully customized.<br/>
@@ -56,7 +70,7 @@ alias lab-builder="docker run --rm \
     --env AVI_DEFAULT_PASSWORD=\"${AVI_DEFAULT_PASSWORD:-na}\" \
     --volume ${SOFTWARE_DIR}:/software_dir \
     --volume ${PWD}:/work \
-    laidbackware/vmware-lab-builder:v5 \
+    laidbackware/vmware-lab-builder:v6 \
     ansible-playbook"
 
 # This command is run inside the container, so point to the `/work` directory within the container.
@@ -74,7 +88,7 @@ lab-builder /work/destroy.yml \
 ## Troubleshooting
 The vCenter install can take a long time. You can check the progress by browsing to https://<vcenter IP>:5480. If the vCenter install fails, check the `vcsa-cli-installer.log` file which can be found in a created directory under /tmp.<br/>
 
-To debug in docker, first enter the container with bash, then run the playbook. This way the vCenter build logs will be avaible after the failure.
+To debug in docker, first enter the container with bash, then run the playbook. This way the vCenter build logs will be available after the failure.
 ```
 # This command will start a bash shell within the container
 docker run  -it --rm \
@@ -95,19 +109,17 @@ ansible-playbook /work/deploy.yml --extra-vars '@/work/<path>/<file>.yml'
 If adding new variables to the vars file be sure to only use underscores as variable names and not hyphens.
 
 ## Roadmap
-For solution specifc features, check the relevant example directory.
+For solution specific features, check the relevant example directory.
 - Add ability to create TKGS namespaces
 - Add ability to create guest clusters for TKGS
-- Add ability to deploy VMs to folders and resource pools on parent VC
-- Add NFS server creation via Ubuntu VM
+- Add ability to deploy VMs to folders and resource pools on parent vCenter
 - Add more examples for different topologies
 - Add support for VSAN configuration
-
 
 ## Docker Image Build
 From the root of the repo. Note no-cache flag used to force builds to pickup any changes to the git repos.
 ```
-docker build --no-cache ./docker/. -t laidbackware/vmware-lab-builder:v5
+docker build --no-cache ./docker/. -t laidbackware/vmware-lab-builder:v6
 ```
 
 ## Local Usage
@@ -123,17 +135,5 @@ Software dependencies for Linux:
    ansible-galaxy collection install community.vmware:1.17.1 --force
    ansible-galaxy collection install vmware.alb --force
    ansible-galaxy collection install git+https://github.com/vmware/ansible-for-nsxt.git,0e3cf74ace9cf3f22099415787e7fe62a487225a --force
+   ansible-galaxy collection install git+https://github.com/laidbackware/ansible-for-vsphere-tanzu.git,ansible-galaxy --force
    ```
-
-### Cloning repos for the extra modules
-You will need to use git to clone ansible-for-nsxt and ansible-for-vsphere-tanzu, then export the location of the modules. A specific branch will be cloned for ansible-for-nsxt as it contains a necessary fix which has a pull request pending. Below assumes a directory called workspace to host the modules.
-```
-cd $HOME/workspace
-git clone https://github.com/laidbackware/ansible-for-vsphere-tanzu.git
-export ANSIBLE_LIBRARY=$HOME/workspace/ansible-for-vsphere-tanzu
-export ANSIBLE_HOST_KEY_CHECKING=False
-```
-Once all is setup run the playbooks can be run locally:
-```
-ansible-playbook deploy.yml --extra-vars="@var-examples/base-vsphere/1host-minimal-opinionated.yml"
-```

@@ -1,10 +1,10 @@
 ---
 # SOFTWARE_DIR must contain all required software
-vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.2-17958471.iso"
-esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u2a_Appliance_Template_v1.ova"
-haproxy_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/haproxy-v0.2.0.ova"
+vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.3-20395099.iso"
+esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u3g_Appliance_Template_v1.ova"
+nsx_alb_controller_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/controller-20.1.7-9154.ova"
 
-environment_tag: "tkgs-vds-haproxy"  # Used to prepend object names in hosting vCenter
+environment_tag: "tanzu-vsphere-vds-avi"  # Used to prepend object names in hosting vCenter
 dns_server: "192.168.0.1"
 dns_domain: "home.local"
 ntp_server_ip: "192.168.0.1"
@@ -13,7 +13,7 @@ disk_mode: thin  # How all disks should be deployed
 nested_host_password: "{{ opinionated.master_password }}"
 
 hosting_vcenter:  # This is the vCenter which will be the target for nested vCenters and ESXi hosts
-  ip: "192.168.0.113"
+  ip: "vcsa.lab"
   username: "{{ lookup('env', 'PARENT_VCENTER_USERNAME') }}"
   password: "{{ lookup('env', 'PARENT_VCENTER_PASSWORD') }}"
   datacenter: "Home"  # Target for all VM deployment
@@ -23,7 +23,7 @@ opinionated:
   master_password: "VMware1!"
   number_of_hosts: 1  # number of ESXi VMs to deploy
   nested_hosts:
-    cpu_cores: 10  # CPU count per nested host
+    cpu_cores: 12  # CPU count per nested host
     ram_in_gb: 96  # memory per nested host
     local_disks:  # (optional) this section can be removed to not modify local disks
       - size_gb: 400
@@ -32,21 +32,20 @@ opinionated:
   hosting_datastore: NVME
   hosting_network:
     base:
-      port_group: Nest
+      port_group: Nest  # Hosting port group
       cidr: "192.168.0.0/22"
       gateway: "192.168.0.1"
       # A TKGS deployment requires 8 IPs, plus 1 per esxi host. They MUST be contiguous.
-      starting_addr: "192.168.0.170"
-    # If you want to provide your own routing between networks, delete the tkgs.router section
+      starting_addr: "192.168.1.90"
     # If using your own network you must provide at least a /24.
     workload:
-      port_group: tkgs-workload
-      vlan_id: 0
-      cidr: "172.31.0.0/24"
-      gateway: "172.31.0.1"
+      port_group: trunk  # Hosting port group
+      vlan_id: 12
+      cidr: "172.19.12.0/24"
+      gateway: "172.19.12.1"
+  ssh_public_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC/qMIbcfUkClzrBi7QjUmtdfpjDlTSXsPcJsmdmezbem2SboQPujpFUGmzFXi5PqhPa3QOxvMn8oJpozlJYydDspFAAqX+0u8n0FrwMMn0ckwUtF4zxz/AnI8tUltjeN67M7mG+3W8ooRFeaY6nrjxEIXbkMOzSbeTaFcB9cDzRXcMmFiuoeDhUonEYbClrsPzLdzscw7Vz6BLMHwo9SBOqlaL25aG/DtZPB7jobQRh48q3RW+Hb29nH18biJNLiBDsRu1SJIzw7Dl+rNSX9Va56vX0cz5CDiTg9A69WgySDx7oZFZM3W6jyHCN0fQbw/OxE/2MemhfQbdJqgffA7zE0qx+/DVIoT5bBP7FPpQSxkMjC+AEAH4PPsDIP0KJH9do6+T/g/Mf6725IOaPSJyV0bAkz1T57T1ty19KdhvPVfjrMnCap+pLvD6Qd/lxzY9uFF4oOwWmo4xQ6hQXZ9oJUhrRsG2A5LF7XGXwOb8mHSG4InfUfjaov4gjLl5tN0=
   tanzu_vsphere:
-    # This network is private and should not overlap with any routeable networks
-    internal_kubernetes_services_network: 172.20.8.0/22
+    internal_kubernetes_services_network: 100.65.0.0/16
 
 #####################################################################
 ### No need to edit below this line for an opinionated deployment ###
@@ -88,8 +87,9 @@ nested_clusters:  # You can add clusters in this section by duplicating the exis
     # Must specify at least 2 port groups, up to a maximum of 10
     vmnic_physical_portgroup_assignment:
       - name: "{{ opinionated.hosting_network.base.port_group }}"
-      # - name: "{{ opinionated.hosting_network.base.port_group }}"
       - name: "{{ opinionated.hosting_network.workload.port_group }}"
+    resource_pools:  # List of resource pools, remove if not needed
+      - tkc
 
 # Below specifies how many IPs are reserved for other functions
 opinionated_host_ip_ofset: 8
@@ -99,8 +99,8 @@ nested_hosts: >-
     {% for host_number in range(opinionated.number_of_hosts) %}
     {
       "name": "esx{{ host_number + 1 }}",
-      "ip": "{{ opinionated.hosting_network.base.starting_addr | ipmath(opinionated_host_ip_ofset + host_number) }}",
-      "mask": "{{ opinionated.hosting_network.base.cidr | ansible.netcommon.ipaddr('netmask') }}",
+      "ip": "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(opinionated_host_ip_ofset + host_number) }}",
+      "mask": "{{ opinionated.hosting_network.base.cidr | ansible.utils.ipaddr('netmask') }}",
       "gw": "{{ opinionated.hosting_network.base.gateway }}",
       "nested_cluster": "compute"
     },
@@ -108,7 +108,7 @@ nested_hosts: >-
   ]
 
 distributed_switches:  # To not create any distributed switches, comment this section.
-  - vds_name: tkgs-vds
+  - vds_name: vds
     mtu: 1500
     vds_version: 7.0.0
     clusters:  # distributed switch will be attached to all hosts in the clusters defined
@@ -137,8 +137,8 @@ tspbm:  # Tag-based Storage Policy Based Management
       tag_name: tkgs-storage-tag
       tag_category: tkgs-storage-category
 
+
 tanzu_vsphere:
-  cluster_ip_services_cidr: "{{ opinionated.tanzu_vsphere.internal_kubernetes_services_network }}"  # This is private within each cluster
   content_library_datastore: "{{ opinionated.nested_hosts.local_disks[0].datastore_prefix }}-esx1"
   content_library_name: tkgs-library
   content_library_url: "http://wp-content.vmware.com/v2/latest/lib.json"
@@ -150,60 +150,68 @@ tanzu_vsphere:
   ntp_server_list: ["{{ ntp_server_ip }}"]
   management_dns_servers: ["{{ dns_server }}"]
   management_gateway: "{{ opinionated.hosting_network.base.gateway }}"
-  management_netmask: "{{ opinionated.hosting_network.base.cidr | ansible.netcommon.ipaddr('netmask') }}"
+  management_netmask: "{{ opinionated.hosting_network.base.cidr | ansible.utils.ipaddr('netmask') }}"
   management_port_group: vm-network
-  management_starting_address: "{{ opinionated.hosting_network.base.starting_addr | ipmath(3) }}"
+  management_starting_address: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(4) }}"
   master_storage_policy: "{{ tspbm.vm_storage_policies[0].storage_policy_name }}"
   network_provider: VSPHERE_NETWORK
+  services_cidr: "{{ opinionated.tanzu_vsphere.internal_kubernetes_services_network }}"  # This is private within each cluster
   supervisor_size: tiny
   vsphere_cluster: compute
   workload_dns_servers: ["{{ dns_server }}"]
 
-  vsphere_networking:
-    haproxy_ip_range_list:
-      # formula to split the workload subnet in 2 and take the first available IP
-      - starting_ip: >-
-          {{ opinionated.hosting_network.workload.cidr |
-          ansible.netcommon.ipsubnet((opinionated.hosting_network.workload.cidr.split('/')[1] |int)+1, 1) | ipmath(0) }}
-        # formula to split the workload subnet in 2 and calculate the number of usable IPs
-        num_of_ips: >-
-          {{ opinionated.hosting_network.workload.cidr |
-          ansible.netcommon.ipsubnet((opinionated.hosting_network.workload.cidr.split('/')[1] |int)+1, 1) | ipsubnet(32) |int -1 }}
-    workload_address: "{{ opinionated.hosting_network.workload.cidr.split('/')[0] }}"
+  vds_networking:
+    load_balancer_provider: AVI
+    nsx_alb_password: "{{ nsx_alb.controller_password }}"
+    nsx_alb_username: "{{ nsx_alb.controller_username}}"
+    nsx_alb_server: "{{ nsx_alb.controller_ip }}"
     workload_gateway: "{{ opinionated.hosting_network.workload.gateway }}"
+    workload_netmask: "{{ opinionated.hosting_network.workload.cidr | ansible.utils.ipaddr('netmask') }}"
+    workload_ntp_servers: ["{{ ntp_server_ip }}"]
+    workload_port_group: workload-pg
     workload_ip_range_list:
-      # formula to split the workload subnet in 2 and take the first available IP
-      - starting_ip: "{{ opinionated.hosting_network.workload.cidr | ipmath(3) }}"
-        # formula to split the workload subnet in 2 and calculate the number of usable IPs
+      - starting_ip: "{{ opinionated.hosting_network.workload.cidr | ansible.utils.ipmath(2) }}"
         num_of_ips: >-
           {{ opinionated.hosting_network.workload.cidr |
-          ansible.netcommon.ipsubnet((opinionated.hosting_network.workload.cidr.split('/')[1] |int)+1, 0) | ipsubnet(32) |int -4 }}
-    workload_netmask: "{{ opinionated.hosting_network.workload.cidr | ansible.netcommon.ipaddr('netmask') }}"
-    workload_port_group: workload-pg
+          ansible.netcommon.ipsubnet((opinionated.hosting_network.workload.cidr.split('/')[1] |int)+1, 1) | ipsubnet(32) |int -2 }}
 
-tkg_router:
-  datastore: "{{ opinionated.nested_hosts.local_disks[0].datastore_prefix }}-esx1"
-  internal_gateway_cidr: "{{ opinionated.hosting_network.workload.gateway }}/{{ opinionated.hosting_network.workload.cidr.split('/')[1] }}"
-  internal_network_cidr: "{{ opinionated.hosting_network.workload.cidr }}"
-  uplink_ip_cidr: >-
-    {{ opinionated.hosting_network.base.starting_addr |
-    ipmath(1) }}/{{ opinionated.hosting_network.base.cidr.split('/')[1] }}
-  uplink_next_hop: "{{ opinionated.hosting_network.base.gateway }}"
+nsx_alb:
+  api_version: "20.1.7"
+  controller_username: admin
+  controller_password: "{{ opinionated.master_password }}"
+  controller_ssh_public_key: "{{ opinionated.ssh_public_key }}"
+  controller_default_password: "{{ lookup('env', 'AVI_DEFAULT_PASSWORD') }}"
 
-tkg_haproxy:
-  username: admin
-  password: "{{ opinionated.master_password }}"
-  root_pwd: "{{ opinionated.master_password }}"
-  datastore: "{{ opinionated.nested_hosts.local_disks[0].datastore_prefix }}-esx1"
-  management_ip: "{{ opinionated.hosting_network.base.starting_addr | ipmath(2) }}"
-  management_subnet_bits: "{{ opinionated.hosting_network.base.cidr.split('/')[1] }}"
-  management_port: "5556"
-  management_gateway: "{{ opinionated.hosting_network.base.gateway }}"
-  management_port_group: vm-network
-  nameservers: "{{ dns_server }}"
-  # Line below will create a cidr of the third quarter of opinionated.hosting_network.workload.cidr
-  service_ip_range: >-
-    {{ opinionated.hosting_network.workload.cidr |
-    ansible.netcommon.ipsubnet((opinionated.hosting_network.workload.cidr.split('/')[1] |int)+1, 1) }}
-  workload_ip: "{{ opinionated.hosting_network.workload.cidr | ipmath(2) }}/{{ opinionated.hosting_network.workload.cidr.split('/')[1] }}"
-  workload_gateway: "{{ opinionated.hosting_network.workload.gateway }}"
+  controller_ip: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(1) }}"
+  controller_netmask: "{{ opinionated.hosting_network.base.cidr.split('/')[1] }}"
+  controller_gateway: "{{ opinionated.hosting_network.base.gateway }}"
+  dns_server: "{{ dns_server }}"
+  ntp_server: "{{ ntp_server_ip }}"
+
+  controller_vcenter_ip: "{{ hosting_vcenter.ip }}"
+  controller_vcenter_username: "{{ hosting_vcenter.username }}"
+  controller_vcenter_password: "{{ hosting_vcenter.password }}"
+  controller_vcenter_datacenter: "{{ hosting_vcenter.datacenter }}"
+  controller_vcenter_cluster: "{{ opinionated.hosting_cluster }}"
+  controller_vcenter_datastore: "{{ opinionated.hosting_datastore }}"
+  controller_port_group: "{{ opinionated.hosting_network.base.port_group }}"
+
+  cloud_vcenter_username: "{{ nested_vcenter.username }}"
+  cloud_vcenter_password: "{{ nested_vcenter.password }}"
+  cloud_vcenter_url: "{{ nested_vcenter.ip }}"
+  cloud_vcenter_datacenter: "{{ nested_vcenter.datacenter }}"
+
+  se_vcenter_cluster: compute
+  # The management network will host he service engine management interface
+  se_management_port_group: vm-network
+  se_management_network_cidr: "{{ opinionated.hosting_network.base.cidr }}"
+  se_management_network_range: >-
+    {{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(2) }}-{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(3) }}
+  se_management_network_gateway: "{{ opinionated.hosting_network.base.gateway }}"
+  # The vip network will contain the virtual servers created by Avi
+  se_vip_port_group: workload-pg
+  se_vip_network_cidr: "{{ opinionated.hosting_network.workload.cidr }}"
+  se_vip_network_range: >-
+    {{ opinionated.hosting_network.workload.cidr | ansible.utils.ipmath(128) }}-{{ opinionated.hosting_network.workload.cidr |
+    ansible.utils.ipaddr('-2') | ansible.utils.ipaddr('address') }}
+  se_vip_network_gateway: "{{ opinionated.hosting_network.workload.gateway }}"

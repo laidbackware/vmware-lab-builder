@@ -83,24 +83,33 @@
     api_version: "{{ api_version }}"
     old_password: "{{ controller_default_password }}"
   when: "access_test.module_stderr is defined and 'Invalid credentials' in access_test.module_stderr"
+  register: useraccount
+
+- name: Wait to for pw change
+  pause:
+    echo: false
+    seconds: 5
+  when: useraccount.changed
 
 - name: Create a SSL Key and Certificate
   avi_sslkeyandcertificate:
     avi_credentials: "{{ avi_credentials }}"
     type: SSL_CERTIFICATE_TYPE_SYSTEM
-    name: "{{ controller_ip }}"
+    name: "controller-cert"
     certificate:
       self_signed: true
       days_until_expire: 730
       signature_algorithm: sha256WithRSAEncryption
       subject:
         common_name: "{{ controller_ip }}"
-        distinguished_name: "CN={{ controller_ip }}"
+      subject_alt_names:
+        - "{{ controller_ip }}"
   register: controller_cert_result
 
 - name: Basic Controller Config
   avi_systemconfiguration:
     avi_credentials: "{{ avi_credentials }}"
+    welcome_workflow_complete: true
     default_license_tier: ESSENTIALS
     email_configuration:
       smtp_type: SMTP_NONE
@@ -119,7 +128,7 @@
             addr: "{{ ntp_server }}"
     portal_configuration:
       sslkeyandcertificate_refs:
-        - /api/sslkeyandcertificate/?name={{ controller_ip }}
+        - /api/sslkeyandcertificate/?name=controller-cert
   register: system_config_result
 
 - name: Wait for server to restart with new certificate
@@ -136,6 +145,8 @@
     name: Backup-Configuration
     backup_passphrase: VMware1!
     upload_to_remote_host: false
+    tenant_ref: "/api/tenant/?name=admin"
+    save_local: true
   register: backup
 
 - debug: msg="{{ backup }}"

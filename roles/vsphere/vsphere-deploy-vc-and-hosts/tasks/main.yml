@@ -138,7 +138,7 @@
                       "datastore": "{{ nested_clusters[host.nested_cluster].hosting_datastore }}",
                       "scsi_type": "paravirtual",
                       "scsi_controller": 0,
-                      "unit_number": {{loop.index0}} + 1
+                      "unit_number": {{loop.index0  + 1}}
                     },
                   {% endfor %}
                 ]

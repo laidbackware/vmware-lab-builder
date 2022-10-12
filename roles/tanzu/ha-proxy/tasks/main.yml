@@ -15,8 +15,8 @@
     disk_provisioning: "{{ disk_mode }}"
     networks:
       Management: "{{ tanzu_vsphere.management_port_group }}"
-      Workload: "{{ tanzu_vsphere.vsphere_networking.workload_port_group }}"
-      Frontend: "{{ tanzu_vsphere.vsphere_networking.workload_port_group }}"
+      Workload: "{{ tanzu_vsphere.vds_networking.workload_port_group }}"
+      Frontend: "{{ tanzu_vsphere.vds_networking.workload_port_group }}"
     ova: "{{ haproxy_ova }}"
     allow_duplicates: false
     power_on: true

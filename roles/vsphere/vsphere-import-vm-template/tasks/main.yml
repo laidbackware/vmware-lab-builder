@@ -9,7 +9,7 @@
     datacenter: "{{ item.0.vcenter_datacenter }}"
     datastore: "{{ item.0.vcenter_datastore }}"
     disk_provisioning: thin
-    networks: 
+    networks:
       nic0: "{{ item.0.vcenter_network }}"
     ova: "{{ item.0.local_path }}"
     allow_duplicates: false

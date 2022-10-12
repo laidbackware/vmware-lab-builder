@@ -12,7 +12,9 @@ RUN set -xe \
     && apt install -y --no-install-recommends \
         ca-certificates iputils-ping python3-apt libarchive-tools sshpass \
         build-essential python3 python3-jmespath python3-setuptools \
-        python3-pip python3-dev git  \
+        python3-pip python3-dev git \
+    \
+    && ln --symbolic /usr/bin/python3 /usr/bin/python \
     \
     && echo "****** Installing Python modules ******" \
     && pip3 install ansible pyvmomi netaddr requests \
@@ -28,8 +30,7 @@ RUN set -xe \
     && ansible-galaxy collection install git+https://github.com/vmware/ansible-for-nsxt.git,0e3cf74ace9cf3f22099415787e7fe62a487225a \
     \
     && echo "****** Cloning ansible-for-vsphere-tanzu ******" \
-    && mkdir /repos \
-    && git clone https://github.com/laidbackware/ansible-for-vsphere-tanzu.git /repos/ansible-for-vsphere-tanzu \
+    && ansible-galaxy collection install git+https://github.com/laidbackware/ansible-for-vsphere-tanzu.git,ansible-galaxy \
     \
     && echo "****** Removing build tools ******" \
     && apt remove -y build-essential python3-pip python3-dev git \
@@ -38,4 +39,4 @@ RUN set -xe \
     && rm -Rf /usr/share/doc && rm -Rf /usr/share/man \
     && rm -rf /root/.cache/pip/ \
     && rm -rf /tmp/* \
-    && apt-get clean \
+    && apt-get clean

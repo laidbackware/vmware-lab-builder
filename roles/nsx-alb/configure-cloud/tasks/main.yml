@@ -84,21 +84,22 @@
             addr: "{{ se_management_network_cidr.split('/')[0] }}"
             type: V4
           mask: "{{ se_management_network_cidr.split('/')[1] }}"
-        static_ranges:
-          - begin:
-              addr: "{{ se_management_network_range.split('-')[0] }}"
-              type: "V4"
-            end:
-              addr: "{{ se_management_network_range.split('-')[1] }}"
-              type: "V4"
+        static_ip_ranges:
+          - range:
+              begin:
+                addr: "{{ se_management_network_range.split('-')[0] }}"
+                type: "V4"
+              end:
+                addr: "{{ se_management_network_range.split('-')[1] }}"
+                type: "V4"
   register: management_network_result
 
 - name: Create IPAM provider
   avi_ipamdnsproviderprofile:
     avi_credentials: "{{ avi_credentials }}"
     internal_profile:
-      usable_network_refs:
-        - /api/network/?name={{ se_vip_port_group }}
+      usable_networks:
+        - nw_ref: /api/network/?name={{ se_vip_port_group }}
       ttl: 30
     name: tkg-ipam-profile
     type: IPAMDNS_TYPE_INTERNAL
@@ -125,7 +126,7 @@
       cluster_refs:
         - "/api/vimgrclusterruntime?name={{ se_vcenter_cluster }}"
       include: true
-    se_deprovision_delay: "{{ se_deprovision_delay | default(0) }}" # never delete SEs if set to 0.
+    se_deprovision_delay: "{{ se_deprovision_delay | default(0) }}"  # never delete SEs if set to 0.
   register: se_group_result
 
 - name: Update Default cloud with IPAM/DNS profiles
@@ -169,11 +170,12 @@
             addr: "{{ se_vip_network_cidr.split('/')[0] }}"
             type: V4
           mask: "{{ se_vip_network_cidr.split('/')[1] }}"
-        static_ranges:
-          - begin:
-              addr: "{{ se_vip_network_range.split('-')[0] }}"
-              type: "V4"
-            end:
-              addr: "{{ se_vip_network_range.split('-')[1] }}"
-              type: "V4"
+        static_ip_ranges:
+          - range:
+              begin:
+                addr: "{{ se_vip_network_range.split('-')[0] }}"
+                type: "V4"
+              end:
+                addr: "{{ se_vip_network_range.split('-')[1] }}"
+                type: "V4"
   register: vip_network_result

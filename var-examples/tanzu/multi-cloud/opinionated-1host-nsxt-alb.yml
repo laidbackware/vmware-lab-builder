@@ -1,10 +1,13 @@
 ---
+# THIS VARS FILE IS BROKEN AND UNTESTED!
+
 # SOFTWARE_DIR must contain all required software
 vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.2-17958471.iso"
-esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u2_Appliance_Template_v1.ova"
-nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-3.1.3.1.0.18504672.ova"
+esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u2a_Appliance_Template_v1.ova"
+nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-3.1.1.0.0.17483186.ova"
+nsx_alb_controller_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/controller-20.1.6-9132.ova"
 
-environment_tag: "tkgi"  # Used to prepend object names in hosting vCenter
+environment_tag: "tanzu-multi-cloud-nsxt-avi"  # Used to prepend object names in hosting vCenter
 dns_server: "192.168.0.1"
 dns_domain: "home.local"
 ntp_server_ip: "192.168.0.1"  # Must be set to an IP address!
@@ -17,16 +20,15 @@ hosting_vcenter:  # This is the vCenter which will be the target for nested vCen
   password: "{{ lookup('env', 'PARENT_VCENTER_PASSWORD') }}"
   datacenter: "Home"  # Target for all VM deployment
 
-# This section is only referenced by other variables in this file
+# This section describes what will be created
 opinionated:
   master_password: "VMware1!"
-  number_of_hosts: 1  # number of ESXi VMs to deploy
   nested_hosts:
-    cpu_cores: 8  # CPU count per nested host
-    ram_in_gb: 128  # memory per nested host
-    local_disks:  # (optional) this section can be removed to not modify local disks
-      - size_gb: 500
-        datastore_prefix: "datastore"  # omit this to not have a datastore created
+    cpu_cores: 16  # CPU count per nested host
+    ram_in_gb: 160  # memory per nested host
+    local_disks:
+      - size_gb: 800
+        datastore_prefix: "datastore"
   hosting_cluster: Physical
   hosting_datastore: NVME
   hosting_network:
@@ -35,28 +37,18 @@ opinionated:
       cidr: "192.168.0.0/22"
       gateway: "192.168.0.1"
       # A NSX-T deployment requires 4 IPs, plus 1 per esxi host. They MUST be contiguous.
-      starting_addr: "192.168.1.10"
+      starting_addr: "192.168.1.50"
+    # nsxt tep pool will not be routed, but should not clash with routeable ranges
     nsxt_tep:
       port_group: TEP
       vlan_id: 0
-      cidr: "172.31.253.0/24"  # IP calculation depends on this being a /24
-  nsxt:
-    tier0_gateway_name: test-t0
-    tier1_gateways:
-      - display_name: infra-t1
-        route_advertisement_types:
-          - "TIER1_CONNECTED"
-          - "TIER1_NAT"
-        segments:
-          - display_name: infra-seg
-            default_gateway_cidr: "172.30.0.1/24"
-    ip_pools:
-      - display_name: floating-ips
-        subnets:
-          - allocation_ranges:
-              - start: "172.30.1.1"
-                end: "172.30.1.254"
-            cidr: "172.30.1.0/24"
+      cidr: "172.31.255.232/29"  # Should be at least a 29 which supports up to 5 hosts and 1 edge
+    nsx_supernet:
+      cidr: "172.21.0.0/18"
+    avi_vips:
+      cidr: "172.21.3.0/24"
+  # This public key will be assigned to the created VMs, so you must have the private key to be able to use SSH
+  ssh_public_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC/qMIbcfUkClzrBi7QjUmtdfpjDlTSXsPcJsmdmezbem2SboQPujpFUGmzFXi5PqhPa3QOxvMn8oJpozlJYydDspFAAqX+0u8n0FrwMMn0ckwUtF4zxz/AnI8tUltjeN67M7mG+3W8ooRFeaY6nrjxEIXbkMOzSbeTaFcB9cDzRXcMmFiuoeDhUonEYbClrsPzLdzscw7Vz6BLMHwo9SBOqlaL25aG/DtZPB7jobQRh48q3RW+Hb29nH18biJNLiBDsRu1SJIzw7Dl+rNSX9Va56vX0cz5CDiTg9A69WgySDx7oZFZM3W6jyHCN0fQbw/OxE/2MemhfQbdJqgffA7zE0qx+/DVIoT5bBP7FPpQSxkMjC+AEAH4PPsDIP0KJH9do6+T/g/Mf6725IOaPSJyV0bAkz1T57T1ty19KdhvPVfjrMnCap+pLvD6Qd/lxzY9uFF4oOwWmo4xQ6hQXZ9oJUhrRsG2A5LF7XGXwOb8mHSG4InfUfjaov4gjLl5tN0=
 
 
 #####################################################################
@@ -79,6 +71,7 @@ nested_vcenter:  # the vCenter appliance that will be deployed
 nested_clusters:  # You can add clusters in this section by duplicating the existing cluster
   compute:  # This will be the name of the cluster in the nested  vCenter. Below are the minimum settings.
     enable_drs: true
+    enable_ha: true
     # Below are properties of the hosting cluster
     hosting_cluster: "{{ opinionated.hosting_cluster }}"  # The nested ESXi VMs will be deployed here
     hosting_datastore: "{{ opinionated.hosting_datastore }}"  # Datastore target for nested ESXi VMs
@@ -98,21 +91,14 @@ nested_clusters:  # You can add clusters in this section by duplicating the exis
       - name: "{{ opinionated.hosting_network.base.port_group }}"
       - name: "{{ opinionated.hosting_network.nsxt_tep.port_group }}"
 
-opinionated_host_ip_ofset: 4
-# See the custom example for host to build hosts out manually
-nested_hosts: >-
-  [
-    {% for host_number in range(opinionated.number_of_hosts) %}
-    {
-      "name": "esx{{ host_number + 1 }}",
-      "ip": "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(opinionated_host_ip_ofset + host_number) }}",
-      "mask": "{{ opinionated.hosting_network.base.cidr | ansible.utils.ipaddr('netmask') }}",
-      "gw": "{{ opinionated.hosting_network.base.gateway }}",
-      "nested_cluster": "compute"
-    },
-    {% endfor %}
-  ]
+nested_hosts:
+  - name: "esx1"
+    ip: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(5) }}"
+    mask: "{{ opinionated.hosting_network.base.cidr | ansible.utils.ipaddr('netmask') }}"
+    gw: "{{ opinionated.hosting_network.base.gateway }}"
+    nested_cluster: compute
 
+# TODO can collapse to a single VDS if the edge tep port can be a vlan segment instead
 distributed_switches:  # (optional) - section can be removed to not create any distributed switches
   - vds_name: nsxt-vds
     mtu: 1600
@@ -122,6 +108,23 @@ distributed_switches:  # (optional) - section can be removed to not create any d
     uplink_quantity: 1
     vmnics:
       - vmnic1
+
+tspbm:  # Tag-based Storage Policy Based Management
+  tag_categories:
+    - category_name: tkg-storage-category
+      description: "TKGS tag category"
+      tags:
+        - tag_name: tkg-storage-tag
+          description: "Tag for datastores used by TKGS"
+  datastore_tags:
+    - datastore_name: "{{ opinionated.nested_hosts.local_disks[0].datastore_prefix }}-esx1"
+      tag_names:
+        - tkg-storage-tag
+  vm_storage_policies:
+    - storage_policy_name: tkg-storage-policy
+      description: "TKGS storage performance policy"
+      tag_name: tkg-storage-tag
+      tag_category: tkg-storage-category
 
 nsxt:  # (optional) - section can be removed to not create any nsxt objects
   manager:
@@ -140,43 +143,22 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
     hosting_cluster: "{{ opinionated.hosting_cluster }}"
     license_key: "{{ lookup('env', 'NSXT_LICENSE_KEY') }}"
 
-  principal_identities:
-    - display_name: tkgi-super-user
-      role: "enterprise_admin"
-      public_key: |-
-        -----BEGIN CERTIFICATE-----
-        MIIC4TCCAcmgAwIBAgIUcUSVwH8oE8BTBrF9clFe3v64YYkwDQYJKoZIhvcNAQEL
-        BQAwHjEcMBoGA1UEAwwTcGtzLW5zeC10LXN1cGVydXNlcjAeFw0yMTA0MDExNjE3
-        MzhaFw0yMzA0MDExNjE3MzhaMB4xHDAaBgNVBAMME3Brcy1uc3gtdC1zdXBlcnVz
-        ZXIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC9lFGyhqKqjX4d4sg5
-        wpPmjlIQsbpwyu1r3Jpvk8b+3KdpejUcI0UlfUAYsshhv4+g8s1/CyV6/rR4nfnL
-        sj+Da8WaGZSxQAnaBQdZS+E+xQ6JqnCmrCGZwFaTuooTt2l/cPbIeOLy1aEFb5Oy
-        5QJH155KJnpSBQwwOceKsxeeCAX+lESg7jeM+IuE5Fpix9LFNCskUyWDWIOgsT0h
-        G2ybAgIMjaqCSjneEkQGkryorhSShffG8SkYx9g/AI0Es1J4CfTuxfZZDBIFMnij
-        gLmhXejXzqI69DK8PHiR9UYIuDROJl0nYelg4bih1b6DjAqLzxpeCNZE3VLIwES/
-        nSV1AgMBAAGjFzAVMBMGA1UdJQQMMAoGCCsGAQUFBwMCMA0GCSqGSIb3DQEBCwUA
-        A4IBAQAN7Zg5YCYtF8PPjjJSEwDJ3+kZGpvEeZpva4moJs741LF6BXlwl1bM2w7e
-        hc++zn4J5oNBPiGmfoNeIZVIJmKAJG/Sj1zIiboMLelxzTW2rZBXLPST/2Sm/edF
-        XgtZsI/yL2oh6lnlGXyQRvHdH185wC9LGYwWN+t2cv2VH2IqryrtmgGn5DNdREVK
-        QAxcle1oHgzTkA6cOE2nJSlzBw4V5kXP6cLMgr5XFjA7bnkBta3XFQubZdEUGdfd
-        xMWz87g/O6p9n8UtBfW/EfRQJswn3CMRPcOW8DaPoxTLSr/p8/Jbaji3UmcnfsKS
-        2ahXFX/S0BIbF2E57GVY5djChgzW
-        -----END CERTIFICATE-----
+  # If the section below is defined, the playbook will wait for the IP to become pingable
+  # For TKG service deployments this is the default gateway of the supervisor network
+  routing_test:
+    ip_to_ping: "{{ opinionated.hosting_network.nsx_supernet.cidr | ansible.utils.ipmath(1) }}"
+    # The playbook will present a message using the params below
+    # A static route must be made to the router uplink for nsxt_supernet
+    router_uplink: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(3) }}"
+    nsxt_supernet: "{{ opinionated.hosting_network.nsx_supernet.cidr }}"
+
   ip_pools:
     - display_name: tep-pool  # This is a non-routable range which is used for the overlay tunnels.
       subnets:
         - allocation_ranges:
             - start: "{{ opinionated.hosting_network.nsxt_tep.cidr | ansible.utils.ipmath(1) }}"
-              end: "{{ opinionated.hosting_network.nsxt_tep.cidr | ansible.utils.ipmath(254) }}"
+              end: "{{ opinionated.hosting_network.nsxt_tep.cidr | ansible.utils.ipaddr('-2') | ansible.utils.ipaddr('address') }}"
           cidr: "{{ opinionated.hosting_network.nsxt_tep.cidr }}"
-    - display_name: "{{ opinionated.nsxt.ip_pools[0].display_name }}"
-      subnets: "{{ opinionated.nsxt.ip_pools[0].subnets }}"
-
-  ip_blocks:
-    - display_name: tkgi-nodes  # This is a non-routable range which is used for the overlay tunnels.
-      cidr: 172.30.32.0/19
-    - display_name: tkgi-pods
-      cidr: 172.30.64.0/19
 
   uplink_profiles:
     - display_name: host-tep-profile
@@ -206,12 +188,12 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
   transport_zones:
     - display_name: tz-overlay
       transport_type: OVERLAY
-      host_switch_name: sw_overlay
+      # host_switch_name: "{{ distributed_switches[0].vds_name }}"
       nested_nsx: true  # Set this to true if you use NSX-T for your physical host networking
       description: "Overlay Transport Zone"
     - display_name: tz-vlan
       transport_type: VLAN
-      host_switch_name: sw_vlan
+      # host_switch_name: sw_vlan
       description: "Uplink Transport Zone"
 
   transport_node_profiles:
@@ -254,7 +236,6 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
       cluster_name: compute
       host_switches:
         tep:
-          host_switch_name: "sw_overlay"
           uplink_profile_name: edge-tep-profile
           ip_assignment_spec:
             resource_type: StaticIpPoolSpec
@@ -285,7 +266,7 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
 
   # For full spec see - https://github.com/laidbackware/ansible-for-nsxt/blob/vmware-lab-builder/library/nsxt_policy_tier0.py
   tier_0:
-    display_name: "{{ opinionated.nsxt.tier0_gateway_name }}"
+    display_name: "tkg-t0"
     ha_mode: ACTIVE_STANDBY
     uplink_ip: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(3) }}"
     disable_firewall: true
@@ -297,7 +278,7 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
           - ip_address: "{{ opinionated.hosting_network.base.gateway }}"
     locale_services:
       - state: present
-        display_name: "{{ opinionated.nsxt.tier0_gateway_name }}-ls"
+        display_name: "tkg-t0-ls"
         edge_cluster_info:
           edge_cluster_display_name: edge-cluster-1
         interfaces:
@@ -312,40 +293,85 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
               edge_node_display_name: edge-node-1
             mtu: 1500
 
-  # build list of segments from opinionated section. See custom deployment for example of how to configurre
-  overlay_segments: >-
-    [
-      {% if "overlay_segment" in  opinionated.nsxt %}
-      {% for overlay_segment in opinionated.nsxt.standalone_overlay_segments %}
-      {
-        "display_name": "{{ overlay_segment.display_name }}",
-        "transport_zone_display_name": "tz-overlay"
-      },
-      {% endfor %}
-      {% endif %}
-      {% for tier1_gateway in opinionated.nsxt.tier1_gateways %}
-      {% if "segments" in  tier1_gateway %}
-      {% for segment in tier1_gateway.segments %}
-      {
-        "display_name": "{{ segment.display_name }}",
-        "transport_zone_display_name": "tz-overlay",
-        "tier1_display_name": "{{ tier1_gateway.display_name }}",
-        "subnets": [
-          {"gateway_address": "{{ segment.default_gateway_cidr }}"}
-        ]
-      },
-      {% endfor %}
-      {% endif %}
-      {% endfor %}
-    ]
+  overlay_segments:
+    - display_name: tkg-mgmt-seg
+      transport_zone_display_name: tz-overlay
+      tier1_display_name: mgmt-t1
+      subnets:
+        - gateway_address: >-
+            {{ opinionated.hosting_network.nsx_supernet.cidr |
+            ansible.utils.ipmath(1) }}/{{ opinionated.hosting_network.nsx_supernet.cidr.split('/')[1] |int +6 }}
+    - display_name: reg-seg
+      transport_zone_display_name: tz-overlay
+      tier1_display_name: mgmt-t1
+      subnets:
+        - gateway_address: >-
+            {{ opinionated.hosting_network.nsx_supernet.cidr |
+            ansible.utils.ipmath(257) }}/{{ opinionated.hosting_network.nsx_supernet.cidr.split('/')[1] |int +6 }}
+    - display_name: jump-seg
+      transport_zone_display_name: tz-overlay
+      tier1_display_name: mgmt-t1
+      subnets:
+        - gateway_address: >-
+            {{ opinionated.hosting_network.nsx_supernet.cidr |
+            ansible.utils.ipmath(513) }}/{{ opinionated.hosting_network.nsx_supernet.cidr.split('/')[1] |int +6 }}
+    - display_name: avi-mgmt-seg
+      transport_zone_display_name: tz-overlay
+      tier1_display_name: mgmt-t1
+      subnets:
+        - gateway_address: >-
+            {{ opinionated.hosting_network.nsx_supernet.cidr |
+            ansible.utils.ipmath(769) }}/{{ opinionated.hosting_network.nsx_supernet.cidr.split('/')[1] |int +6 }}
+    - display_name: avi-vip-seg
+      transport_zone_display_name: tz-overlay
+      tier1_display_name: mgmt-t1
+      subnets:
+        - gateway_address: >-
+            {{ opinionated.hosting_network.avi_vips.cidr |
+            ansible.utils.ipmath(1025) }}/{{ opinionated.hosting_network.avi_vips.cidr.split('/')[1]}}
 
-  tier_1_gateways: >-
-    [
-      {% for tier1_gateway in opinionated.nsxt.tier1_gateways %}
-      {
-        "display_name": "{{ tier1_gateway.display_name }}",
-        "route_advertisement_types": "{{ tier1_gateway.route_advertisement_types }}",
-        "tier0_display_name": "{{ opinionated.nsxt.tier0_gateway_name }}"
-      },
-      {% endfor %}
-    ]
+  tier_1_gateways:
+    - display_name: mgmt-t1
+      route_advertisement_types:
+        - "TIER1_CONNECTED"
+      tier0_display_name: tkg-t0
+
+nsx_alb:
+  api_version: "20.1.2"
+  controller_username: admin
+  controller_password: "{{ opinionated.master_password }}"
+  controller_ssh_public_key: "{{ opinionated.ssh_public_key }}"
+  controller_default_password: "{{ lookup('env', 'AVI_DEFAULT_PASSWORD') }}"
+
+  controller_ip: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(4) }}"
+  controller_netmask: "{{ opinionated.hosting_network.base.cidr.split('/')[1] }}"
+  controller_gateway: "{{ opinionated.hosting_network.base.gateway }}"
+  dns_server: "{{ dns_server }}"
+  ntp_server: "{{ ntp_server_ip }}"
+
+  controller_vcenter_ip: "{{ nested_vcenter.ip }}"
+  controller_vcenter_username: "{{ nested_vcenter.username }}"
+  controller_vcenter_password: "{{ nested_vcenter.password }}"
+  controller_vcenter_datacenter: "{{ nested_vcenter.datacenter }}"
+  controller_vcenter_cluster: "compute"
+  controller_vcenter_datastore: "datastore-esx1"
+  controller_port_group: "vm-network"
+
+  cloud_vcenter_username: "{{ nested_vcenter.username }}"
+  cloud_vcenter_password: "{{ nested_vcenter.password }}"
+  cloud_vcenter_url: "{{ nested_vcenter.ip }}"
+  cloud_vcenter_datacenter: "{{ nested_vcenter.datacenter }}"
+
+  se_vcenter_cluster: compute
+  # The management network will host he service engine management interface
+  se_management_port_group: avi-mgmt-seg
+  se_management_network_cidr: "{{ opinionated.hosting_network.base.cidr }}"
+  se_management_network_range: >-
+    {{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(2) }}-{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(3) }}
+  se_management_network_gateway: "{{ opinionated.hosting_network.base.gateway }}"
+  # The vip network will contain the virtual servers created by Avi
+  se_vip_port_group: avi-vip-seg
+  se_vip_network_cidr: "{{ opinionated.hosting_network.avi_vips.cidr }}"
+  se_vip_network_range: >-
+    {{ opinionated.hosting_network.avi_vips.cidr | ansible.utils.ipmath(2) }}-{{ opinionated.hosting_network.avi_vips.cidr |
+    ansible.utils.ipaddr('-2') | ansible.utils.ipaddr('address') }}

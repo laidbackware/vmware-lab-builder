@@ -35,8 +35,6 @@
   loop: "{{ nsxt.cluster_attach }}"
   register: tnp_attach_result
 
-
-
 - name: Waiting for cluster to configure
   vmware.ansible_for_nsxt.nsxt_transport_nodes_facts:
     hostname: "{{ nsxt.manager.hostname }}"

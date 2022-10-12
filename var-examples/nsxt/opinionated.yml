@@ -12,7 +12,7 @@ disk_mode: thin  # How all disks should be deployed
 nested_host_password: "{{ opinionated.master_password }}"
 
 hosting_vcenter:  # This is the vCenter which will be the target for nested vCenters and ESXi hosts
-  ip: "192.168.0.113"
+  ip: "vcsa.lab"
   username: "{{ lookup('env', 'PARENT_VCENTER_USERNAME') }}"
   password: "{{ lookup('env', 'PARENT_VCENTER_PASSWORD') }}"
   datacenter: "Home"  # Target for all VM deployment
@@ -105,8 +105,8 @@ nested_hosts: >-
     {% for host_number in range(opinionated.number_of_hosts) %}
     {
       "name": "esx{{ host_number + 1 }}",
-      "ip": "{{ opinionated.hosting_network.base.starting_addr | ipmath(opinionated_host_ip_ofset + host_number) }}",
-      "mask": "{{ opinionated.hosting_network.base.cidr | ansible.netcommon.ipaddr('netmask') }}",
+      "ip": "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(opinionated_host_ip_ofset + host_number) }}",
+      "mask": "{{ opinionated.hosting_network.base.cidr | ansible.utils.ipaddr('netmask') }}",
       "gw": "{{ opinionated.hosting_network.base.gateway }}",
       "nested_cluster": "compute"
     },
@@ -125,9 +125,9 @@ distributed_switches:  # (optional) - section can be removed to not create any d
 
 nsxt:  # (optional) - section can be removed to not create any nsxt objects
   manager:
-    hostname: "{{ opinionated.hosting_network.base.starting_addr | ipmath(1) }}"
-    ip: "{{ opinionated.hosting_network.base.starting_addr | ipmath(1) }}"
-    netmask: "{{ opinionated.hosting_network.base.cidr | ansible.netcommon.ipaddr('netmask') }}"
+    hostname: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(1) }}"
+    ip: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(1) }}"
+    netmask: "{{ opinionated.hosting_network.base.cidr | ansible.utils.ipaddr('netmask') }}"
     gateway: "{{ opinionated.hosting_network.base.gateway }}"
     username: admin  # this cannot be changed
     password: "{{ opinionated.master_password }}{{ opinionated.master_password }}"
@@ -144,8 +144,8 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
     - display_name: tep-pool  # This is a non-routable range which is used for the overlay tunnels.
       subnets:
         - allocation_ranges:
-            - start: "{{ opinionated.hosting_network.nsxt_tep.cidr | ipmath(1) }}"
-              end: "{{ opinionated.hosting_network.nsxt_tep.cidr | ipmath(254) }}"
+            - start: "{{ opinionated.hosting_network.nsxt_tep.cidr | ansible.utils.ipmath(1) }}"
+              end: "{{ opinionated.hosting_network.nsxt_tep.cidr | ansible.utils.ipmath(254) }}"
           cidr: "{{ opinionated.hosting_network.nsxt_tep.cidr }}"
 
   policy_ip_pools:
@@ -154,8 +154,8 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
         - id: tep-pool-1
           state: present
           allocation_ranges:
-            - start: "{{ opinionated.hosting_network.nsxt_tep.cidr | ipmath(1) }}"
-              end: "{{ opinionated.hosting_network.nsxt_tep.cidr | ansible.netcommon.ipaddr('-2') | ipaddr('address') }}"
+            - start: "{{ opinionated.hosting_network.nsxt_tep.cidr | ansible.utils.ipmath(1) }}"
+              end: "{{ opinionated.hosting_network.nsxt_tep.cidr | ansible.utils.ipaddr('-2') |ansible.utils.ipaddr('address') }}"
           cidr: "{{ opinionated.hosting_network.nsxt_tep.cidr }}"
           do_wait_till_create: true
 
@@ -225,7 +225,7 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
   edge_nodes:
     - display_name: edge-node-1
       size: MEDIUM
-      mgmt_ip_address: "{{ opinionated.hosting_network.base.starting_addr | ipmath(2) }}"
+      mgmt_ip_address: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(2) }}"
       mgmt_prefix_length: "{{ opinionated.hosting_network.base.cidr.split('/')[1] }}"
       mgmt_default_gateway: "{{ opinionated.hosting_network.base.gateway }}"
       network_management_name: vm-network
@@ -267,7 +267,7 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
   tier_0:
     display_name: "{{ opinionated.nsxt.tier0_gateway_name }}"
     ha_mode: ACTIVE_STANDBY
-    uplink_ip: "{{ opinionated.hosting_network.base.starting_addr | ipmath(3) }}"
+    uplink_ip: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(3) }}"
     disable_firewall: true
     static_routes:
       - state: present
@@ -284,7 +284,7 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
           - display_name: "{{ opinionated.nsxt.tier0_gateway_name }}-t0ls-iface"
             state: present
             subnets:
-              - ip_addresses: ["{{ opinionated.hosting_network.base.starting_addr | ipmath(3) }}"]
+              - ip_addresses: ["{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(3) }}"]
                 prefix_len: "{{ opinionated.hosting_network.base.cidr.split('/')[1] | int }}"
             segment_id: t0-uplink
             edge_node_info:

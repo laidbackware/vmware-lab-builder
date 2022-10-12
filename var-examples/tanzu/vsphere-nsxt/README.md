@@ -12,14 +12,16 @@ This will deploy NSX-T and enable Workload Management, aka deploy the Supervisor
 - After the deployment you will need to add a static route to the T0 gateway uplink for any addresses that will be behind NSX-T.
 
 ## Architecture
-Below is the layout of the opinionated deployment, which can be customized by editing the vars file.<br/><br/>
+Below is the layout of the opinionated deployment, which can be customized by editing the vars file.
+
 ![Architecture Diagram](architecture-tanzu-vsphere-nsxt.png)
+
 - The NSX-T Manager VM will be deployed as a standard VM on your physical host.
 - A single vCenter will be added and attached to the physical host.
 - All components will be added to a single nested ESXi host. This can be customized by editing the yaml.
-- A single T0 gataway will be deployed and the T0 uplink will share the same network as the management interfaces in vmnic0
-- If you want to have more that 1 nested host, then your tep network should be set to MTU of at least 1600 to allow the nested ESXi hosts to communicate.
-- The tep network is used twice on the nested ESXi hosts because the edge tep port group cannot be on the same VDS that will be used by the host transport nodes.
+- A single T0 gateway will be deployed and the T0 uplink will share the same network as the management interfaces in vmnic0
+- If you want to have more that 1 nested host, then your TEP network should be set to MTU of at least 1600 to allow the nested ESXi hosts to communicate.
+- The tep network is used twice on the nested ESXi hosts because the edge TEP port group cannot be on the same VDS that will be used by the host transport nodes.
 - During setup you will be prompted to add a static route to the T0 uplink when created.
 - A single T1 router and segment will be added, which will be used to host the supervisor cluster.
 
