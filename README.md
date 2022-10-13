@@ -124,7 +124,7 @@ docker build --no-cache ./docker/. -t laidbackware/vmware-lab-builder:v6
 
 ## Local Usage
 Software dependencies for Linux:
-- Ansible 2.10 or higher.
+- Ansible 2.13 or higher.
 - Linux tools `apt-get install libarchive-tools sshpass python3-pip git python3-jmespath sshpass`
 - Install all necessary Python modules
     ```
@@ -132,8 +132,8 @@ Software dependencies for Linux:
     ```
 - Add necessary Ansible collections. Force switch will ensure it is upgraded.
    ```
-   ansible-galaxy collection install community.vmware:1.17.1 --force
+   ansible-galaxy collection install community.vmware:3.0.0 --force
    ansible-galaxy collection install vmware.alb --force
-   ansible-galaxy collection install git+https://github.com/vmware/ansible-for-nsxt.git,0e3cf74ace9cf3f22099415787e7fe62a487225a --force
+   ansible-galaxy collection install git+https://github.com/vmware/ansible-for-nsxt.git,v3.2.0 --force
    ansible-galaxy collection install git+https://github.com/laidbackware/ansible-for-vsphere-tanzu.git,ansible-galaxy --force
    ```

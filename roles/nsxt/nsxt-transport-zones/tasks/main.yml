@@ -5,14 +5,14 @@
     username: "{{ nsxt.manager.username }}"
     password: "{{ nsxt.manager.password }}"
     validate_certs: false
-    resource_type: "TransportZone"
+    state: "present"
     display_name: "{{ item.display_name }}"
     description: "{{ item.description }}"
-    transport_type: "{{ item.transport_type }}"
     host_switch_name: "{{ item.host_switch_name | default(omit) }}"
     nested_nsx: "{{ item.nested_nsx | default(omit) }}"
-    state: "present"
+    resource_type: "TransportZone"
     tags: "{{ item.tags | default(omit) }}"
+    transport_type: "{{ item.transport_type }}"
   loop: "{{ nsxt.transport_zones }}"
   register: tz_results
 

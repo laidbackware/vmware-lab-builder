@@ -1,6 +1,6 @@
 FROM ubuntu:20.04
 
-ENV ANSIBLE_VERSION=2.12.*
+ENV ANSIBLE_VERSION=2.13.*
 
 ENV ANSIBLE_LIBRARY=/repos/ansible-for-vsphere-tanzu
 ENV ANSIBLE_HOST_KEY_CHECKING=False
@@ -21,13 +21,13 @@ RUN set -xe \
         git+https://github.com/vmware/vsphere-automation-sdk-python.git \
     \
     && echo "****** Adding community.vmware from Ansible Galaxy ******" \
-    && ansible-galaxy collection install community.vmware:1.17.1 \
+    && ansible-galaxy collection install community.vmware:3.0.0 \
     \
     && echo "****** Adding vmware.avi from Ansible Galaxy ******" \
     && ansible-galaxy collection install vmware.alb \
     \
     && echo "****** Adding ansible-for-nsxt from Github ******" \
-    && ansible-galaxy collection install git+https://github.com/vmware/ansible-for-nsxt.git,0e3cf74ace9cf3f22099415787e7fe62a487225a \
+    && ansible-galaxy collection install git+https://github.com/vmware/ansible-for-nsxt.git,v3.2.0 \
     \
     && echo "****** Cloning ansible-for-vsphere-tanzu ******" \
     && ansible-galaxy collection install git+https://github.com/laidbackware/ansible-for-vsphere-tanzu.git,ansible-galaxy \

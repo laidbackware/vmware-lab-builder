@@ -6,10 +6,10 @@
     password: "{{ nested_vcenter.password }}"
     datacenter_name: "{{ nested_vcenter.datacenter }}"
     cluster_name: "{{ item.key }}"
-    ignore_drs: true
-    ignore_ha: true
     validate_certs: false
   with_dict: "{{ nested_clusters }}"
+
+
 
 - name: Add ESXi Host to VCSA
   community.vmware.vmware_host:
