@@ -15,6 +15,6 @@
     do_wait_till_create: true
   loop: "{{ nsxt.vlan_segments }}"
   register: vlan_segment_results
-  retries: 24
+  retries: 36
   delay: 5
   until: vlan_segment_results is success
