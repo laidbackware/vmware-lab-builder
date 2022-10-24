@@ -3,6 +3,7 @@ This will deploy NSX-T and enable Workload Management, aka deploy the Supervisor
 
 ## Tested Versions
 - NSX-T 3.1.3
+  - NSX-T 3.2 has a bug where creation of the edge will fail, but then after a few hours start working
 - vSphere 7.0 U3c
 
 ## Dependencies

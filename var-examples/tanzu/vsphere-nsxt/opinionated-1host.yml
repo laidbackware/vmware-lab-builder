@@ -100,7 +100,7 @@ nested_hosts:
 
 distributed_switches:  # (optional) - section can be removed to not create any distributed switches
   - vds_name: nsxt-vds
-    mtu: 1600
+    mtu: 1700
     vds_version: 7.0.0  # Should be 7.0.0, 6.7.0
     clusters:  # distributed switch will be attached to all hosts in the clusters listed
       - compute
@@ -215,7 +215,7 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
         policy: FAILOVER_ORDER
       transport_vlan: "{{ opinionated.hosting_network.nsxt_tep.vlan_id }}"
     - display_name: edge-tep-profile
-      mtu: 9000
+      # mtu: 1600
       teaming:
         active_list:
           - uplink_name: "uplink-1"
@@ -223,7 +223,7 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
         policy: FAILOVER_ORDER
       transport_vlan: "{{ opinionated.hosting_network.nsxt_tep.vlan_id }}"
     - display_name: edge-uplink-profile
-      mtu: 1500
+      # mtu: 1600
       teaming:
         active_list:
           - uplink_name: "uplink-1"
@@ -235,7 +235,7 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
     - display_name: tz-overlay
       transport_type: OVERLAY
       # host_switch_name: "{{ distributed_switches[0].vds_name }}"
-      nested_nsx: true  # Set this to true if you use NSX-T for your physical host networking
+      # nested_nsx: true  # Set this to true if you use NSX-T for your physical host networking
       description: "Overlay Transport Zone"
     # - display_name: nsx-vlan-transportzone
     #   transport_type: VLAN

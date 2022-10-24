@@ -44,7 +44,7 @@
   register: host_transport_node_facts
   retries: 120
   delay: 10
-  until: host_transport_node_facts.results and host_transport_node_facts.results[0].node_deployment_info.discovered_ip_addresses
+  until: host_transport_node_facts.results and host_transport_node_facts.results[0].node_deployment_info.managed_by_server
 
 - debug: msg="Creating edge nodes {{ nsxt.edge_nodes }}"
 
@@ -94,7 +94,7 @@
           cli_username: admin
           root_password: "{{ nsxt.manager.password }}"
         vm_deployment_config:
-          allow_ssh_root_login: true
+          # allow_ssh_root_login: true
           compute: "{{ item.cluster_name }}"
           data_networks:
             - "{{ item.network_uplink_name }}"
@@ -102,8 +102,8 @@
             - "{{ item.network_tep_name }}"
           default_gateway_addresses:
             - "{{ item.mgmt_default_gateway }}"
-          enable_ssh: true
-          hostname: "{{ item.mgmt_ip_address }}"
+          # enable_ssh: true
+          # hostname: "{{ item.mgmt_ip_address }}"
           management_network: "{{ item.network_management_name }}"
           management_port_subnets:
             - ip_addresses:
@@ -116,6 +116,10 @@
           vc_password: "{{ nested_vcenter.password }}"
       deployment_type: VIRTUAL_MACHINE
       display_name: "{{ item.display_name}}"
+      node_settings:
+        allow_ssh_root_login: true
+        enable_ssh: true
+        hostname: "{{ item.mgmt_ip_address }}"
     # transport_zone_endpoints: "{{ item.transport_zone_endpoints }}"
     state: present
   async: 1800

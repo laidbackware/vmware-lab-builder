@@ -24,12 +24,12 @@
     username: "{{ nested_vcenter.username }}"
     password: "{{ nested_vcenter.password }}"
     validate_certs: false
+    state: present
+    num_ports: 8
+    port_binding: ephemeral
     portgroup_name: "{{ item.port_group_name }}"
     switch_name: "{{ item.vds_name }}"
     vlan_id: "{{ item.vlan_id }}"
-    num_ports: 8
-    portgroup_type: earlyBinding
-    state: present
   loop: "{{ vds_port_groups }}"
   delegate_to: localhost
   when: 'distributed_switches is defined'
