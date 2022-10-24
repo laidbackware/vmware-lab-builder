@@ -9,8 +9,6 @@
     validate_certs: false
   with_dict: "{{ nested_clusters }}"
 
-
-
 - name: Add ESXi Host to VCSA
   community.vmware.vmware_host:
     hostname: "{{ nested_vcenter.ip }}"
