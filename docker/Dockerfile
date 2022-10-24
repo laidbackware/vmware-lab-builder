@@ -1,8 +1,7 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 ENV ANSIBLE_VERSION=2.13.*
 
-ENV ANSIBLE_LIBRARY=/repos/ansible-for-vsphere-tanzu
 ENV ANSIBLE_HOST_KEY_CHECKING=False
 
 RUN set -xe \
@@ -24,7 +23,7 @@ RUN set -xe \
     && ansible-galaxy collection install community.vmware:3.0.0 \
     \
     && echo "****** Adding vmware.avi from Ansible Galaxy ******" \
-    && ansible-galaxy collection install vmware.alb \
+    && ansible-galaxy collection install vmware.alb:21.1.5 \
     \
     && echo "****** Adding ansible-for-nsxt from Github ******" \
     && ansible-galaxy collection install git+https://github.com/vmware/ansible-for-nsxt.git,v3.2.0 \

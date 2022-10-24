@@ -3,9 +3,9 @@ Build a nested vSphere lab with Ansible.
 
 ## <span style="color:red">Breaking Changes</span>
 
-The vSphere with Tanzu modules have been converted to Ansible Galaxy modules, meaning the role have changed, so you must update to use version 6 of the build container.
-
 When pulling this repo, be sure to use the latest version of the container image or check the dependency setup, to ensure the the roles have all the required dependencies.
+
+Version 7 of the images updates the VMware and NSX Ansible modules.
 
 ## Description
 You can use the ansible playbooks in this repo to build out nested ESXi hosts, deploy a vCenter and configure clusters. ESXi/vCenter 6.7 and 7.0 are supported. The main design goal of this project is to be able to provide both opinionated deployment with few variables and to have the ability to fully customize the deployment.
@@ -70,7 +70,7 @@ alias lab-builder="docker run --rm \
     --env AVI_DEFAULT_PASSWORD=\"${AVI_DEFAULT_PASSWORD:-na}\" \
     --volume ${SOFTWARE_DIR}:/software_dir \
     --volume ${PWD}:/work \
-    laidbackware/vmware-lab-builder:v6 \
+    laidbackware/vmware-lab-builder:v7 \
     ansible-playbook"
 
 # This command is run inside the container, so point to the `/work` directory within the container.
@@ -100,7 +100,7 @@ docker run  -it --rm \
     --env AVI_DEFAULT_PASSWORD=${AVI_DEFAULT_PASSWORD:-na} \
     --volume ${SOFTWARE_DIR}:/software_dir \
     --volume ${PWD}:/work \
-    laidbackware/vmware-lab-builder:v6 \
+    laidbackware/vmware-lab-builder:v7 \
     /bin/bash
 
 # Then the playbook can be triggered
@@ -110,16 +110,18 @@ If adding new variables to the vars file be sure to only use underscores as vari
 
 ## Roadmap
 For solution specific features, check the relevant example directory.
+- Switch all OVAs to be uploaded and used from a Content library, to speed up deployment
+- Support for NSX-T 3.2
+- Support for NSX-ALB 21.1
 - Add ability to create TKGS namespaces
 - Add ability to create guest clusters for TKGS
 - Add ability to deploy VMs to folders and resource pools on parent vCenter
-- Add more examples for different topologies
 - Add support for VSAN configuration
 
 ## Docker Image Build
 From the root of the repo. Note no-cache flag used to force builds to pickup any changes to the git repos.
 ```
-docker build --no-cache ./docker/. -t laidbackware/vmware-lab-builder:v6
+docker build --no-cache ./docker/. -t laidbackware/vmware-lab-builder:v7
 ```
 
 ## Local Usage
@@ -133,7 +135,7 @@ Software dependencies for Linux:
 - Add necessary Ansible collections. Force switch will ensure it is upgraded.
    ```
    ansible-galaxy collection install community.vmware:3.0.0 --force
-   ansible-galaxy collection install vmware.alb --force
+   ansible-galaxy collection install vmware.alb:21.1.5 --force
    ansible-galaxy collection install git+https://github.com/vmware/ansible-for-nsxt.git,v3.2.0 --force
    ansible-galaxy collection install git+https://github.com/laidbackware/ansible-for-vsphere-tanzu.git,ansible-galaxy --force
    ```
