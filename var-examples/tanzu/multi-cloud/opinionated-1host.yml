@@ -1,9 +1,9 @@
 ---
 # SOFTWARE_DIR must contain all required software
-vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.3-20395099.iso"
-esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u3g_Appliance_Template_v1.ova"
-nsx_alb_controller_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/controller-20.1.7-9154.ova"
-tkgm_os_kubernetes_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/ubuntu-2004-kube-v1.23.8+vmware.2-tkg.1-85a434f93857371fccb566a414462981.ova"
+vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.3-20990077.iso"
+esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u3j_Appliance_Template_v1.ova"
+nsx_alb_controller_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/controller-21.1.4-9210.ova"
+tkgm_os_kubernetes_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/ubuntu-2004-kube-v1.24.9+vmware.1-tkg.1-b030088fe71fea7ff1ecb87a4d425c93.ova"
 
 environment_tag: "tanzu-multi-cloud-avi"  # Used to prepend object names in hosting vCenter
 dns_server: "192.168.0.1"
@@ -42,6 +42,8 @@ opinionated:
     # In the example below the same subnet is used for both the workload nodes and the VIPs
     # Avi will use the IP range defined vip_ip_range for VIPs
     # TKG needs DHCP to be configured for the first half of the subnet
+    # By default the second IP address is the API VIP.
+    # Recommend reserving the first 10 IPs for use as API VIPs.
     workload:
       port_group: trunk
       vlan_id: 10 # Optional. If unset VLAN 0 will be used
