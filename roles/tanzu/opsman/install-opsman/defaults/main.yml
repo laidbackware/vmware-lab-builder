@@ -1,0 +1,25 @@
+---
+opaman_image_path: "{{ opsman_ova }}"
+
+opsman_vm_name: "{{ ops_manager.vm_name }}"
+opsman_hostname: "{{ ops_manager.hostname }}"
+opsman_vm_path: "{{ opsman_vcenter_folder }}/{{ opsman_vm_name }}"
+
+opsman_private_ip: "{{ ops_manager.private_ip }}"
+opsman_netmask: "{{ ops_manager.netmask}}"
+opsman_gateway: "{{ ops_manager.gateway }}"
+opsman_network: "{{ ops_manager.network }}"
+opsman_dns: "{{ ops_manager.dns }}"
+opsman_ntp: "{{ ops_manager.ntp }}"
+
+opsman_vcenter_url: "{{ ops_manager.vcenter_url }}"
+opsman_vcenter_datacenter: "{{ ops_manager.vcenter_datacenter }}"
+opsman_vcenter_datastore: "{{ ops_manager.vcenter_datastore }}"
+opsman_vcenter_folder: "{{ ops_manager.vcenter_folder }}"
+opsman_vcenter_username: "{{ ops_manager.vcenter_username }}"
+opsman_vcenter_password: "{{ ops_manager.vcenter_password }}"
+opsman_vcenter_resource_pool: "{{ ops_manager.vcenter_resource_pool }}"
+
+opsman_ssh_public_key: "{{ ops_manager.ssh_public_key }}"
+opsman_username: "{{ ops_manager.username }}"
+opsman_password: "{{ ops_manager.password }}"

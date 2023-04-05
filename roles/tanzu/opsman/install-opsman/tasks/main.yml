@@ -1,0 +1,65 @@
+---
+
+# - name: Create opsman state
+#   ansible.builtin.template:
+#     src: state.yml
+#     dest: "{{ temp_dir }}/state.yml"
+#     mode: '0644'
+
+# Importing templates as variables to allow for debugging
+- name: Set variables
+  ansible.builtin.set_fact:
+    opsman_config: |
+      {{ lookup('template', 'opsman.yml') | from_yaml }}
+    opsman_env: |
+      {{ lookup('template', 'env.yml') | from_yaml }}
+
+# - name: Create Opsman VM - Follow progress in the vCenter
+#   command: |
+#     om vm-lifecycle create-vm \
+#       --config "{{ temp_dir }}/opsman.yml" \
+#       --image-file "{{ opaman_image_path }}" \
+#       --state-file "{{ temp_dir }}/state.yml"
+
+- name: Create Opsman VM - Follow progress in the vCenter
+  args:
+    executable: /bin/bash
+  ansible.builtin.shell:
+    cmd: |
+      #/bin/bash
+      set -eu
+
+      opsman_config=$(cat << EOF
+      {{ opsman_config | to_nice_yaml }}
+      EOF
+      )
+
+      #export OPSMAN_CONFIG=
+      om vm-lifecycle create-vm \
+        --config <(echo "$opsman_config") \
+        --image-file "{{ opaman_image_path }}" \
+        --state-file <(echo "")
+  register: result_opsman_create
+
+- name: Pause 1 minute for Opsman to boot
+  ansible.builtin.pause:
+    minutes: 1
+  when: "'stderr' in result_opsman_create and not 'already exists' in result_opsman_create.stderr"
+
+- name: Configure Opsman Auth
+  args:
+    executable: /bin/bash
+  ansible.builtin.shell:
+    cmd: |
+      #/bin/bash
+      set -eu
+
+      env=$(cat << EOF
+      {{ opsman_env | to_nice_yaml }}
+      EOF
+      )
+
+      om --env <(echo "$env") --skip-ssl-validation configure-authentication \
+        --config <(echo "$env")
+
+  register: result_opsman_auth
