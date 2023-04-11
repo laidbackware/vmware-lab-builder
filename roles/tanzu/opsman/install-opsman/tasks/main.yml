@@ -1,11 +1,5 @@
 ---
 
-# - name: Create opsman state
-#   ansible.builtin.template:
-#     src: state.yml
-#     dest: "{{ temp_dir }}/state.yml"
-#     mode: '0644'
-
 # Importing templates as variables to allow for debugging
 - name: Set variables
   ansible.builtin.set_fact:
@@ -13,13 +7,8 @@
       {{ lookup('template', 'opsman.yml') | from_yaml }}
     opsman_env: |
       {{ lookup('template', 'env.yml') | from_yaml }}
-
-# - name: Create Opsman VM - Follow progress in the vCenter
-#   command: |
-#     om vm-lifecycle create-vm \
-#       --config "{{ temp_dir }}/opsman.yml" \
-#       --image-file "{{ opaman_image_path }}" \
-#       --state-file "{{ temp_dir }}/state.yml"
+    opsman_auth: |
+      {{ lookup('template', 'auth.yml') | from_yaml }}
 
 - name: Create Opsman VM - Follow progress in the vCenter
   args:
@@ -34,10 +23,9 @@
       EOF
       )
 
-      #export OPSMAN_CONFIG=
       om vm-lifecycle create-vm \
         --config <(echo "$opsman_config") \
-        --image-file "{{ opaman_image_path }}" \
+        --image-file "{{ opsman_image_path }}" \
         --state-file <(echo "")
   register: result_opsman_create
 
@@ -53,13 +41,13 @@
     cmd: |
       #/bin/bash
       set -eu
+      unset OM_PASSWORD OM_USERNAME OM_SKIP_SSL_VALIDATION OM_TARGET
 
       env=$(cat << EOF
       {{ opsman_env | to_nice_yaml }}
       EOF
       )
 
-      om --env <(echo "$env") --skip-ssl-validation configure-authentication \
-        --config <(echo "$env")
+      om --env <(echo "$env") configure-authentication --config <(echo "$env")
 
   register: result_opsman_auth

@@ -1,6 +1,7 @@
 .envrc
 temp/*
 settings.json
+tmp/
 
 # Tanzu Multi-cloud outputs
 cluster-config.yml
