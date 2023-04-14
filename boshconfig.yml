@@ -1,0 +1,238 @@
+az-configuration:
+-   clusters:
+    -   cluster: compute
+        drs_rule: MUST
+        host_group: null
+        resource_pool: null
+    iaas_configuration_name: default
+    name: az1
+iaas-configurations:
+-   additional_cloud_properties: {}
+    bosh_disk_path: pcf_disk
+    bosh_template_folder: pcf_templates
+    bosh_vm_folder: pcf_vms
+    datacenter: Lab
+    disk_type: thin
+    ephemeral_datastore_clusters_string: ''
+    ephemeral_datastores_string: datastore-esx1
+    name: default
+    nsx_address: 192.168.1.11
+    nsx_ca_certificate: '-----BEGIN CERTIFICATE-----
+
+        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
+
+        JRxisUGlAU5Ovg==
+
+        -----END CERTIFICATE-----'
+    nsx_mode: nsx-t
+    nsx_networking_enabled: true
+    nsx_password: VMware1!VMware1!
+    nsx_t_auth_type: local_user
+    nsx_t_use_policy_api: false
+    nsx_username: admin
+    persistent_datastore_clusters_string: ''
+    persistent_datastores_string: datastore-esx1
+    ssl_verification_enabled: false
+    vcenter_host: 192.168.1.10
+    vcenter_password: VMware1!
+    vcenter_username: administrator@vsphere.local
+network-assignment:
+    network:
+        name: infra
+    other_availability_zones: []
+    singleton_availability_zone:
+        name: az1
+networks-configuration:
+    icmp_checks_enabled: true
+    networks:
+    -   name: infra
+        subnets:
+        -   availability_zone_names:
+            - az1
+            cidr: 172.29.0.0/24
+            dns: 192.168.0.1
+            gateway: 172.29.0.1
+            iaas_identifier: tkgi-infra-seg
+            reserved_ip_ranges: 172.29.0.2
+properties-configuration:
+    director_configuration:
+        additional_ssh_users: []
+        blobstore_type: local
+        bosh_director_recreate_on_next_deploy: false
+        bosh_recreate_on_next_deploy: false
+        bosh_recreate_persistent_disks_on_next_deploy: false
+        ca_certificate_duration: 1460
+        database_type: internal
+        director_metrics_server_enabled: true
+        director_worker_count: 5
+        duration_overrides_enabled: false
+        encryption:
+            keys: []
+            providers: []
+        hm_emailer_options:
+            enabled: false
+        hm_pager_duty_options:
+            enabled: false
+        identification_tags: {}
+        job_configuration_on_tmpfs: false
+        keep_unreachable_vms: false
+        leaf_certificate_duration: 730
+        local_blobstore_options:
+            enable_signed_urls: true
+        metrics_server_enabled: true
+        ntp_servers_string: 192.168.0.1
+        post_deploy_enabled: false
+        resurrector_enabled: true
+        retry_bosh_deploys: false
+        short_lived_nats_bootstrap_credentials_enabled: false
+        skip_director_drain: false
+        system_metrics_runtime_enabled: true
+    dns_configuration:
+        excluded_recursors: []
+        handlers: []
+    security_configuration:
+        clear_default_trusted_certificates_store: false
+        generate_vm_passwords: true
+        opsmanager_root_ca_trusted_certs: false
+        trusted_certificates: '-----BEGIN CERTIFICATE-----
+
+            MIIEcTCCAtmgAwIBAgIQYT/WsqgerXhiDqIgTTwSKDANBgkqhkiG9w0BAQsFADBR
+
+            MR4wHAYDVQQKExVta2NlcnQgZGV2ZWxvcG1lbnQgQ0ExEzARBgNVBAsMCm1hdHRA
+
+            ZGVyZWsxGjAYBgNVBAMMEW1rY2VydCBtYXR0QGRlcmVrMB4XDTIxMDkxNzExNTkx
+
+            MFoXDTMxMDkxNzExNTkxMFowUTEeMBwGA1UEChMVbWtjZXJ0IGRldmVsb3BtZW50
+
+            IENBMRMwEQYDVQQLDAptYXR0QGRlcmVrMRowGAYDVQQDDBFta2NlcnQgbWF0dEBk
+
+            ZXJlazCCAaIwDQYJKoZIhvcNAQEBBQADggGPADCCAYoCggGBALzChT9D86Acsy3z
+
+            wQLdwdcMIFtXyCQ+k6OVLAH4PrSwKOJlrHVmS9BL9ap/oZVkcNCYi/XtgaPtZcIy
+
+            JT6ZopeYdo1usdT1PKP3MBGOEjL5llmDhj+6+HQi3WeajnxsUIdbkUkoGHPEpsJ7
+
+            yyOOUHVel1Ww+Li4grup3d9RRH6lJWvBpYHYXS6Fs9OeOvvse0qAVDla2ig23bXu
+
+            lsfcv2LqRDR2bkPimNJOOadX/9rhjKcD4VKj13BRdqqf1tb2CZGPym+RLDiczrBx
+
+            s9wkzZwL02hop2vhfUUFsrSBHX4Qfome9q8qxnNCK1Dg/KNNkbuJK4Wb9n7/x470
+
+            Wx8hr2Z1fcpwQkKeGCFzNBo0k5k+C8hhB7DChWavw/Yaisp2QySOTJbYVOXN2ojA
+
+            wKNfh3U6xjQtEktqBQJbrneDpYPHT7p6tU383QxmDws0cVCwzkTm6q+01kJyd8fI
+
+            wTJDgv6goOfvvck/kCPbdXyqiIqsXeIqNDXUug+0JI+QzoNa9wIDAQABo0UwQzAO
+
+            BgNVHQ8BAf8EBAMCAgQwEgYDVR0TAQH/BAgwBgEB/wIBADAdBgNVHQ4EFgQUsEcJ
+
+            VnM0DRiHJE0lU2mWldCE7YkwDQYJKoZIhvcNAQELBQADggGBAK+J2XiA4tc2hrbv
+
+            lCJGLHBj2inpklpOVHv14OJipyy0htP5hyuBES0tcGRLIbg1zSNgWx0rRoFa321u
+
+            l9v961qpGmWRsIRpfftJeOFCUEzoLz5CNzxI2cm7BWB/f+RHX7126EUzsu67qG+j
+
+            YI07Si7kgwsGwzcyMlD7wrJNtNuF2PgomIqCUZ1O0H5vETc6aLO0/R+ULQpzbUcM
+
+            kXDzxJfkrr4m1JLZuFVd83GXNzMNsDsnybBUrF/+/2H20QRo3HGEQNdFqDP3QxJ9
+
+            idkmA6cESv4L7dBNt55nBL7T9GRTLeEhatoPScwzyUC7b09MrZv1IgxwzUAVKfkK
+
+            oaSl5UKGEcW1LxViVpvc5eFkAVbFKcVXoulpR5DipJkvUGbBPoyE47iHA0K4bora
+
+            fDl9fTw3eIlsxa0Mx3SGDst1bqGWEjKo/zUkHzQL4ghQRL/MfMTkZLdOGKsnOFY1
+
+            7V3wGoU318BAiAotx2ytabt7Z67YSs8Em8gHasj9ahJVuJBNjw==
+
+            -----END CERTIFICATE-----'
+    syslog_configuration:
+        enabled: false
+resource-configuration:
+    compilation:
+        additional_networks: []
+        additional_vm_extensions: []
+        instance_type:
+            id: automatic
+        instances: automatic
+        nsx:
+            lbs: []
+            security_groups: []
+        nsxt:
+            lb:
+                server_pools: []
+            ns_groups: []
+        swap_as_percent_of_memory_size: automatic
+    director:
+        additional_networks: []
+        additional_vm_extensions: []
+        instance_type:
+            id: automatic
+        instances: automatic
+        nsx:
+            lbs: []
+            security_groups: []
+        nsxt:
+            lb:
+                server_pools: []
+            ns_groups: []
+        persistent_disk:
+            size_mb: automatic
+        swap_as_percent_of_memory_size: automatic
+vmextensions-configuration: []
+vmtypes-configuration: {}

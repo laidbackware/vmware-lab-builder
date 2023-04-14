@@ -129,11 +129,15 @@
       when: '"tanzu_opsman_bosh" is defined'
       tags: ["opsman"]
     - role: tanzu/opsman/configure-bosh
-      # when: 'tests is defined'
       when: '"tanzu_opsman_bosh" is defined'
       tags: ["bosh"]
 
-    # Harbor section
+    # TKGi section
+    - role: tanzu/tkgi/harbor-tile
+      when: '"tkgi" is defined'
+      tags: ["harbor-tile"]
+
+    # Harbor VM section
     - role: harbor-standalone/harbor-vm
       when: '"harbor_standalone" is defined'
       tags: ["harbor"]

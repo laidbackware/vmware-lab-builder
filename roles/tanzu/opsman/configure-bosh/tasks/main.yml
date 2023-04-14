@@ -29,8 +29,10 @@
       #/bin/bash
       set -eu
 
+      unset OM_PASSWORD OM_USERNAME OM_SKIP_SSL_VALIDATION OM_TARGET
+
       bosh_config=$(cat << EOF
-      {{ bosh_config | to_nice_yaml }}
+      {{ bosh_config | to_nice_yaml(width=9999) }}
       EOF
       )
       env=$(cat << EOF
@@ -41,3 +43,21 @@
       om --env <(echo "$env") configure-director \
         --config <(echo "$bosh_config")
   register: result_opsman_create
+
+- name: Applying bosh director changes
+  args:
+    executable: /bin/bash
+  ansible.builtin.shell:
+    cmd: |
+      #/bin/bash
+      set -eu
+
+      unset OM_PASSWORD OM_USERNAME OM_SKIP_SSL_VALIDATION OM_TARGET
+
+      env=$(cat << EOF
+      {{ opsman_env | to_nice_yaml }}
+      EOF
+      )
+
+      om --env <(echo "$env") apply-changes --skip-deploy-products
+  register: result_bosh_changes

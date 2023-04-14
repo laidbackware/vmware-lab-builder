@@ -7,8 +7,6 @@
       {{ lookup('template', 'opsman.yml') | from_yaml }}
     opsman_env: |
       {{ lookup('template', 'env.yml') | from_yaml }}
-    opsman_auth: |
-      {{ lookup('template', 'auth.yml') | from_yaml }}
 
 - name: Create Opsman VM - Follow progress in the vCenter
   args:
