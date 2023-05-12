@@ -41,105 +41,105 @@
     - role: vsphere/vsphere-resource-pools
       tags: ["vsphere"]
     - role: vsphere/vsphere-distributed-switches
-      when: '"distributed_switches" is defined'
+      when: 'distributed_switches is defined'
       tags: ["vsphere"]
     - role: vsphere/vsphere-distributed-port-groups
-      when: '"distributed_switches" is defined'
+      when: 'distributed_switches is defined'
       tags: ["vsphere"]
     - role: vsphere/vsphere-import-vm-template
-      when: '"vm_templates" is defined'
+      when: 'vm_templates is defined'
       tags: ["vsphere"]
 
     # NSX-T Section
     - role: nsxt/nsxt-mgmt-appliance
-      when: '"nsxt" is defined'
+      when: 'nsxt is defined'
       tags: ["nsxt", "nsxt-mgr"]
     - role: nsxt/nsxt-mgmt-certificate
-      when: '"nsxt" is defined'
+      when: 'nsxt is defined'
       tags: ["nsxt", "nsxt-mgr-cert"]
     - role: nsxt/nsxt-ip-pools
-      when: '"nsxt.ip_pools" is defined'
+      when: 'nsxt.ip_pools is defined'
       tags: ["nsxt", "nsxt-ip-pools"]
     - role: nsxt/nsxt-policy-ip-pools
-      when: '"nsxt.policy_ip_pools" is defined'
+      when: 'nsxt.policy_ip_pools is defined'
       tags: ["nsxt", "nsxt-policy-ip-pools"]
     - role: nsxt/nsxt-ip-blocks
-      when: '"nsxt.ip_blocks" is defined'
+      when: 'nsxt.ip_blocks is defined'
       tags: ["nsxt", "nsxt-ip-blocks"]
     - role: nsxt/nsxt-uplink-profiles
-      when: '"nsxt" is defined'
+      when: 'nsxt is defined'
       tags: ["nsxt", "nsxt-uplink-profiles"]
     - role: nsxt/nsxt-transport-zones
-      when: '"nsxt" is defined'
+      when: 'nsxt is defined'
       tags: ["nsxt", "nsxt-transport-zones"]
     - role: nsxt/nsxt-compute-manager
-      when: '"nsxt" is defined'
+      when: 'nsxt is defined'
       tags: ["nsxt", "nsxt-compute-mgr"]
     - role: nsxt/nsxt-principal-identities
-      when: '"nsxt.principal_identities" is defined'
+      when: 'nsxt.principal_identities is defined'
       tags: ["nsxt", "nsxt-pis"]
     - role: nsxt/nsxt-vlan-segments
-      when: '"nsxt" is defined'
+      when: 'nsxt is defined'
       tags: ["nsxt", "nsxt-vlan-segments"]
     - role: nsxt/nsxt-transport-nodes
-      when: '"nsxt" is defined'
+      when: 'nsxt is defined'
       tags: ["nsxt", "nsxt-transport-nodes"]
     - role: nsxt/nsxt-edge-clusters
-      when: '"nsxt" is defined'
+      when: 'nsxt is defined'
       tags: ["nsxt", "nsxt-edge-clusters"]
     - role: nsxt/nsxt-switching-routing
-      when: '"nsxt" is defined'
+      when: 'nsxt is defined'
       tags: ["nsxt", "nsxt-switching-routing"]
 
     # NSX-ALB (Avi) Section
     - role: nsx-alb/deploy-controller
-      when: '"nsx_alb" is defined'
+      when: 'nsx_alb is defined'
       tags: ["nsx-alb"]
     - role: nsx-alb/configure-cloud
-      when: '"nsx_alb" is defined'
+      when: 'nsx_alb is defined'
       tags: ["nsx-alb"]
     - role: nsx-alb/dummy-service
-      when: '"nsx_alb.dummy_service" is defined'
+      when: 'nsx_alb.dummy_service is defined'
       tags: ["nsx-alb"]
 
     # Tanzu Multi-Cloud Secton
     - role: tanzu/multi-cloud-generate-config
-      when: '"tanzu_multi_cloud.generated_config_file_name" is defined'
+      when: 'tanzu_multi_cloud.generated_config_file_name is defined'
       tags: ["tkgm-config"]
 
     # vSphere with Kubernetes Section
     - role: vsphere/vsphere-storage-based-policy-management
-      when: '"tspbm" is defined'
+      when: 'tspbm is defined'
       tags: ["tkgs"]
     - role: tanzu/vsphere-content-library
-      when: '"tanzu_vsphere" is defined'
+      when: 'tanzu_vsphere is defined'
       tags: ["tkgs"]
     - role: tanzu/vyos-router
-      when: '"tkg_router" is defined'
+      when: 'tkg_router is defined'
       tags: ["tkgs"]
     - role: tanzu/ha-proxy
-      when: '"tkg_haproxy" is defined'
+      when: 'tkg_haproxy is defined'
       tags: ["tkgs"]
     - role: tanzu/vsphere-enable-cluster
-      when: '"tanzu_vsphere" is defined'
+      when: 'tanzu_vsphere is defined'
       tags: ["tkgs"]
 
     # Opsman/Bosh Secton
     - role: tanzu/opsman/install-opsman
-      when: '"tanzu_opsman_bosh" is defined'
+      when: 'tanzu_opsman_bosh is defined'
       tags: ["opsman"]
     - role: tanzu/opsman/configure-bosh
-      when: '"tanzu_opsman_bosh" is defined'
+      when: 'tanzu_opsman_bosh is defined'
       tags: ["bosh"]
 
     # TKGi section
     - role: tanzu/tkgi/harbor-tile
-      when: '"tkgi" is defined'
+      when: 'tkgi is defined'
       tags: ["harbor-tile"]
 
     # Harbor VM section
     - role: harbor-standalone/harbor-vm
-      when: '"harbor_standalone" is defined'
+      when: 'harbor_standalone is defined'
       tags: ["harbor"]
 
   post_tasks:
@@ -154,7 +154,7 @@
   become: true
   roles:
     - role: harbor-standalone/harbor-configuration
-      when: '"harbor_standalone" is defined'
+      when: 'harbor_standalone is defined'
       tags: ["harbor"]
 
 - name: Display Summary

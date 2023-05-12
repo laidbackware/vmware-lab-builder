@@ -33,6 +33,9 @@ product-properties:
         {{ harbor_public_key | indent(8) }}
       private_key_pem: |-
         {{ harbor_private_key | indent(8) }}
+  .properties.server_cert_ca:
+    value: |-
+      {{ bosh_trusted_ca_certs | indent(6) }}
   .properties.trivy_offline_scan:
     value: true
   .properties.trivy_skip_update:
