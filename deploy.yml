@@ -136,6 +136,9 @@
     - role: tanzu/tkgi/harbor-tile
       when: 'tkgi is defined'
       tags: ["harbor-tile"]
+    - role: tanzu/tkgi/tkgi-tile
+      when: 'tkgi is defined'
+      tags: ["tkgi-tile"]
 
     # Harbor VM section
     - role: harbor-standalone/harbor-vm

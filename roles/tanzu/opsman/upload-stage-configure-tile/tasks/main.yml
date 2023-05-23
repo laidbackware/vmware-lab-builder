@@ -1,12 +1,21 @@
 ---
 
 # Importing templates as variables to allow for debugging
-- name: Set variables
+- name: Set variables for {{ item.slug }}
   ansible.builtin.set_fact:
     opsman_env: |
       {{ lookup('template', 'env.yml') | from_yaml }}
 
-- name: Upload and stage product
+
+- name: Get product version from .pivotal file for {{ item.slug }}
+  args:
+    executable: /bin/bash
+  ansible.builtin.command: 
+    cmd: |
+      om product-metadata -p {{ item.file_path }} --product-version
+  register: result_product_version
+
+- name: Upload and stage product for {{ item.slug }}
   args:
     executable: /bin/bash
   ansible.builtin.shell:
@@ -24,10 +33,10 @@
       om --env <(echo "$env") upload-product -p {{ item.file_path }}
 
       om --env <(echo "$env") stage-product -p {{ item.slug }} \
-        --product-version={{ item.product_version }}
+        --product-version={{ result_product_version.stdout }}
   register: result_opsman_create
 
-- name: Configure product
+- name: Configure product for {{ item.slug }}
   args:
     executable: /bin/bash
   ansible.builtin.shell:
@@ -51,20 +60,20 @@
         --config <(echo "$product_config")
   register: result_opsman_create
 
-- name: Apply changes for {{ item.slug }}
-  args:
-    executable: /bin/bash
-  ansible.builtin.shell:
-    cmd: |
-      #/bin/bash
-      set -eu
+# - name: Apply changes for {{ item.slug }}
+#   args:
+#     executable: /bin/bash
+#   ansible.builtin.shell:
+#     cmd: |
+#       #/bin/bash
+#       set -eu
 
-      unset OM_PASSWORD OM_USERNAME OM_SKIP_SSL_VALIDATION OM_TARGET
+#       unset OM_PASSWORD OM_USERNAME OM_SKIP_SSL_VALIDATION OM_TARGET
 
-      env=$(cat << EOF
-      {{ opsman_env | to_nice_yaml }}
-      EOF
-      )
+#       env=$(cat << EOF
+#       {{ opsman_env | to_nice_yaml }}
+#       EOF
+#       )
 
-      om --env <(echo "$env") apply-changes --product-name={{ item.slug }}
-  register: result_bosh_changes
+#       om --env <(echo "$env") apply-changes --product-name={{ item.slug }}
+#   register: result_bosh_changes

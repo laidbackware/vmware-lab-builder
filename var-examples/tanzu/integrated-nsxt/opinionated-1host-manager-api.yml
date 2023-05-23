@@ -42,19 +42,24 @@ opinionated:
     nsxt_tep:
       port_group: TEP
       vlan_id: 0
-      cidr: "172.31.253.0/24"  # IP calculation depends on this being a /24
+      cidr: 100.71.0.0/24
   tkgi:
-    routeable_super_net: 172.29.0.0/18  # CIDR must be a minimum of a /20
+    routeable_super_net: 172.29.0.0/23  # CIDR must be a minimum of a /24
     private_node_cidr: 100.67.0.0/16
     k8s_services_cidr: 100.68.0.0/16
+    node_ip_block: 100.69.0.0/16
+    pod_ip_block: 100.70.0.0/16
+
   nsxt:
-    ip_pools:
-      - display_name: floating-ips
-        subnets:
-          - allocation_ranges:
-              - start: "172.30.1.1"
-                end: "172.30.1.254"
-            cidr: "172.30.1.0/24"
+    # ip_pools:
+    #   - display_name: floating-ips
+    #     subnets:
+    #       - allocation_ranges:
+    #           - start: "172.30.1.1"
+    #             end: "172.30.1.254"
+    #         cidr: >- #"172.30.1.0/24"
+    #           {{ opinionated.tanzu_vsphere.routeable_super_net |
+    #           ansible.netcommon.ipsubnet((opinionated.tanzu_vsphere.routeable_super_net.split('/')[1] |int)+1, 1) }} 
   ssh_public_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC/qMIbcfUkClzrBi7QjUmtdfpjDlTSXsPcJsmdmezbem2SboQPujpFUGmzFXi5PqhPa3QOxvMn8oJpozlJYydDspFAAqX+0u8n0FrwMMn0ckwUtF4zxz/AnI8tUltjeN67M7mG+3W8ooRFeaY6nrjxEIXbkMOzSbeTaFcB9cDzRXcMmFiuoeDhUonEYbClrsPzLdzscw7Vz6BLMHwo9SBOqlaL25aG/DtZPB7jobQRh48q3RW+Hb29nH18biJNLiBDsRu1SJIzw7Dl+rNSX9Va56vX0cz5CDiTg9A69WgySDx7oZFZM3W6jyHCN0fQbw/OxE/2MemhfQbdJqgffA7zE0qx+/DVIoT5bBP7FPpQSxkMjC+AEAH4PPsDIP0KJH9do6+T/g/Mf6725IOaPSJyV0bAkz1T57T1ty19KdhvPVfjrMnCap+pLvD6Qd/lxzY9uFF4oOwWmo4xQ6hQXZ9oJUhrRsG2A5LF7XGXwOb8mHSG4InfUfjaov4gjLl5tN0=
 
 #####################################################################
@@ -165,17 +170,32 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
     - display_name: tep-pool  # This is a non-routable range which is used for the overlay tunnels.
       subnets:
         - allocation_ranges:
-            - start: "{{ opinionated.hosting_network.nsxt_tep.cidr | ansible.utils.ipmath(1) }}"
-              end: "{{ opinionated.hosting_network.nsxt_tep.cidr | ansible.utils.ipmath(254) }}"
+            - start: "{{ opinionated.hosting_network.nsxt_tep.cidr | ansible.utils.ipaddr('1') }}"
+              end: "{{ opinionated.hosting_network.nsxt_tep.cidr | ansible.utils.ipaddr('-2') }}"
           cidr: "{{ opinionated.hosting_network.nsxt_tep.cidr }}"
-    - display_name: "{{ opinionated.nsxt.ip_pools[0].display_name }}"
+    
+    - display_name: floating-ips
       subnets: "{{ opinionated.nsxt.ip_pools[0].subnets }}"
+      subnets:
+        - allocation_ranges:
+            - start: >-
+                {{ opinionated.tkgi.routeable_super_net |
+                ansible.netcommon.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+1, 1) |
+                ansible.utils.ipaddr('1') | ansible.utils.ipv4('address') }}
+              end: >-
+                {{ opinionated.tkgi.routeable_super_net |
+                ansible.netcommon.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+1, 1) |
+                ansible.utils.ipaddr('-2') | ansible.utils.ipv4('address') }}
+          
+          cidr: >- #"172.30.1.0/24"
+              {{ opinionated.tkgi.routeable_super_net |
+              ansible.netcommon.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+1, 1) }}
 
   ip_blocks:
     - display_name: tkgi-nodes  # This is a non-routable range which is used for the overlay tunnels.
-      cidr: 172.30.32.0/19
+      cidr: "{{ opinionated.tkgi.node_ip_block }}"
     - display_name: tkgi-pods
-      cidr: 172.30.64.0/19
+      cidr: "{{ opinionated.tkgi.pod_ip_block }}"
 
   uplink_profiles:
     - display_name: host-tep-profile
@@ -338,19 +358,19 @@ tanzu_opsman_bosh:
   opsman_ip: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(2) }}"
   netmask: >-
     {{ opinionated.tkgi.routeable_super_net |
-    ansible.netcommon.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+6, 0) |
+    ansible.netcommon.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+4, 0) |
     ansible.utils.ipaddr('netmask') }}
   gateway: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(1) }}"
   network: tkgi-infra-seg
   network_cidr: >-
     {{ opinionated.tkgi.routeable_super_net |
-    ansible.netcommon.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+6, 0) }}
+    ansible.netcommon.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+4, 0) }}
   dns: "{{ dns_server }}"
   ntp: "{{ ntp_server_ip }}"
 
   vcenter_url: "{{ nested_vcenter.ip }}"
-  vcenter_datacenter: "{{ nested_vcenter.datacenter }}"
   vcenter_cluster: compute
+  vcenter_datacenter: "{{ nested_vcenter.datacenter }}"
   vcenter_datastore: datastore-esx1
   vcenter_folder: "/{{ nested_vcenter.datacenter }}/vm"
   vcenter_username: "{{ nested_vcenter.username }}"
@@ -393,63 +413,77 @@ tanzu_opsman_bosh:
     -----END CERTIFICATE-----
 
 tkgi:
+  vcenter_url: "{{ nested_vcenter.ip }}"
+  vcenter_username: "{{ nested_vcenter.username }}"
+  vcenter_password: "{{ nested_vcenter.password }}"
+  vcenter_cluster: compute
+  vcenter_datacenter: "{{ nested_vcenter.datacenter }}"
+  vcenter_datastore: datastore-esx1
+  vcenter_folder: "pcf_vms"
+
+  dns: "{{ dns_server }}"
+  k8s_services_cidr: "{{ opinionated.tkgi.k8s_services_cidr }}"
+
   api:
     certificate:
       public_key: |-
         -----BEGIN CERTIFICATE-----
-        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
+        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
-        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
+        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
-        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
+        AQEFAAOCAQ8AMIIBCgKCAQEA5cdarNQ31P+bImH6w8zk9ceYCa9xIPOZuHQBMZbh
+        EOgCqxUT/87ooxHTFA41gJ/yGAtAqJFWA4B55oXdn8TTDqt2+aTDa9Pl0lJxbbB8
+        Y5m+2do+EPwP7UUMizqnZiNUx8UTpnXF35KY1zP06A5uy4O4N8ElGIoNjd5ItvdT
+        oDHYD6ZudfIZkOaPrAu9HEOpDolRCg60QboNRZqULiPf0bfqyxNUY8Kh4upetCBk
+        t1Xli1Dt9QUBXK8aF/tMHqEE0G5vq0kou8a2upK8/biU6rdX0KEsP7lcG8/e4fNS
+        NDjUeJZNpG+Aup7cYawc6OhYoVREis6w6lKQLWpTD0Ss+wIDAQABo2MwYTAOBgNV
         HQ8BAf8EBAMCBaAwEwYDVR0lBAwwCgYIKwYBBQUHAwEwHwYDVR0jBBgwFoAUsEcJ
-        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
-        UFHowJkNXS1zx+a+LbWDmRg=
+        VnM0DRiHJE0lU2mWldCE7YkwGQYDVR0RBBIwEIIOYXBpLnRrZ2kubG9jYWwwDQYJ
+        KoZIhvcNAQELBQADggGBAIcVpvDt625xDvP/p2PJ6c1cZgxPCQfB1LJwZCxLkHvr
+        vggMJYndC3Nlhkn1g6R96wWEIHccZaYyjj5ONWFT8oYKmhLl7EmcgJKs1pY9vabO
+        5dMMWZZM7gBsnY9TlwwvgC8qQ8kwHWUwA7Zs5uQ3p/j5Mugku4gDpW+bup8k+cDq
+        b2KviCfFO53uK7CW6/ZKz37Z8B3vCw2F5ofZfsrtaUPnn73NgFs1hZzrBE9c2W10
+        mWMsN8fmRpngs5K3B2zV9YtcB9OT5PFJhpUDoZupPxAH85v/AoYmu9jYm8J9wkET
+        A+94q6dVgoCVNSFyQovEs6o1QMPHiUeZc8bHtYyGzLDevx+cJEBIQxKcFrqAi6Nu
+        QOiI3qW0qL4Ub2f7iJe23E65B3FAigBjlqlJKIkH9qG+ifZQpR5yxiwKprYF1urX
+        djlr4nlEUNRiROvA/Hwh1ah2tw5Elu1jx51pPpyCT4UDAIJv4hQ/fiqmOMAHczBd
+        9BVcujHsRH1GhDTXvpG8mg==
         -----END CERTIFICATE-----
       private_key: |-
         -----BEGIN PRIVATE KEY-----
-        MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC9dbAERyZgkGR6
-        SYjF5Rwo4U3gLhRXb46cglvNmg6dWv8oTWx5cw13OMGGDYrEeb/4OIYCkSTtAV9O
-        nRl5vqyO4F0P3rNK3RBFUn+yw6gro73V9r3enmJKCJsTRQXABDMiTWJDbEfvXrcz
-        vRBc22ahhHY5tUUR4vvs3VIRRTMlNzn+60tuWxAt73w4iiZb4tSu0iWcnKK1C+J/
-        etBM700X40guzUZ4JncROpHP9eVQgIxtOpYh83+AU6/ZcQ5UKdcWbFkSTo/Om4cH
-        9hiBFx+FUnSE2KMw/p/PnFzR0rXauQeC3wCh+Vhuxy49NhqBbJfvAOjJP2TzQj3P
-        XbfYUWCLAgMBAAECggEAEsU/LB1UewqzOb5hU6HwWUiBK63FDCicS3tK1yLlQcfL
-        MdYB4kJ42hAAdGSRFAgv8cq/1C9HJkgVhjdgV8SBWiJ2deUNhGREgWm8Bx0FY1V0
-        sGcixpSQjl8t5gnXmP+RhVt/Wci3k8qhgfnATkLadzQldnA0KKKBbSU8RUPC3nPf
-        bAvOEgd5ptWtrUkwejoxCNh/H5rBi8Lt/uq2Py754ivVpNQjQ71aWAJjDl+GiUJs
-        hbx1GxD9eu5lV2HoZEh6yX79oX7bWGF6cBppQTTYRBeKnI+NZe5Ipxq+zD1TxPCJ
-        RGS9KoICmjTOFbWPdBNPtEHrWkYm7gW9sUPie6+eMQKBgQDzFP/WcqzR4CabaHiJ
-        0EDuX1v9PfyvlhbcRfLp8zbmL7SSRNGVZuGESYmb0YnYsRozOwswE+QUh+z2Wo5I
-        54o1zUnNV7MZL+p7SkPC5OKu1/onICbQjfGU3ASSUMYVWkCMMxcvODMLRpyGDoVA
-        LxyBnJT5vGpo6b6HPa/XnvkieQKBgQDHhy92zaXRjT/POs2b8AbcsFAcncquxf2r
-        HWQ2O92ADj2fD0AYDkm3OxrcBVaaxAd0v87ZFR0oBrfa0fz/xNO13hlky5TEXFfA
-        LQFVCKowsIG2YjRJ4oBsPgP7l2ZIpdXgU5rPRj5ubMDxBfoF5x6xmk/giIjDkhpV
-        +PSUG3R6IwKBgQCjd3O0mtltKffMeqzUwJ9precGnjDXQ2+MId4BRfWdRmeAFZd7
-        iPwPIgTQLFEuz6p22TXk1vuCcwX/hVY54LspAyymUlu2jGp7Dq4S2ik2uzcWKKDx
-        jwLuwCay3m7W3SKbJaBpuLla09lerVUenI/m+Y2VhAdrFgVynSErN1UCwQKBgCeb
-        7I43EN3innIzCDIWmiYhUiX8JQpA/7SCZyxlAfmz2gPDcUPVQkj/kLtwy9p5Y8mH
-        cjah/GG/w6vK1+CmYCjQaFYcG/JHKpxZ0tPgnnh/8aAVKrAoKLpULVI6ofF2Clk3
-        /5l6JlahfEPcnd+iG/PB4G2AbTX1wQikHVlxgdPlAoGARtwcXWMMrTcpNj9JtFGW
-        ie0YzZC84PawQSpZr1F9j1NwvaoFmuamCf8ritqPsmm9RTI20ZSNoqJ4KTZVSqTx
-        Cr6HXenipfr19jdQDjEdmMVvYITbxD7tddcJEm8MloBw8ThmAqO+wsaDwvQ9RvgU
-        Vj2xx+AzMW748Yzs2SLy4qQ=
+        MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDlx1qs1DfU/5si
+        YfrDzOT1x5gJr3Eg85m4dAExluEQ6AKrFRP/zuijEdMUDjWAn/IYC0CokVYDgHnm
+        hd2fxNMOq3b5pMNr0+XSUnFtsHxjmb7Z2j4Q/A/tRQyLOqdmI1THxROmdcXfkpjX
+        M/ToDm7Lg7g3wSUYig2N3ki291OgMdgPpm518hmQ5o+sC70cQ6kOiVEKDrRBug1F
+        mpQuI9/Rt+rLE1RjwqHi6l60IGS3VeWLUO31BQFcrxoX+0weoQTQbm+rSSi7xra6
+        krz9uJTqt1fQoSw/uVwbz97h81I0ONR4lk2kb4C6ntxhrBzo6FihVESKzrDqUpAt
+        alMPRKz7AgMBAAECggEBAJI/5c3VMUgn/KTQuhw/4IczJ+kaOqYfhnrpkwzuHIh3
+        M6OSwezy1A1evfuo45LfuuZk2x2vi5ClCHGaSKp1S2St7AcPQLbz4vaQNNP9Hd8D
+        L39XsmN7G+QIK+i+R2fyGvcfz9cGZRBdLVzkHABLl2d/ihQqoiLRU7k1fxC9sQNn
+        IXvIBqbFktUsxOtuwpeSKnPaSeLwktNgLGFdBbn40bvZBewAohfQHjJaXIKa0eA/
+        mUobNu9YAMzUUJ6LnSRDl77fZLl19nayy3glStSt/Ztzp9LBbGQXWTvNZfde4HwM
+        +XYYQdi7aSzRUj95IT8h4qnuS412XLq08TjwNgIgDkkCgYEA77zh5L8kUWGc0S3J
+        q0ti11Q2sQdo1Ltpzo04iYiwJiwNMzYRpDLXpP6xRl+o7HIKJU78G1HnpeZA3WAO
+        X3ExgTrD2sL5maDIesxWedKPYglvlkcGPgaZ8gDjTqWMy3uS0gURwZjAlx9CxDR9
+        18k4k9dDQROF/ir6ivMSCcf2ho0CgYEA9V2Hef3riAKDgCBANChUC2k4uLxRuLzv
+        L+O4ovcDAvnlG4zjzLOgTfRd064BjBMu1dvW7kBDeXGZlmIpxTjqtJlyK9Vyb+Gu
+        vP1Yugu9XFV63vAuMPF/UXBeO0GB8SDJkkT2fxDJrWTFzP3AFbscGOTw/8K12+cl
+        OsaHDtgsQ6cCgYEAgf0pgs19VL8Xt3gbREzg8B6SdRSua8Ke0UdTY4eA84GpOp5T
+        nHOQ577Nwnm171a6V5ZnLi0P7K1XeHFP+cI3dHm3npNfoURD0AmhzfY0lpTFM3eZ
+        U+JicIy4s3kiSWbcqhHjmdRIgOiLXDWWEn3hto/ewJdkbPdC2DqKClGpQzUCgYAO
+        fS1o2MO1zmAxirX/3nnICricwBIbVJzTOSFIDkoRPOx4igNRrTHEKK/5tgbFXMSh
+        QFAa1ZSmcTzekoFg8hF6BK2nRP1y+eK1qkg5BER0VV/iFlDD9x7LklUeLqobsRH2
+        HzhnHHisUo0To9BZ+Cial7pbgAX5LFcYd2y2RbGndQKBgQDQrQwRpBQB9aLPfjQo
+        v+6l1ro0pW7vFRJ16uAGbK7hyZdT2UE/xZwYfzDnM0o2Y0ZbN5x2e4xu/ev/Crfn
+        aeiKn0Nz4UqRVKBN73rGQHbSaOPcrqDZxYeqsX7o35kJ/yYqdi25w+n3EPm0IUjQ
+        lwtZ7ytHwO1SHZ1lqXzfEYDWTw==
         -----END PRIVATE KEY-----
   nsx:
+    manager_url: "{{ nsxt.manager.ip }}"
+    manager_username: "{{ nsxt.manager.username }}"
+    manager_password: "{{ nsxt.manager.password }}"
     principal_identity:
       public_key: |-
         -----BEGIN CERTIFICATE-----

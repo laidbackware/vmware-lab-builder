@@ -54,10 +54,10 @@
     harbor_vars:
       - slug: harbor-container-registry
         file_path: "{{ harbor_tile }}"
-        product_version: 2.6.4-build.17
+        # product_version: 2.6.4-build.17
         product_config: "{{ lookup('template', 'harbor.yml') | from_yaml }}"
 
-- name: Run tasks/other.yaml instead of 'main'
+- name: Deploy TKGi
   ansible.builtin.include_role:
     name: tanzu/opsman/upload-stage-configure-tile
   with_items: "{{ harbor_vars }}"
