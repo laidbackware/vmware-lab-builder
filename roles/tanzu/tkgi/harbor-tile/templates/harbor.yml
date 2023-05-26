@@ -51,7 +51,7 @@ network-properties:
   network:
     name: infra
   other_availability_zones:
-  - name: az1
+    - name: az1
   singleton_availability_zone:
     name: az1
 resource-config:

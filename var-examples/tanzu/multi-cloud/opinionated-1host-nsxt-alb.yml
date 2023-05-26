@@ -367,7 +367,8 @@ nsx_alb:
   se_management_port_group: avi-mgmt-seg
   se_management_network_cidr: "{{ opinionated.hosting_network.base.cidr }}"
   se_management_network_range: >-
-    {{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(2) }}-{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(3) }}
+    {{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(2) }}-
+    {{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(3) }}
   se_management_network_gateway: "{{ opinionated.hosting_network.base.gateway }}"
   # The vip network will contain the virtual servers created by Avi
   se_vip_port_group: avi-vip-seg

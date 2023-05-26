@@ -1,32 +1,70 @@
 ---
 
+# Creating here to allow capture of output IP
+- name: Create NSX Floating IP Pool
+  vmware.ansible_for_nsxt.nsxt_ip_pools:
+    hostname: "{{ tkgi_nsx_manager_url }}"
+    username: "{{ tkgi_nsx_username }}"
+    password: "{{ tkgi_nsx_password }}"
+    validate_certs: false
+    display_name: "{{ tkgi_nsx_floating_pool.display_name }}"
+    subnets: "{{ tkgi_nsx_floating_pool.subnets }}"
+    state: present
+  register: result_nsx_floating_pool
+
+- name: Create NSX Node IP block
+  vmware.ansible_for_nsxt.nsxt_ip_blocks:
+    hostname: "{{ tkgi_nsx_manager_url }}"
+    username: "{{ tkgi_nsx_username }}"
+    password: "{{ tkgi_nsx_password }}"
+    validate_certs: false
+    display_name: "{{ tkgi_nsx_node_block.display_name }}"
+    cidr: "{{ tkgi_nsx_node_block.cidr }}"
+    state: present
+  register: result_nsx_node_block
+
+- name: Create NSX Pod IP block
+  vmware.ansible_for_nsxt.nsxt_ip_blocks:
+    hostname: "{{ tkgi_nsx_manager_url }}"
+    username: "{{ tkgi_nsx_username }}"
+    password: "{{ tkgi_nsx_password }}"
+    validate_certs: false
+    display_name: "{{ tkgi_nsx_pod_block.display_name }}"
+    cidr: "{{ tkgi_nsx_pod_block.cidr }}"
+    state: present
+  register: result_nsx_pod_block
+
+- name: List Logical Routers
+  vmware.ansible_for_nsxt.nsxt_logical_routers_facts:
+    hostname: "{{ tkgi_nsx_manager_url }}"
+    username: "{{ tkgi_nsx_username }}"
+    password: "{{ tkgi_nsx_password }}"
+    validate_certs: false
+  register: result_nsx_routers
+
 - name: Fetch NSX Manager cert
   ansible.builtin.shell: |
+    set -o pipefail && \
     openssl s_client -showcerts -servername {{ tkgi_nsx_manager_url }} \
       -connect {{ tkgi_nsx_manager_url }}:443 </dev/null \
       | openssl x509 -outform pem
   register: result_nsx_manager_cert_pem
   changed_when: false
+  args:
+    executable: /usr/bin/bash
 
-- name: Set NSX CA Cert
+- name: Set NSX facts
   ansible.builtin.set_fact:
     nsx_ca_cert: |-
       {{ result_nsx_manager_cert_pem.stdout }}
-
-- name: NSX Manager cert check
-  ansible.builtin.shell: |
-    openssl s_client -showcerts -servername 192.168.1.11 -connect 192.168.1.11:443 </dev/null | \
-      sed -n -e '/BEGIN\ CERTIFICATE/,/END\ CERTIFICATE/ p'
-  register: result_nsx_manager_cert
-  changed_when: false
-
+    nsx_floating_pool_id: "{{ result_nsx_floating_pool.id }}"
+    nsx_node_block_id: "{{ result_nsx_node_block.id }}"
+    nsx_pod_block_id: "{{ result_nsx_pod_block.id }}"
+    # Expects the T0 to be the first created router, which is not role agnostic
+    nsx_t0_id: "{{ result_nsx_routers.results[0].id }}"
 
 - name: Setting TKGi Tile vars
-  set_fact:
-    nsx_manager_cert: "{{ result_nsx_manager_cert.stdout }}"
-
-- name: Setting TKGi Tile vars
-  set_fact:
+  ansible.builtin.set_fact:
     tkgi_vars:
       - slug: pivotal-container-service
         file_path: "{{ tkgi_tile }}"

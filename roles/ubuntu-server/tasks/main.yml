@@ -1,6 +1,6 @@
 ---
 - name: Deploy Ubuntu OVA
-  vmware_deploy_ovf:
+  community.vmware.vmware_deploy_ovf:
     hostname: "{{ vcsa_hostname }}"
     username: "{{ vcsa_username }}"
     password: "{{ vcsa_password }}"
@@ -11,7 +11,7 @@
     datastore: "{{ datastore }}"
     disk_provisioning: thin
     networks: "{u'VM Network':u'{{ ubuntu_vm_network }}'}"
-    ova: "{{ ubuntu_ova }}"
+    ova: "{{ ubuntu_ova_path }}"
     allow_duplicates: false
     power_on: false
     fail_on_spec_warnings: false
@@ -24,16 +24,16 @@
   register: vm_instance_data
 
 - name: Get Ubuntu VM UUID
-  set_fact:
-    vm_uuid: "{{ vm_instance_data.hw_product_uuid }}"
+  ansible.builtin.set_fact:
+    ubuntu_server_vm_uuid: "{{ vm_instance_data.hw_product_uuid }}"
 
 - name: Configure Ubuntu VM resources
-  vmware_guest:
+  community.vmware.vmware_guest:
     hostname: "{{ vcsa_hostname }}"
     username: "{{ vcsa_username }}"
     password: "{{ vcsa_password }}"
     validate_certs: false
-    uuid: "{{ vm_uuid }}"
+    uuid: "{{ ubuntu_server_vm_uuid }}"
     state: "present"
     hardware:
       memory_mb: "{{ ubuntu_vm_memory }}"
@@ -48,20 +48,20 @@
     username: "{{ vcsa_username }}"
     password: "{{ vcsa_password }}"
     validate_certs: false
-    uuid: "{{ vm_uuid }}"
+    uuid: "{{ ubuntu_server_vm_uuid }}"
     state: powered-on
   delegate_to: localhost
 
 - name: Wait for port 22 to become open and contain "OpenSSH"
-  wait_for:
+  ansible.builtin.wait_for:
     port: 22
-    host: "{{ ubuntu_client_ip_address | ansible.netcommon.ipaddr('address')  }}"
+    host: "{{ ubuntu_client_ip_address | ansible.utils.ipaddr('address') }}"
     search_regex: OpenSSH
     delay: 10
 
 - name: Add host to harbor group
-  add_host:
-    name: "{{ ubuntu_client_ip_address | ansible.netcommon.ipaddr('address')  }}"
+  ansible.builtin.add_host:
+    name: "{{ ubuntu_client_ip_address | ansible.utils.ipaddr('address') }}"
     groups: "{{ inventory_host_group }}"
     ansible_connection: ssh
     ansible_user: "{{ ubuntu_client_username }}"

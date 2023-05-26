@@ -1,6 +1,6 @@
 ---
 
-- debug: msg="{{tkg_haproxy}}"
+- ansible.builtin.debug: var=tkg_haproxy
 
 - name: Deploy HA Proxy
   community.vmware.vmware_deploy_ovf:

@@ -1,6 +1,6 @@
 ---
 
-- debug: msg="{{tkg_router}}"
+- ansible.builtin.debug: var=tkg_router
 
 - name: Deploy VYoS
   community.vmware.vmware_deploy_ovf:

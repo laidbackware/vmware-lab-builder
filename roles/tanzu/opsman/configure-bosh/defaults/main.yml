@@ -19,15 +19,15 @@ bosh_vcenter_datastore_persistent: "{{ tanzu_opsman_bosh.vcenter_datastore }}"
 bosh_vcenter_username: "{{ tanzu_opsman_bosh.vcenter_username }}"
 bosh_vcenter_password: "{{ tanzu_opsman_bosh.vcenter_password }}"
 
-bosh_nsx_url: "{{ tanzu_opsman_bosh.nsx_url}}"
-bosh_nsx_username: "{{ tanzu_opsman_bosh.nsx_username}}"
-bosh_nsx_password: "{{ tanzu_opsman_bosh.nsx_password}}"
+bosh_nsx_url: "{{ tanzu_opsman_bosh.nsx_url }}"
+bosh_nsx_username: "{{ tanzu_opsman_bosh.nsx_username }}"
+bosh_nsx_password: "{{ tanzu_opsman_bosh.nsx_password }}"
 
 bosh_ssh_public_key: "{{ tanzu_opsman_bosh.ssh_public_key }}"
 bosh_username: "{{ tanzu_opsman_bosh.username }}"
 bosh_password: "{{ tanzu_opsman_bosh.password }}"
 
-bosh_trusted_ca_certs: "{{ tanzu_opsman_bosh.trusted_ca_certs |default('') }}"
+bosh_trusted_ca_certs: "{{ tanzu_opsman_bosh.trusted_ca_certs | default('') }}"
 
 bosh_disk_path: pcf_disk
 bosh_template_folder: pcf_templates

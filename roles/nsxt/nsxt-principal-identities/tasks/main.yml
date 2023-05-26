@@ -2,19 +2,20 @@
 - name: Super User Block
   block:
     - name: Create temporary certificate directory
-      tempfile:
+      ansible.builtin.tempfile:
         state: directory
         suffix: pi_cert
       register: temp_dir_results
 
-    - set_fact:
-        tmp_dir={{temp_dir_results.path}}
+    - ansible.builtin.set_fact:
+        tmp_dir={{ temp_dir_results.path }}
 
     - name: Create temporary certificate file
-      copy:
+      ansible.builtin.copy:
         dest: "{{ tmp_dir }}/{{ item.display_name }}.pem"
         content: |
           {{ item.public_key }}
+        mode: '660'
       loop: "{{ nsxt.principal_identities }}"
 
     - name: Register a TKGI Super User
@@ -31,11 +32,10 @@
         state: "present"
       register: pi_result
       loop: "{{ nsxt.principal_identities }}"
-    - debug: msg="{{ pi_result }}"
 
   always:
     - name: Remove the temp directory
-      file:
+      ansible.builtin.file:
         path: "{{ tmp_dir }}"
         state: absent
       when: tmp_dir is defined

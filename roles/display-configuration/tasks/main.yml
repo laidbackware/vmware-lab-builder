@@ -5,7 +5,7 @@
 #   when: tanzu_vsphere is defined
 
 - name: Build outputs
-  set_fact:
+  ansible.builtin.set_fact:
     build_outputs: >-
       {
         "vcenter": {
@@ -74,9 +74,5 @@
 
       }
 
-- name: Display Build environment
-  debug:
-    # msg:
-    #   - Deployment complete. Below is what has been configured.
-    var:
-      build_outputs
+- name: Display built configuration
+  ansible.builtin.debug: var=build_outputs

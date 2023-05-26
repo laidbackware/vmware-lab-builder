@@ -21,14 +21,16 @@ tkgi_vcenter_datastore: "{{ tkgi.vcenter_datastore }}"
 tkgi_vcenter_folder: "{{ tkgi.vcenter_folder }}"
 
 tkgi_nsx_manager_url: "{{ tkgi.nsx.manager_url }}"
-tkgi_nsx_username: "{{ tkgi.nsx.username }}"
-tkgi_nsx_password: "{{ tkgi.nsx.password }}"
+tkgi_nsx_username: "{{ tkgi.nsx.manager_username }}"
+tkgi_nsx_password: "{{ tkgi.nsx.manager_password }}"
+tkgi_nsx_floating_pool: "{{ tkgi.nsx.floating_ip_pool }}"
+tkgi_nsx_node_block: "{{ tkgi.nsx.node_block }}"
+tkgi_nsx_pod_block: "{{ tkgi.nsx.pod_block }}"
 
 tkgi_api_certificate:
-  public_key: "{{ tkgi.api.certificate.public_key}}"
-  private_key: "{{ tkgi.api.certificate.private_key}}"
+  public_key: "{{ tkgi.api.certificate.public_key }}"
+  private_key: "{{ tkgi.api.certificate.private_key }}"
 
 tkgi_nsx_principal_identity:
   public_key: "{{ tkgi.nsx.principal_identity.public_key }}"
   private_key: "{{ tkgi.nsx.principal_identity.private_key }}"
-

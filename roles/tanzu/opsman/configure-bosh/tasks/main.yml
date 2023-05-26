@@ -1,11 +1,12 @@
 ---
 
-# - debug: var=bosh_network_cidr
-
 - name: Fetch NSX Manager cert
   ansible.builtin.shell: |
+    set -o pipefail && \
     openssl s_client -showcerts -servername {{ nsxt.manager.ip }} -connect {{ nsxt.manager.ip }}:443 </dev/null \
       | openssl x509 -outform pem
+  args:
+    executable: /usr/bin/bash
   register: result_nsx_manager_cert_pem
   changed_when: false
 
@@ -43,6 +44,9 @@
       om --env <(echo "$env") configure-director \
         --config <(echo "$bosh_config")
   register: result_opsman_create
+  retries: 6
+  delay: 10
+  until: result_opsman_create.rc == 0
 
 - name: Applying bosh director changes
   args:
@@ -59,5 +63,8 @@
       EOF
       )
 
-      om --env <(echo "$env") apply-changes --skip-deploy-products
+      om --env <(echo "$env") apply-changes --skip-deploy-products --reattach
   register: result_bosh_changes
+  retries: 1
+  delay: 10
+  until: result_bosh_changes.rc == 0

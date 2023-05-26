@@ -26,12 +26,12 @@
     password: "{{ nsxt.manager.password }}"
     validate_certs: false
     resource_type: TransportNodeProfile
-    display_name: "{{ item.display_name}}"
-    description: "{{ item.description}}"
+    display_name: "{{ item.display_name }}"
+    description: "{{ item.description }}"
     host_switch_spec:
       resource_type: StandardHostSwitchSpec
       host_switches: "{{ item.host_switches }}"
-    transport_zone_endpoints: "{{ item.transport_zone_endpoints | default(omit)}}"
+    transport_zone_endpoints: "{{ item.transport_zone_endpoints | default(omit) }}"
     state: present
   loop: "{{ nsxt.transport_node_profiles }}"
 

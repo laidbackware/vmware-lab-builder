@@ -118,7 +118,7 @@ distributed_switches:  # To not create any distributed switches, comment this se
       - vmnic1
     distributed_port_groups:
       - port_group_name: workload-pg
-        vlan_id: "{{ opinionated.hosting_network.workload.vlan_id |default(0) }}"
+        vlan_id: "{{ opinionated.hosting_network.workload.vlan_id | default(0) }}"
 
 tspbm:  # Tag-based Storage Policy Based Management
   tag_categories:
@@ -163,7 +163,7 @@ tanzu_vsphere:
   vds_networking:
     load_balancer_provider: AVI
     nsx_alb_password: "{{ nsx_alb.controller_password }}"
-    nsx_alb_username: "{{ nsx_alb.controller_username}}"
+    nsx_alb_username: "{{ nsx_alb.controller_username }}"
     nsx_alb_server: "{{ nsx_alb.controller_ip }}"
     workload_gateway: "{{ opinionated.hosting_network.workload.gateway }}"
     workload_netmask: "{{ opinionated.hosting_network.workload.cidr | ansible.utils.ipaddr('netmask') }}"
@@ -173,7 +173,7 @@ tanzu_vsphere:
       - starting_ip: "{{ opinionated.hosting_network.workload.cidr | ansible.utils.ipmath(2) }}"
         num_of_ips: >-
           {{ opinionated.hosting_network.workload.cidr |
-          ansible.netcommon.ipsubnet((opinionated.hosting_network.workload.cidr.split('/')[1] |int)+1, 1) | ipsubnet(32) |int -2 }}
+          ansible.utils.ipsubnet((opinionated.hosting_network.workload.cidr.split('/')[1] |int)+1, 1) | ipsubnet(32) |int -2 }}
 
 nsx_alb:
   api_version: "20.1.7"
@@ -206,7 +206,8 @@ nsx_alb:
   se_management_port_group: vm-network
   se_management_network_cidr: "{{ opinionated.hosting_network.base.cidr }}"
   se_management_network_range: >-
-    {{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(2) }}-{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(3) }}
+    {{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(2) }}-
+    {{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(3) }}
   se_management_network_gateway: "{{ opinionated.hosting_network.base.gateway }}"
   # The vip network will contain the virtual servers created by Avi
   se_vip_port_group: workload-pg

@@ -3,13 +3,13 @@
   hosts: localhost
   gather_facts: false
   collections:
-  - vmware.alb
-  - vmware.ansible_for_nsxt
-  - crypto
+    - vmware.alb
+    - vmware.ansible_for_nsxt
+    - crypto
 
   pre_tasks:
     - name: Create the temporary directory
-      tempfile:
+      ansible.builtin.tempfile:
         state: directory
         suffix: setup
       register: temp_dir_results
@@ -147,9 +147,10 @@
 
   post_tasks:
     - name: Remove the temporary directory
-      file:
+      ansible.builtin.file:
         path: "{{ temp_dir }}"
         state: absent
+      no_log: true
 
 # Separate section to run commands inside harbor VM if created
 - name: Setup Standalone Harbor
@@ -167,4 +168,3 @@
     ### Show outputs at the end
     - role: display-configuration
       tags: ["summary"]
-

@@ -8,7 +8,7 @@
     cluster_name: "{{ item.key }}"
     validate_certs: false
     enable: "{{ item.value.enable_ha }}"
-    ha_host_monitoring: "{{ item.value.ha_host_monitoring | default('disabled')}}"
+    ha_host_monitoring: "{{ item.value.ha_host_monitoring | default('disabled') }}"
   with_dict: "{{ nested_clusters }}"
   when: '"enable_ha" in item.value'
 
@@ -21,6 +21,6 @@
     cluster_name: "{{ item.key }}"
     validate_certs: false
     enable: "{{ item.value.enable_drs }}"
-    drs_default_vm_behavior: "{{ item.value.drs_default_vm_behavior | default(omit)}}"
+    drs_default_vm_behavior: "{{ item.value.drs_default_vm_behavior | default(omit) }}"
   with_dict: "{{ nested_clusters }}"
   when: '"enable_drs" in item.value'

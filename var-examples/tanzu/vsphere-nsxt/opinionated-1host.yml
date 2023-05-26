@@ -141,7 +141,7 @@ tanzu_vsphere:
   management_gateway: "{{ opinionated.tanzu_vsphere.routeable_super_net | ansible.utils.ipmath(1) }}"
   management_netmask: >-
     {{ opinionated.tanzu_vsphere.routeable_super_net |
-    ansible.netcommon.ipsubnet((opinionated.tanzu_vsphere.routeable_super_net.split('/')[1] |int)+3, 0) |
+    ansible.utils.ipsubnet((opinionated.tanzu_vsphere.routeable_super_net.split('/')[1] |int)+3, 0) |
     ansible.utils.ipaddr('netmask') }}
   management_starting_address: "{{ opinionated.tanzu_vsphere.routeable_super_net | ansible.utils.ipmath(2) }}"
   master_storage_policy: "{{ tspbm.vm_storage_policies[0].storage_policy_name }}"
@@ -156,15 +156,15 @@ tanzu_vsphere:
     egress_cidrs:
       - >-
         {{ opinionated.tanzu_vsphere.routeable_super_net |
-        ansible.netcommon.ipsubnet((opinionated.tanzu_vsphere.routeable_super_net.split('/')[1] |int)+3, 1) }}
+        ansible.utils.ipsubnet((opinionated.tanzu_vsphere.routeable_super_net.split('/')[1] |int)+3, 1) }}
       - >-
         {{ opinionated.tanzu_vsphere.routeable_super_net |
-        ansible.netcommon.ipsubnet((opinionated.tanzu_vsphere.routeable_super_net.split('/')[1] |int)+2, 1) }}
+        ansible.utils.ipsubnet((opinionated.tanzu_vsphere.routeable_super_net.split('/')[1] |int)+2, 1) }}
     ingress_cidrs:
       - >-
         {{ opinionated.tanzu_vsphere.routeable_super_net |
-        ansible.netcommon.ipsubnet((opinionated.tanzu_vsphere.routeable_super_net.split('/')[1] |int)+1, 1) }}
-    nsx_edge_cluster: "{{ nsxt.edge_clusters[0].edge_cluster_name}}"
+        ansible.utils.ipsubnet((opinionated.tanzu_vsphere.routeable_super_net.split('/')[1] |int)+1, 1) }}
+    nsx_edge_cluster: "{{ nsxt.edge_clusters[0].edge_cluster_name }}"
     pod_cidrs: "{{ opinionated.tanzu_vsphere.internal_pod_network }}"
     # This is used by the task which checks if the supervisor network is online
     t0_uplink_ip: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(3) }}"

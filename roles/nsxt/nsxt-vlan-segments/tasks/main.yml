@@ -1,5 +1,5 @@
 ---
-- debug: msg="{{ nsxt.vlan_segments }}"
+- ansible.builtin.debug: var=nsxt.vlan_segments
 
 - name: Create VLAN segments
   vmware.ansible_for_nsxt.nsxt_policy_segment:

@@ -3,7 +3,7 @@
 vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.3-21477706.iso"
 esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u3k_Appliance_Template_v1.ova"
 nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-3.1.3.8.0.20532387.ova"
-opsman_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/ops-manager-vsphere-2.10.56-build.762.ova"
+opsman_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/ops-manager-vsphere-2.10.57-build.911.ova"
 harbor_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/harbor-container-registry-2.6.4-build.17.pivotal"
 tkgi_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/pivotal-container-service-1.13.10-build.10.pivotal"
 
@@ -50,16 +50,6 @@ opinionated:
     node_ip_block: 100.69.0.0/16
     pod_ip_block: 100.70.0.0/16
 
-  nsxt:
-    # ip_pools:
-    #   - display_name: floating-ips
-    #     subnets:
-    #       - allocation_ranges:
-    #           - start: "172.30.1.1"
-    #             end: "172.30.1.254"
-    #         cidr: >- #"172.30.1.0/24"
-    #           {{ opinionated.tanzu_vsphere.routeable_super_net |
-    #           ansible.netcommon.ipsubnet((opinionated.tanzu_vsphere.routeable_super_net.split('/')[1] |int)+1, 1) }} 
   ssh_public_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC/qMIbcfUkClzrBi7QjUmtdfpjDlTSXsPcJsmdmezbem2SboQPujpFUGmzFXi5PqhPa3QOxvMn8oJpozlJYydDspFAAqX+0u8n0FrwMMn0ckwUtF4zxz/AnI8tUltjeN67M7mG+3W8ooRFeaY6nrjxEIXbkMOzSbeTaFcB9cDzRXcMmFiuoeDhUonEYbClrsPzLdzscw7Vz6BLMHwo9SBOqlaL25aG/DtZPB7jobQRh48q3RW+Hb29nH18biJNLiBDsRu1SJIzw7Dl+rNSX9Va56vX0cz5CDiTg9A69WgySDx7oZFZM3W6jyHCN0fQbw/OxE/2MemhfQbdJqgffA7zE0qx+/DVIoT5bBP7FPpQSxkMjC+AEAH4PPsDIP0KJH9do6+T/g/Mf6725IOaPSJyV0bAkz1T57T1ty19KdhvPVfjrMnCap+pLvD6Qd/lxzY9uFF4oOwWmo4xQ6hQXZ9oJUhrRsG2A5LF7XGXwOb8mHSG4InfUfjaov4gjLl5tN0=
 
 #####################################################################
@@ -170,32 +160,15 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
     - display_name: tep-pool  # This is a non-routable range which is used for the overlay tunnels.
       subnets:
         - allocation_ranges:
-            - start: "{{ opinionated.hosting_network.nsxt_tep.cidr | ansible.utils.ipaddr('1') }}"
-              end: "{{ opinionated.hosting_network.nsxt_tep.cidr | ansible.utils.ipaddr('-2') }}"
+            - start: "{{ opinionated.hosting_network.nsxt_tep.cidr | ansible.utils.ipaddr('1') | ansible.utils.ipv4('address') }}"
+              end: "{{ opinionated.hosting_network.nsxt_tep.cidr | ansible.utils.ipaddr('-2') | ansible.utils.ipv4('address') }}"
           cidr: "{{ opinionated.hosting_network.nsxt_tep.cidr }}"
-    
-    - display_name: floating-ips
-      subnets: "{{ opinionated.nsxt.ip_pools[0].subnets }}"
-      subnets:
-        - allocation_ranges:
-            - start: >-
-                {{ opinionated.tkgi.routeable_super_net |
-                ansible.netcommon.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+1, 1) |
-                ansible.utils.ipaddr('1') | ansible.utils.ipv4('address') }}
-              end: >-
-                {{ opinionated.tkgi.routeable_super_net |
-                ansible.netcommon.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+1, 1) |
-                ansible.utils.ipaddr('-2') | ansible.utils.ipv4('address') }}
-          
-          cidr: >- #"172.30.1.0/24"
-              {{ opinionated.tkgi.routeable_super_net |
-              ansible.netcommon.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+1, 1) }}
 
-  ip_blocks:
-    - display_name: tkgi-nodes  # This is a non-routable range which is used for the overlay tunnels.
-      cidr: "{{ opinionated.tkgi.node_ip_block }}"
-    - display_name: tkgi-pods
-      cidr: "{{ opinionated.tkgi.pod_ip_block }}"
+  # ip_blocks:
+  #   - display_name: tkgi-nodes  # This is a non-routable range which is used for the overlay tunnels.
+  #     cidr: "{{ opinionated.tkgi.node_ip_block }}"
+  #   - display_name: tkgi-pods
+  #     cidr: "{{ opinionated.tkgi.pod_ip_block }}"
 
   uplink_profiles:
     - display_name: host-tep-profile
@@ -358,13 +331,13 @@ tanzu_opsman_bosh:
   opsman_ip: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(2) }}"
   netmask: >-
     {{ opinionated.tkgi.routeable_super_net |
-    ansible.netcommon.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+4, 0) |
+    ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+4, 0) |
     ansible.utils.ipaddr('netmask') }}
   gateway: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(1) }}"
   network: tkgi-infra-seg
   network_cidr: >-
     {{ opinionated.tkgi.routeable_super_net |
-    ansible.netcommon.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+4, 0) }}
+    ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+4, 0) }}
   dns: "{{ dns_server }}"
   ntp: "{{ ntp_server_ip }}"
 
@@ -375,7 +348,7 @@ tanzu_opsman_bosh:
   vcenter_folder: "/{{ nested_vcenter.datacenter }}/vm"
   vcenter_username: "{{ nested_vcenter.username }}"
   vcenter_password: "{{ nested_vcenter.password }}"
-  vcenter_resource_pool: "/{{ nested_vcenter.datacenter }}/host/compute"
+  # vcenter_resource_pool: "/{{ nested_vcenter.datacenter }}/host/compute"
 
   nsx_url: "{{ nsxt.manager.ip }}"
   nsx_username: "{{ nsxt.manager.username }}"
@@ -484,6 +457,30 @@ tkgi:
     manager_url: "{{ nsxt.manager.ip }}"
     manager_username: "{{ nsxt.manager.username }}"
     manager_password: "{{ nsxt.manager.password }}"
+    floating_ip_pool:
+      display_name: tkgi-floating-ips
+      subnets:
+        - allocation_ranges:
+            - start: >-
+                {{ opinionated.tkgi.routeable_super_net |
+                ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+1, 1) |
+                ansible.utils.ipaddr('1') | ansible.utils.ipv4('address') }}
+              end: >-
+                {{ opinionated.tkgi.routeable_super_net |
+                ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+1, 1) |
+                ansible.utils.ipaddr('-2') | ansible.utils.ipv4('address') }}
+
+          cidr: >- #"172.30.1.0/24"
+              {{ opinionated.tkgi.routeable_super_net |
+              ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+1, 1) }}
+
+    node_block:
+      display_name: tkgi-nodes  # This is a non-routable range which is used for the overlay tunnels.
+      cidr: "{{ opinionated.tkgi.node_ip_block }}"
+    pod_block:
+      display_name: tkgi-pods
+      cidr: "{{ opinionated.tkgi.pod_ip_block }}"
+
     principal_identity:
       public_key: |-
         -----BEGIN CERTIFICATE-----

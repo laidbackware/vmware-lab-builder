@@ -10,7 +10,7 @@
 - name: Get product version from .pivotal file for {{ item.slug }}
   args:
     executable: /bin/bash
-  ansible.builtin.command: 
+  ansible.builtin.command:
     cmd: |
       om product-metadata -p {{ item.file_path }} --product-version
   register: result_product_version
@@ -60,20 +60,20 @@
         --config <(echo "$product_config")
   register: result_opsman_create
 
-# - name: Apply changes for {{ item.slug }}
-#   args:
-#     executable: /bin/bash
-#   ansible.builtin.shell:
-#     cmd: |
-#       #/bin/bash
-#       set -eu
+- name: Apply changes for {{ item.slug }}
+  args:
+    executable: /bin/bash
+  ansible.builtin.shell:
+    cmd: |
+      #/bin/bash
+      set -eu
 
-#       unset OM_PASSWORD OM_USERNAME OM_SKIP_SSL_VALIDATION OM_TARGET
+      unset OM_PASSWORD OM_USERNAME OM_SKIP_SSL_VALIDATION OM_TARGET
 
-#       env=$(cat << EOF
-#       {{ opsman_env | to_nice_yaml }}
-#       EOF
-#       )
+      env=$(cat << EOF
+      {{ opsman_env | to_nice_yaml }}
+      EOF
+      )
 
-#       om --env <(echo "$env") apply-changes --product-name={{ item.slug }}
-#   register: result_bosh_changes
+      om --env <(echo "$env") apply-changes --product-name={{ item.slug }}
+  register: result_bosh_changes

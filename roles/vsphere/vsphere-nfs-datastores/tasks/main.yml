@@ -1,17 +1,17 @@
 ---
 # Build a list of each datastore to add to each host
 - name: Build datastores to add
-  set_fact:
+  ansible.builtin.set_fact:
     datastores_to_add: >-
       [
       {% for host in nested_hosts %}
-      {% if "nfs_datastores" in  nested_clusters[host.nested_cluster] %}
-      {% for datastore in nested_clusters[host.nested_cluster].nfs_datastores  %}
+      {% if "nfs_datastores" in nested_clusters[host.nested_cluster] %}
+      {% for datastore in nested_clusters[host.nested_cluster].nfs_datastores %}
       {
         "host_name": "{{ host.ip }}",
-        "datastore_name": "{{datastore.datastore_name}}",
-        "nfs_server": "{{datastore.nfs_server}}",
-        "nfs_path": "{{datastore.nfs_path}}",
+        "datastore_name": "{{ datastore.datastore_name }}",
+        "nfs_server": "{{ datastore.nfs_server }}",
+        "nfs_path": "{{ datastore.nfs_path }}",
       },
       {% endfor %}
       {% endif %}

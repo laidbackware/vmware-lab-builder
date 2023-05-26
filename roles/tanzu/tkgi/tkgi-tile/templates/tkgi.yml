@@ -34,9 +34,9 @@ product-properties:
   .properties.network_selector.nsx.feign_client_read_timeout:
     value: 60000
   .properties.network_selector.nsx.floating-ip-pool-ids:
-    value: 5f6ec024-b1e4-4eee-84fb-a8f1436cc420
+    value: "{{ nsx_floating_pool_id }}"
   .properties.network_selector.nsx.ip-block-id:
-    value: 13c337c1-b84c-45d8-afac-d1aa01b93277
+    value: "{{ nsx_pod_block_id }}"
   .properties.network_selector.nsx.nat_mode:
     value: true
   .properties.network_selector.nsx.ncp-ha-heartbeat-period:
@@ -48,7 +48,7 @@ product-properties:
   .properties.network_selector.nsx.network_automation:
     value: true
   .properties.network_selector.nsx.nodes-ip-block-id:
-    value: d84bc188-03d9-4dc8-aa86-5c0bf5403d5e
+    value: "{{ nsx_node_block_id }}"
   .properties.network_selector.nsx.nsx-t-ca-cert:
     value: |-
       {{ nsx_ca_cert | indent(6) }}
@@ -67,7 +67,7 @@ product-properties:
   .properties.network_selector.nsx.service_cluster_cidr:
     value: "{{ tkgi_k8s_services_cidr }}"
   .properties.network_selector.nsx.t0-router-id:
-    value: 11280bcf-8fc2-42e1-bc0c-ae33001b63cf
+    value: "{{ nsx_t0_id }}"
   .properties.network_selector.nsx.vcenter_cluster:
     value: "{{ tkgi_vcenter_cluster }}"
   .properties.node_exporter_deploy:
@@ -107,7 +107,7 @@ product-properties:
     value: 0
   .properties.plan1_selector.active.master_az_placement:
     value:
-    - az1
+      - az1
   .properties.plan1_selector.active.master_instances:
     value: 1
   .properties.plan1_selector.active.max_worker_instances:
@@ -116,7 +116,7 @@ product-properties:
     value: small
   .properties.plan1_selector.active.worker_az_placement:
     value:
-    - az1
+      - az1
   .properties.plan1_selector.active.worker_instances:
     value: 1
   .properties.plan1_selector.active.worker_vm_type:
@@ -198,7 +198,7 @@ network-properties:
   network:
     name: infra
   other_availability_zones:
-  - name: az1
+    - name: az1
   service_network:
     name: infra
   singleton_availability_zone:
@@ -251,4 +251,3 @@ errand-config:
     post-deploy-state: true
   upgrade-all-service-instances:
     post-deploy-state: false
-

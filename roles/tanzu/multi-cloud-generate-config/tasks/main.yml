@@ -4,3 +4,4 @@
   ansible.builtin.template:
     src: management-cluster.yml
     dest: "{{ playbook_dir }}/{{ tanzu_multi_cloud.generated_config_file_name }}"
+    mode: '660'

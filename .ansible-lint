@@ -1,0 +1,15 @@
+---
+exclude_paths:
+  - config/
+  - downloads/
+
+skip_list:
+  - name[template]
+  - no-changed-when
+  - no-handler
+  - yaml[line-length]
+  - yaml[comments-indentation]
+  - no-free-form
+  - name[missing]
+  - role-name[path]
+  - ignore-errors  # review this at some point

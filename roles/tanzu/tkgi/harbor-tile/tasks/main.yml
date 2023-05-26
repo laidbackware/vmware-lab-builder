@@ -2,14 +2,14 @@
 
 # - name: Harbor cert check
 #   ansible.builtin.shell: |
-#     set -euo pipefail
+#     set -euo pipefail && \
 #     openssl s_client -connect {{ harbor_ip }}:443 </dev/null 2>/dev/null \
 #       | openssl x509 -noout -text | grep DNS: | xargs
 #   register: result_harbor_cert_sans
 #   ignore_errors: yes
 #   changed_when: false
 
-# - debug: var=result_harbor_cert_sans
+# - ansible.builtin.debug: var=result_harbor_cert_sans
 
 # - ansible.builtin.set_fact:
 #     cert_replace: "{{ result_harbor_cert_sans.rc != 0 or harbor_fdqn not in result_harbor_cert_sans.stdout }}"
@@ -33,7 +33,7 @@
 #   register: result_harbor_csr
 #   when: cert_replace
 
-# - debug: var=result_harbor_csr
+# - ansible.builtin.debug: var=result_harbor_csr
 
 # - name: Generate Harbor Self Signed OpenSSL certificate
 #   community.crypto.x509_certificate:
@@ -43,14 +43,14 @@
 #     provider: selfsigned
 #   when: cert_replace
 
-# - set_fact:
+# - ansible.builtin.set_fact:
 #     harbor_public_key: |-
 #       {{lookup('ansible.builtin.file', '{{ temp_dir }}/harbor.crt') }}
 #     harbor_private_key: |-
 #       {{lookup('ansible.builtin.file', '{{ temp_dir }}/harbor.key') }}
 
 - name: Setting Harbor Tile vars
-  set_fact:
+  ansible.builtin.set_fact:
     harbor_vars:
       - slug: harbor-container-registry
         file_path: "{{ harbor_tile }}"
