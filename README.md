@@ -32,12 +32,12 @@ The pattern names below match the sub-directory under `var-examples` where examp
 | Pattern Name              | Product Versions | Status                  |
 | ------------------------- | ---------------- | ----------------------- |
 | base-vsphere              | n/a              | Stable                  |
-| nsxt                      | NSX-T 3.1.3.1    | Stable                  |
+| nsxt                      | NSX-T 3.x,4.0    | Stable                  |
 | tanzu/multi-cloud         | NSX-ALB 20.1.7   | Stable                  |
 | tanzu/vsphere-nsxt        | NSX-T 3.1.3.1    | Stable                  |
 | tanzu/vsphere-vds-alb     | NSX-ALB 20.1.7   | Stable                  |
 | tanzu/vsphere-vds-haproxy | haproxy          | Stable                  |
-| tanzu/integrated          | NSX-T 3.0        | Work in progress/broken |
+| tanzu/integrated          | NSX-T 3.x,4.0    | Work in progress/broken |
 
 ## Usage with Docker
 Each deployment pattern has an opinionated and some have a custom example(which may be out of date). The idea of the opinionated deployment is that the user has to provide the minimum of configuration and the remainder of the options are calculated for them. Whereas the custom example has to have all sections built up by hand. Either of the examples types can be fully customized.<br/>

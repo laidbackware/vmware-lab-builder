@@ -73,7 +73,7 @@
   retries: 60
   delay: 10
   register: result
-  until: "'UNKNOWN' not in result.content and 'DOWN' not in result.content"
+  until: "'UNKNOWN' not in result.content and '\"DOWN\"' not in result.content"
 
 - name: Add license
   vmware.ansible_for_nsxt.nsxt_licenses:

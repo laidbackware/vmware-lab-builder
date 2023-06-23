@@ -48,7 +48,7 @@
 
 - ansible.builtin.debug: msg="Creating edge nodes {{ nsxt.edge_nodes }}"
 
-- name: Waiting 30 seconds for vlan segments to propagate to the cluster
+- name: Waiting for vlan segments to propagate to the cluster
   ansible.builtin.pause:
     echo: false
     seconds: 30
