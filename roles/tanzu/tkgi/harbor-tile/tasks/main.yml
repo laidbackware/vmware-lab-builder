@@ -17,15 +17,15 @@
     cert_replace: "{{ result_harbor_cert_sans.rc != 0 or harbor_fdqn not in result_harbor_cert_sans.stdout }}"
 
 - name: Create Harbor private key
-  community.crypto.openssl_privatekey:
-    path: "{{ temp_dir }}/harbor.key"
+  community.crypto.openssl_privatekey_pipe:
     size: 2048
     format: pkcs8
+  register: result_harbor_private_key
   when: cert_replace
 
 - name: Create Harbor certificate signing request (CSR) for self-signed certificate
   community.crypto.openssl_csr_pipe:
-    privatekey_path: "{{ temp_dir }}/harbor.key"
+    privatekey_content: "{{ result_harbor_private_key.privatekey }}"
     common_name: "{{ harbor_fdqn }}"
     country_name: US
     state_or_province_name: California
@@ -40,18 +40,16 @@
 - ansible.builtin.debug: var=result_harbor_csr
 
 - name: Generate Harbor Self Signed OpenSSL certificate
-  community.crypto.x509_certificate:
-    path: "{{ temp_dir }}/harbor.crt"
-    privatekey_path: "{{ temp_dir }}/harbor.key"
+  community.crypto.x509_certificate_pipe:
+    privatekey_content: "{{ result_harbor_private_key.privatekey }}"
     csr_content: "{{ result_harbor_csr.csr }}"
     provider: selfsigned
+  register: result_harbor_public_key
   when: cert_replace
 
 - ansible.builtin.set_fact:
-    harbor_public_key: |-
-      {{lookup('ansible.builtin.file', '{{ temp_dir }}/harbor.crt') }}
-    harbor_private_key: |-
-      {{lookup('ansible.builtin.file', '{{ temp_dir }}/harbor.key') }}
+    harbor_public_key: "{{ result_harbor_private_key.privatekey }}"
+    harbor_private_key: "{{ result_harbor_public_key.certificate }}"
   when: cert_replace
 
 - name: Setting Harbor Tile vars
@@ -72,7 +70,7 @@
 - ansible.builtin.debug: var=harbor_vars[0]['product-properties']
   when: not cert_replace
 
-- name: Deploy Harbor
-  ansible.builtin.include_role:
-    name: tanzu/opsman/upload-stage-configure-tile
-  with_items: "{{ harbor_vars }}"
+# - name: Deploy Harbor
+#   ansible.builtin.include_role:
+#     name: tanzu/opsman/upload-stage-configure-tile
+#   with_items: "{{ harbor_vars }}"
