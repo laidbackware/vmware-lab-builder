@@ -2,10 +2,10 @@
 # SOFTWARE_DIR must contain all required software
 vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.3-21477706.iso"
 esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u3k_Appliance_Template_v1.ova"
-nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-3.1.3.8.0.20532387.ova"
-opsman_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/ops-manager-vsphere-2.10.57-build.911.ova"
-harbor_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/harbor-container-registry-2.6.4-build.17.pivotal"
-tkgi_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/pivotal-container-service-1.13.10-build.10.pivotal"
+nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-3.2.3.0.0.21703641.ova"
+opsman_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/ops-manager-vsphere-3.0.8+LTS-T.ova"
+harbor_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/harbor-container-registry-2.8.1-build.4.pivotal"
+tkgi_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/pivotal-container-service-1.16.1-build.25.pivotal"
 
 environment_tag: "tkgi"  # Used to prepend object names in hosting vCenter
 dns_server: "192.168.0.1"
@@ -49,8 +49,61 @@ opinionated:
     k8s_services_cidr: 100.68.0.0/16
     node_ip_block: 100.69.0.0/16
     pod_ip_block: 100.70.0.0/16
+    api_fqdn: api.tkgi.local
 
   ssh_public_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC/qMIbcfUkClzrBi7QjUmtdfpjDlTSXsPcJsmdmezbem2SboQPujpFUGmzFXi5PqhPa3QOxvMn8oJpozlJYydDspFAAqX+0u8n0FrwMMn0ckwUtF4zxz/AnI8tUltjeN67M7mG+3W8ooRFeaY6nrjxEIXbkMOzSbeTaFcB9cDzRXcMmFiuoeDhUonEYbClrsPzLdzscw7Vz6BLMHwo9SBOqlaL25aG/DtZPB7jobQRh48q3RW+Hb29nH18biJNLiBDsRu1SJIzw7Dl+rNSX9Va56vX0cz5CDiTg9A69WgySDx7oZFZM3W6jyHCN0fQbw/OxE/2MemhfQbdJqgffA7zE0qx+/DVIoT5bBP7FPpQSxkMjC+AEAH4PPsDIP0KJH9do6+T/g/Mf6725IOaPSJyV0bAkz1T57T1ty19KdhvPVfjrMnCap+pLvD6Qd/lxzY9uFF4oOwWmo4xQ6hQXZ9oJUhrRsG2A5LF7XGXwOb8mHSG4InfUfjaov4gjLl5tN0=
+
+  # principal identity can be kept as default unless there is a security reason to change
+  nsx_principal_identity:
+    public_key: |-
+      -----BEGIN CERTIFICATE-----
+      MIIDADCCAeigAwIBAgIUJdyN7pMx9a5rFluqWIdBu05GGIcwDQYJKoZIhvcNAQEL
+      BQAwHjEcMBoGA1UEAwwTcGtzLW5zeC10LXN1cGVydXNlcjAeFw0yMzA0MDQxNDIy
+      NDlaFw0yNTA0MDMxNDIyNDlaMB4xHDAaBgNVBAMME3Brcy1uc3gtdC1zdXBlcnVz
+      ZXIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDXUJoCuRXNvfG24gCB
+      H367P3BjeCJ04utTCwgsj0fnk/MbUQagXidL/0azIoCvEJ6eA8n1SfD14kErnrOi
+      9TwOvy9E2MRoFYwpLcjv1oKm0SUsldFfEU0TWTIt2zJcintIWZkEzb63YK2gud0k
+      g/snCcggK1rH91SwUgi3qlXzIdsrxxaKyL5G/u2P9zUKIfYIq+S4K5hh6PNM/7Pd
+      BaSeu1Tv9AKTUrRMnporO1iopcZhcwX43YkSnSHcZqvOIOsi8cry3iaFgRbhxtEE
+      QCG0IMmtFWTFrtoNBhtjLCIQvje2pWCM5dRRHos+LN1IigtcoZAORAwtN+05z6+M
+      tZ7RAgMBAAGjNjA0MBMGA1UdJQQMMAoGCCsGAQUFBwMCMB0GA1UdDgQWBBTT5Fot
+      BYKTSO49UJHpIKZusO0ZezANBgkqhkiG9w0BAQsFAAOCAQEAw3afcTvhnbCwlzeY
+      cWOiRK+gJ3YWN+4pzY04y3A+mFhHDFZGy01eUuW1qPnV9HWyfB1GpnEtnu3aw89h
+      F0bBIJ9Tvx8bXCVnSIn/+Zea39/hOYqXHewVrennpMyCCiDu6lxadHKJVUCBDcqV
+      e9uUhEcPupNs6f8P8FflHf5jCQ95464d9sZ5caM19vfomg3bC7iLlo/Owo23nZlw
+      X2gpUu8hJFDbAeeW6Sx6ZbtVikTUFaiwTzMmSAt+xLeGmYqXNxUPDP8ORxAEcrKN
+      J9fWUWc/BhKzlXGqOf/EGjYs41OiAY/2ok1gODPZW/2nwPlFNrrq1Qv72jJ0GaWW
+      onRhDA==
+      -----END CERTIFICATE-----
+    private_key: |-
+      -----BEGIN PRIVATE KEY-----
+      MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDXUJoCuRXNvfG2
+      4gCBH367P3BjeCJ04utTCwgsj0fnk/MbUQagXidL/0azIoCvEJ6eA8n1SfD14kEr
+      nrOi9TwOvy9E2MRoFYwpLcjv1oKm0SUsldFfEU0TWTIt2zJcintIWZkEzb63YK2g
+      ud0kg/snCcggK1rH91SwUgi3qlXzIdsrxxaKyL5G/u2P9zUKIfYIq+S4K5hh6PNM
+      /7PdBaSeu1Tv9AKTUrRMnporO1iopcZhcwX43YkSnSHcZqvOIOsi8cry3iaFgRbh
+      xtEEQCG0IMmtFWTFrtoNBhtjLCIQvje2pWCM5dRRHos+LN1IigtcoZAORAwtN+05
+      z6+MtZ7RAgMBAAECggEAAeLouS23mq9XfvODmfNVhWdyC8phfDusCx9gHsp8kJ3+
+      YGwOePjfiENqx6aoO6Bo0K1A0jTSdx0DLCd+Sbxd89UfTA+dcjn/bzGW/pRBsxtx
+      o26GleTNaOYm/I7ckJdSqtjExe2AMRQYQVMPicKG60R4gTZQBnYiGE9dAzBAri9x
+      d2CMUYv+u8MgIz4UcNlOGT2m9pvOC/CX5YbDKP7GX3xuJ3Zg/XHmjvuEyBfKEGx2
+      9D7KKI9d8ra+KMJVqAR8NzubVVz0VDALXpFumbL2jJQb1jccyDbSTx619n4kRnIO
+      GtJqLWjuSAuRFk+PV6Vb48gmaKWSo5uXpvqeat/cdwKBgQDxq5J8xlXz/rzPLUS4
+      fraFTlR+MnwmN65FQyqHPYaGI4o9/DJJO7DuuUbj7fNta2FDuzR+ZQZgZhiBNqiq
+      RYL0sL6AHSnduka5XSbXRCDiwl7nfO6i4+iy52VeKdacrhV3YVDydx6hfxGPHDPo
+      F8pMpYC2mizFYPvTu1httfISgwKBgQDkFPgGSvWZt5BpkofTJfNNtQcg2eiFhnXn
+      bVaKScVmvk7AWpZ/FkmQRc1gXGKszDp1Zx7EgUBhCiN8YgxK8bQT2aVBViIaqG7N
+      mkN1RUIisBIaOPFURt1T1XAaZJxLPFD30ufv1dKhoNm50/SBUp6DITnhpNjNcT/s
+      DvQSIm+5GwKBgGQUbUGG0SmOIJqbYI4Wy3dBDPSF66vX+y9rtTz0WbVLGoC45Ao3
+      0fnKeHUDoX96rHjkGcUOCSn6ncNE42xABQ9X8kwTx7au4YL59I/JAuVlIPA0aI7E
+      WyVbdjsckGeqH/GkN2VxtxmiCZ9+SnCfCYPcNgVoq4nBtAfm2aP1aR4JAoGAHZay
+      zm4vCnAL5gZCZJwJwkz3zcU3KwtUhF9k2K/VUgziPoYB/B6yEGtdx2B01KHx+4UT
+      Mr7p0Sz1iY9WtOpCSEj17VH1PqwXI8kdczs25zUcRBabCCnhUJzh3CqtM/1xK5VK
+      zYxZtOofFMJwd852DeDjl2hBT/WfK0qNU0TwZX0CgYAm+wjS++HJBv9f2oZM2PjF
+      GVM9Bp/uEiG1z/4O7Rpsv9qJHCgVaZ3q2Qebppq4D4o7ELLcV15djClmv7qkaR9B
+      ZauGoYXF2AwcdX8JO4bWHc985IwdAfZohGEqYSOIDkwgOoDXbrtK3LE/R8XtmJJk
+      MQTQCVfQMqNNIHcVkgWBNg==
+      -----END PRIVATE KEY-----
 
 #####################################################################
 ### No need to edit below this line for an opinionated deployment ###
@@ -133,29 +186,21 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
     hosting_cluster: "{{ opinionated.hosting_cluster }}"
     license_key: "{{ lookup('env', 'NSXT_LICENSE_KEY') }}"
 
+  # If the section below is defined, the playbook will wait for the IP to become pingable
+  # For TKG service deployments this is the default gateway of the supervisor network
+  routing_test:
+    ip_to_ping: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(1) }}"
+    # The playbook will present a message using the params below
+    # A static route must be made to the router uplink for nsxt_supernet
+    router_uplink: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(3) }}"
+    nsxt_supernet: "{{ opinionated.tkgi.routeable_super_net }}"
+
   principal_identities:
     - display_name: tkgi-super-user
       role: "enterprise_admin"
       public_key: |-
-        -----BEGIN CERTIFICATE-----
-        MIIDADCCAeigAwIBAgIUJdyN7pMx9a5rFluqWIdBu05GGIcwDQYJKoZIhvcNAQEL
-        BQAwHjEcMBoGA1UEAwwTcGtzLW5zeC10LXN1cGVydXNlcjAeFw0yMzA0MDQxNDIy
-        NDlaFw0yNTA0MDMxNDIyNDlaMB4xHDAaBgNVBAMME3Brcy1uc3gtdC1zdXBlcnVz
-        ZXIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDXUJoCuRXNvfG24gCB
-        H367P3BjeCJ04utTCwgsj0fnk/MbUQagXidL/0azIoCvEJ6eA8n1SfD14kErnrOi
-        9TwOvy9E2MRoFYwpLcjv1oKm0SUsldFfEU0TWTIt2zJcintIWZkEzb63YK2gud0k
-        g/snCcggK1rH91SwUgi3qlXzIdsrxxaKyL5G/u2P9zUKIfYIq+S4K5hh6PNM/7Pd
-        BaSeu1Tv9AKTUrRMnporO1iopcZhcwX43YkSnSHcZqvOIOsi8cry3iaFgRbhxtEE
-        QCG0IMmtFWTFrtoNBhtjLCIQvje2pWCM5dRRHos+LN1IigtcoZAORAwtN+05z6+M
-        tZ7RAgMBAAGjNjA0MBMGA1UdJQQMMAoGCCsGAQUFBwMCMB0GA1UdDgQWBBTT5Fot
-        BYKTSO49UJHpIKZusO0ZezANBgkqhkiG9w0BAQsFAAOCAQEAw3afcTvhnbCwlzeY
-        cWOiRK+gJ3YWN+4pzY04y3A+mFhHDFZGy01eUuW1qPnV9HWyfB1GpnEtnu3aw89h
-        F0bBIJ9Tvx8bXCVnSIn/+Zea39/hOYqXHewVrennpMyCCiDu6lxadHKJVUCBDcqV
-        e9uUhEcPupNs6f8P8FflHf5jCQ95464d9sZ5caM19vfomg3bC7iLlo/Owo23nZlw
-        X2gpUu8hJFDbAeeW6Sx6ZbtVikTUFaiwTzMmSAt+xLeGmYqXNxUPDP8ORxAEcrKN
-        J9fWUWc/BhKzlXGqOf/EGjYs41OiAY/2ok1gODPZW/2nwPlFNrrq1Qv72jJ0GaWW
-        onRhDA==
-        -----END CERTIFICATE-----
+        {{ opinionated.nsx_principal_identity.public_key }}
+
   ip_pools:
     - display_name: tep-pool  # This is a non-routable range which is used for the overlay tunnels.
       subnets:
@@ -198,12 +243,12 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
   transport_zones:
     - display_name: tz-overlay
       transport_type: OVERLAY
-      host_switch_name: sw_overlay
+      # host_switch_name: sw_overlay  # Not required for NSX-T 3.2, but needed for 3.1
       nested_nsx: true  # Set this to true if you use NSX-T for your physical host networking
       description: "Overlay Transport Zone"
     - display_name: tz-vlan
       transport_type: VLAN
-      host_switch_name: sw_vlan
+      # host_switch_name: sw_vlan  # Not required for NSX-T 3.2, but needed for 3.1
       description: "Uplink Transport Zone"
 
   transport_node_profiles:
@@ -246,7 +291,7 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
       cluster_name: compute
       host_switches:
         tep:
-          host_switch_name: "sw_overlay"
+          # host_switch_name: "sw_overlay"  # Not required for NSX-T 3.2, but needed for 3.1
           uplink_profile_name: edge-tep-profile
           ip_assignment_spec:
             resource_type: StaticIpPoolSpec
@@ -254,7 +299,7 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
           transport_zone_endpoints:
             - transport_zone_name: "tz-overlay"
         uplink:
-          host_switch_name: "sw_vlan"
+          host_switch_name: "sw_vlan"  # Not required for NSX-T 3.2, but needed for 3.1
           uplink_profile_name: edge-uplink-profile
           transport_zone_endpoints:
             - transport_zone_name: "tz-vlan"
@@ -357,34 +402,6 @@ tanzu_opsman_bosh:
   # Reserve opsman IP.
   bosh_reserved_ip_ranges: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(2) }}"
 
-  trusted_ca_certs: |-  # can be removed if not used
-    -----BEGIN CERTIFICATE-----
-    MIIEcTCCAtmgAwIBAgIQYT/WsqgerXhiDqIgTTwSKDANBgkqhkiG9w0BAQsFADBR
-    MR4wHAYDVQQKExVta2NlcnQgZGV2ZWxvcG1lbnQgQ0ExEzARBgNVBAsMCm1hdHRA
-    ZGVyZWsxGjAYBgNVBAMMEW1rY2VydCBtYXR0QGRlcmVrMB4XDTIxMDkxNzExNTkx
-    MFoXDTMxMDkxNzExNTkxMFowUTEeMBwGA1UEChMVbWtjZXJ0IGRldmVsb3BtZW50
-    IENBMRMwEQYDVQQLDAptYXR0QGRlcmVrMRowGAYDVQQDDBFta2NlcnQgbWF0dEBk
-    ZXJlazCCAaIwDQYJKoZIhvcNAQEBBQADggGPADCCAYoCggGBALzChT9D86Acsy3z
-    wQLdwdcMIFtXyCQ+k6OVLAH4PrSwKOJlrHVmS9BL9ap/oZVkcNCYi/XtgaPtZcIy
-    JT6ZopeYdo1usdT1PKP3MBGOEjL5llmDhj+6+HQi3WeajnxsUIdbkUkoGHPEpsJ7
-    yyOOUHVel1Ww+Li4grup3d9RRH6lJWvBpYHYXS6Fs9OeOvvse0qAVDla2ig23bXu
-    lsfcv2LqRDR2bkPimNJOOadX/9rhjKcD4VKj13BRdqqf1tb2CZGPym+RLDiczrBx
-    s9wkzZwL02hop2vhfUUFsrSBHX4Qfome9q8qxnNCK1Dg/KNNkbuJK4Wb9n7/x470
-    Wx8hr2Z1fcpwQkKeGCFzNBo0k5k+C8hhB7DChWavw/Yaisp2QySOTJbYVOXN2ojA
-    wKNfh3U6xjQtEktqBQJbrneDpYPHT7p6tU383QxmDws0cVCwzkTm6q+01kJyd8fI
-    wTJDgv6goOfvvck/kCPbdXyqiIqsXeIqNDXUug+0JI+QzoNa9wIDAQABo0UwQzAO
-    BgNVHQ8BAf8EBAMCAgQwEgYDVR0TAQH/BAgwBgEB/wIBADAdBgNVHQ4EFgQUsEcJ
-    VnM0DRiHJE0lU2mWldCE7YkwDQYJKoZIhvcNAQELBQADggGBAK+J2XiA4tc2hrbv
-    lCJGLHBj2inpklpOVHv14OJipyy0htP5hyuBES0tcGRLIbg1zSNgWx0rRoFa321u
-    l9v961qpGmWRsIRpfftJeOFCUEzoLz5CNzxI2cm7BWB/f+RHX7126EUzsu67qG+j
-    YI07Si7kgwsGwzcyMlD7wrJNtNuF2PgomIqCUZ1O0H5vETc6aLO0/R+ULQpzbUcM
-    kXDzxJfkrr4m1JLZuFVd83GXNzMNsDsnybBUrF/+/2H20QRo3HGEQNdFqDP3QxJ9
-    idkmA6cESv4L7dBNt55nBL7T9GRTLeEhatoPScwzyUC7b09MrZv1IgxwzUAVKfkK
-    oaSl5UKGEcW1LxViVpvc5eFkAVbFKcVXoulpR5DipJkvUGbBPoyE47iHA0K4bora
-    fDl9fTw3eIlsxa0Mx3SGDst1bqGWEjKo/zUkHzQL4ghQRL/MfMTkZLdOGKsnOFY1
-    7V3wGoU318BAiAotx2ytabt7Z67YSs8Em8gHasj9ahJVuJBNjw==
-    -----END CERTIFICATE-----
-
 tkgi:
   vcenter_url: "{{ nested_vcenter.ip }}"
   vcenter_username: "{{ nested_vcenter.username }}"
@@ -394,65 +411,10 @@ tkgi:
   vcenter_datastore: datastore-esx1
   vcenter_folder: "pcf_vms"
 
-  dns: "{{ dns_server }}"
+  api_fqdn: "{{ opinionated.tkgi.api_fqdn }}"
+  dns_server: "{{ dns_server }}"
   k8s_services_cidr: "{{ opinionated.tkgi.k8s_services_cidr }}"
 
-  api:
-    certificate:
-      public_key: |-
-        -----BEGIN CERTIFICATE-----
-        MIID/DCCAmSgAwIBAgIQEKsC2UGoDmyFZoee/KtOFjANBgkqhkiG9w0BAQsFADBR
-        MR4wHAYDVQQKExVta2NlcnQgZGV2ZWxvcG1lbnQgQ0ExEzARBgNVBAsMCm1hdHRA
-        ZGVyZWsxGjAYBgNVBAMMEW1rY2VydCBtYXR0QGRlcmVrMB4XDTIzMDUxODE0MjMw
-        M1oXDTI1MDgxODE0MjMwM1owPjEnMCUGA1UEChMebWtjZXJ0IGRldmVsb3BtZW50
-        IGNlcnRpZmljYXRlMRMwEQYDVQQLDAptYXR0QGRlcmVrMIIBIjANBgkqhkiG9w0B
-        AQEFAAOCAQ8AMIIBCgKCAQEA5cdarNQ31P+bImH6w8zk9ceYCa9xIPOZuHQBMZbh
-        EOgCqxUT/87ooxHTFA41gJ/yGAtAqJFWA4B55oXdn8TTDqt2+aTDa9Pl0lJxbbB8
-        Y5m+2do+EPwP7UUMizqnZiNUx8UTpnXF35KY1zP06A5uy4O4N8ElGIoNjd5ItvdT
-        oDHYD6ZudfIZkOaPrAu9HEOpDolRCg60QboNRZqULiPf0bfqyxNUY8Kh4upetCBk
-        t1Xli1Dt9QUBXK8aF/tMHqEE0G5vq0kou8a2upK8/biU6rdX0KEsP7lcG8/e4fNS
-        NDjUeJZNpG+Aup7cYawc6OhYoVREis6w6lKQLWpTD0Ss+wIDAQABo2MwYTAOBgNV
-        HQ8BAf8EBAMCBaAwEwYDVR0lBAwwCgYIKwYBBQUHAwEwHwYDVR0jBBgwFoAUsEcJ
-        VnM0DRiHJE0lU2mWldCE7YkwGQYDVR0RBBIwEIIOYXBpLnRrZ2kubG9jYWwwDQYJ
-        KoZIhvcNAQELBQADggGBAIcVpvDt625xDvP/p2PJ6c1cZgxPCQfB1LJwZCxLkHvr
-        vggMJYndC3Nlhkn1g6R96wWEIHccZaYyjj5ONWFT8oYKmhLl7EmcgJKs1pY9vabO
-        5dMMWZZM7gBsnY9TlwwvgC8qQ8kwHWUwA7Zs5uQ3p/j5Mugku4gDpW+bup8k+cDq
-        b2KviCfFO53uK7CW6/ZKz37Z8B3vCw2F5ofZfsrtaUPnn73NgFs1hZzrBE9c2W10
-        mWMsN8fmRpngs5K3B2zV9YtcB9OT5PFJhpUDoZupPxAH85v/AoYmu9jYm8J9wkET
-        A+94q6dVgoCVNSFyQovEs6o1QMPHiUeZc8bHtYyGzLDevx+cJEBIQxKcFrqAi6Nu
-        QOiI3qW0qL4Ub2f7iJe23E65B3FAigBjlqlJKIkH9qG+ifZQpR5yxiwKprYF1urX
-        djlr4nlEUNRiROvA/Hwh1ah2tw5Elu1jx51pPpyCT4UDAIJv4hQ/fiqmOMAHczBd
-        9BVcujHsRH1GhDTXvpG8mg==
-        -----END CERTIFICATE-----
-      private_key: |-
-        -----BEGIN PRIVATE KEY-----
-        MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDlx1qs1DfU/5si
-        YfrDzOT1x5gJr3Eg85m4dAExluEQ6AKrFRP/zuijEdMUDjWAn/IYC0CokVYDgHnm
-        hd2fxNMOq3b5pMNr0+XSUnFtsHxjmb7Z2j4Q/A/tRQyLOqdmI1THxROmdcXfkpjX
-        M/ToDm7Lg7g3wSUYig2N3ki291OgMdgPpm518hmQ5o+sC70cQ6kOiVEKDrRBug1F
-        mpQuI9/Rt+rLE1RjwqHi6l60IGS3VeWLUO31BQFcrxoX+0weoQTQbm+rSSi7xra6
-        krz9uJTqt1fQoSw/uVwbz97h81I0ONR4lk2kb4C6ntxhrBzo6FihVESKzrDqUpAt
-        alMPRKz7AgMBAAECggEBAJI/5c3VMUgn/KTQuhw/4IczJ+kaOqYfhnrpkwzuHIh3
-        M6OSwezy1A1evfuo45LfuuZk2x2vi5ClCHGaSKp1S2St7AcPQLbz4vaQNNP9Hd8D
-        L39XsmN7G+QIK+i+R2fyGvcfz9cGZRBdLVzkHABLl2d/ihQqoiLRU7k1fxC9sQNn
-        IXvIBqbFktUsxOtuwpeSKnPaSeLwktNgLGFdBbn40bvZBewAohfQHjJaXIKa0eA/
-        mUobNu9YAMzUUJ6LnSRDl77fZLl19nayy3glStSt/Ztzp9LBbGQXWTvNZfde4HwM
-        +XYYQdi7aSzRUj95IT8h4qnuS412XLq08TjwNgIgDkkCgYEA77zh5L8kUWGc0S3J
-        q0ti11Q2sQdo1Ltpzo04iYiwJiwNMzYRpDLXpP6xRl+o7HIKJU78G1HnpeZA3WAO
-        X3ExgTrD2sL5maDIesxWedKPYglvlkcGPgaZ8gDjTqWMy3uS0gURwZjAlx9CxDR9
-        18k4k9dDQROF/ir6ivMSCcf2ho0CgYEA9V2Hef3riAKDgCBANChUC2k4uLxRuLzv
-        L+O4ovcDAvnlG4zjzLOgTfRd064BjBMu1dvW7kBDeXGZlmIpxTjqtJlyK9Vyb+Gu
-        vP1Yugu9XFV63vAuMPF/UXBeO0GB8SDJkkT2fxDJrWTFzP3AFbscGOTw/8K12+cl
-        OsaHDtgsQ6cCgYEAgf0pgs19VL8Xt3gbREzg8B6SdRSua8Ke0UdTY4eA84GpOp5T
-        nHOQ577Nwnm171a6V5ZnLi0P7K1XeHFP+cI3dHm3npNfoURD0AmhzfY0lpTFM3eZ
-        U+JicIy4s3kiSWbcqhHjmdRIgOiLXDWWEn3hto/ewJdkbPdC2DqKClGpQzUCgYAO
-        fS1o2MO1zmAxirX/3nnICricwBIbVJzTOSFIDkoRPOx4igNRrTHEKK/5tgbFXMSh
-        QFAa1ZSmcTzekoFg8hF6BK2nRP1y+eK1qkg5BER0VV/iFlDD9x7LklUeLqobsRH2
-        HzhnHHisUo0To9BZ+Cial7pbgAX5LFcYd2y2RbGndQKBgQDQrQwRpBQB9aLPfjQo
-        v+6l1ro0pW7vFRJ16uAGbK7hyZdT2UE/xZwYfzDnM0o2Y0ZbN5x2e4xu/ev/Crfn
-        aeiKn0Nz4UqRVKBN73rGQHbSaOPcrqDZxYeqsX7o35kJ/yYqdi25w+n3EPm0IUjQ
-        lwtZ7ytHwO1SHZ1lqXzfEYDWTw==
-        -----END PRIVATE KEY-----
   nsx:
     manager_url: "{{ nsxt.manager.ip }}"
     manager_username: "{{ nsxt.manager.username }}"
@@ -470,126 +432,24 @@ tkgi:
                 ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+1, 1) |
                 ansible.utils.ipaddr('-2') | ansible.utils.ipv4('address') }}
 
-          cidr: >- #"172.30.1.0/24"
+          cidr: >-
               {{ opinionated.tkgi.routeable_super_net |
               ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+1, 1) }}
 
     node_block:
-      display_name: tkgi-nodes  # This is a non-routable range which is used for the overlay tunnels.
+      display_name: tkgi-nodes  # This is a non-routable range which is used tkgi nodes.
       cidr: "{{ opinionated.tkgi.node_ip_block }}"
     pod_block:
-      display_name: tkgi-pods
+      display_name: tkgi-pods  # This is a non-routable range which is used tkgi pods.
       cidr: "{{ opinionated.tkgi.pod_ip_block }}"
 
     principal_identity:
       public_key: |-
-        -----BEGIN CERTIFICATE-----
-        MIIDADCCAeigAwIBAgIUJdyN7pMx9a5rFluqWIdBu05GGIcwDQYJKoZIhvcNAQEL
-        BQAwHjEcMBoGA1UEAwwTcGtzLW5zeC10LXN1cGVydXNlcjAeFw0yMzA0MDQxNDIy
-        NDlaFw0yNTA0MDMxNDIyNDlaMB4xHDAaBgNVBAMME3Brcy1uc3gtdC1zdXBlcnVz
-        ZXIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDXUJoCuRXNvfG24gCB
-        H367P3BjeCJ04utTCwgsj0fnk/MbUQagXidL/0azIoCvEJ6eA8n1SfD14kErnrOi
-        9TwOvy9E2MRoFYwpLcjv1oKm0SUsldFfEU0TWTIt2zJcintIWZkEzb63YK2gud0k
-        g/snCcggK1rH91SwUgi3qlXzIdsrxxaKyL5G/u2P9zUKIfYIq+S4K5hh6PNM/7Pd
-        BaSeu1Tv9AKTUrRMnporO1iopcZhcwX43YkSnSHcZqvOIOsi8cry3iaFgRbhxtEE
-        QCG0IMmtFWTFrtoNBhtjLCIQvje2pWCM5dRRHos+LN1IigtcoZAORAwtN+05z6+M
-        tZ7RAgMBAAGjNjA0MBMGA1UdJQQMMAoGCCsGAQUFBwMCMB0GA1UdDgQWBBTT5Fot
-        BYKTSO49UJHpIKZusO0ZezANBgkqhkiG9w0BAQsFAAOCAQEAw3afcTvhnbCwlzeY
-        cWOiRK+gJ3YWN+4pzY04y3A+mFhHDFZGy01eUuW1qPnV9HWyfB1GpnEtnu3aw89h
-        F0bBIJ9Tvx8bXCVnSIn/+Zea39/hOYqXHewVrennpMyCCiDu6lxadHKJVUCBDcqV
-        e9uUhEcPupNs6f8P8FflHf5jCQ95464d9sZ5caM19vfomg3bC7iLlo/Owo23nZlw
-        X2gpUu8hJFDbAeeW6Sx6ZbtVikTUFaiwTzMmSAt+xLeGmYqXNxUPDP8ORxAEcrKN
-        J9fWUWc/BhKzlXGqOf/EGjYs41OiAY/2ok1gODPZW/2nwPlFNrrq1Qv72jJ0GaWW
-        onRhDA==
-        -----END CERTIFICATE-----
+        {{ opinionated.nsx_principal_identity.public_key }}
       private_key: |-
-        -----BEGIN PRIVATE KEY-----
-        MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDXUJoCuRXNvfG2
-        4gCBH367P3BjeCJ04utTCwgsj0fnk/MbUQagXidL/0azIoCvEJ6eA8n1SfD14kEr
-        nrOi9TwOvy9E2MRoFYwpLcjv1oKm0SUsldFfEU0TWTIt2zJcintIWZkEzb63YK2g
-        ud0kg/snCcggK1rH91SwUgi3qlXzIdsrxxaKyL5G/u2P9zUKIfYIq+S4K5hh6PNM
-        /7PdBaSeu1Tv9AKTUrRMnporO1iopcZhcwX43YkSnSHcZqvOIOsi8cry3iaFgRbh
-        xtEEQCG0IMmtFWTFrtoNBhtjLCIQvje2pWCM5dRRHos+LN1IigtcoZAORAwtN+05
-        z6+MtZ7RAgMBAAECggEAAeLouS23mq9XfvODmfNVhWdyC8phfDusCx9gHsp8kJ3+
-        YGwOePjfiENqx6aoO6Bo0K1A0jTSdx0DLCd+Sbxd89UfTA+dcjn/bzGW/pRBsxtx
-        o26GleTNaOYm/I7ckJdSqtjExe2AMRQYQVMPicKG60R4gTZQBnYiGE9dAzBAri9x
-        d2CMUYv+u8MgIz4UcNlOGT2m9pvOC/CX5YbDKP7GX3xuJ3Zg/XHmjvuEyBfKEGx2
-        9D7KKI9d8ra+KMJVqAR8NzubVVz0VDALXpFumbL2jJQb1jccyDbSTx619n4kRnIO
-        GtJqLWjuSAuRFk+PV6Vb48gmaKWSo5uXpvqeat/cdwKBgQDxq5J8xlXz/rzPLUS4
-        fraFTlR+MnwmN65FQyqHPYaGI4o9/DJJO7DuuUbj7fNta2FDuzR+ZQZgZhiBNqiq
-        RYL0sL6AHSnduka5XSbXRCDiwl7nfO6i4+iy52VeKdacrhV3YVDydx6hfxGPHDPo
-        F8pMpYC2mizFYPvTu1httfISgwKBgQDkFPgGSvWZt5BpkofTJfNNtQcg2eiFhnXn
-        bVaKScVmvk7AWpZ/FkmQRc1gXGKszDp1Zx7EgUBhCiN8YgxK8bQT2aVBViIaqG7N
-        mkN1RUIisBIaOPFURt1T1XAaZJxLPFD30ufv1dKhoNm50/SBUp6DITnhpNjNcT/s
-        DvQSIm+5GwKBgGQUbUGG0SmOIJqbYI4Wy3dBDPSF66vX+y9rtTz0WbVLGoC45Ao3
-        0fnKeHUDoX96rHjkGcUOCSn6ncNE42xABQ9X8kwTx7au4YL59I/JAuVlIPA0aI7E
-        WyVbdjsckGeqH/GkN2VxtxmiCZ9+SnCfCYPcNgVoq4nBtAfm2aP1aR4JAoGAHZay
-        zm4vCnAL5gZCZJwJwkz3zcU3KwtUhF9k2K/VUgziPoYB/B6yEGtdx2B01KHx+4UT
-        Mr7p0Sz1iY9WtOpCSEj17VH1PqwXI8kdczs25zUcRBabCCnhUJzh3CqtM/1xK5VK
-        zYxZtOofFMJwd852DeDjl2hBT/WfK0qNU0TwZX0CgYAm+wjS++HJBv9f2oZM2PjF
-        GVM9Bp/uEiG1z/4O7Rpsv9qJHCgVaZ3q2Qebppq4D4o7ELLcV15djClmv7qkaR9B
-        ZauGoYXF2AwcdX8JO4bWHc985IwdAfZohGEqYSOIDkwgOoDXbrtK3LE/R8XtmJJk
-        MQTQCVfQMqNNIHcVkgWBNg==
-        -----END PRIVATE KEY-----
+        {{ opinionated.nsx_principal_identity.private_key }}
 
   harbor:
-    # ip: 172.29.0.20
     ip: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(15) }}"
     fdqn: harbor.tkgi.local
     admin_password: "{{ opinionated.master_password }}"
-    certificate:
-      public_key: |-
-        -----BEGIN CERTIFICATE-----
-        MIIEBjCCAm6gAwIBAgIRAOibx/CvU1qy3g0STuhhrxQwDQYJKoZIhvcNAQELBQAw
-        UTEeMBwGA1UEChMVbWtjZXJ0IGRldmVsb3BtZW50IENBMRMwEQYDVQQLDAptYXR0
-        QGRlcmVrMRowGAYDVQQDDBFta2NlcnQgbWF0dEBkZXJlazAeFw0yMzA0MTQxNDA2
-        NTZaFw0yNTA3MTQxNDA2NTZaMD4xJzAlBgNVBAoTHm1rY2VydCBkZXZlbG9wbWVu
-        dCBjZXJ0aWZpY2F0ZTETMBEGA1UECwwKbWF0dEBkZXJlazCCASIwDQYJKoZIhvcN
-        AQEBBQADggEPADCCAQoCggEBANW/sovdh0ipmwdUuj2KisI0I50A6srXRGzZbZbm
-        MhStb9IByhfqSqkaqu6f4T8WhFFYG4Fq2sfGUV+MF531H4NMj427zgOmrT49IOHL
-        k5Hr84NGG3JPHO7yGZW7C5ySB2vqscrZC2PaZC1RmfdXG3BFpxVH4uBnw+Teo2Uv
-        /2PP82CoAiKwhX6DDnRXwOa1Q3ftgPgR+Jf0jt2HbXVvp/FEzG1jOA41WlZ1FjJF
-        2miZxlTh2rZtFxiI6MEw46t3vXwu8EysQ95yDTXHn25JlhkeLfCcWRH8rDtxtkfi
-        xGL0sdJYjYwfvCW4j9lLOM1cJ6ikMhWb8RnUAA6UyLurr7UCAwEAAaNsMGowDgYD
-        VR0PAQH/BAQDAgWgMBMGA1UdJQQMMAoGCCsGAQUFBwMBMB8GA1UdIwQYMBaAFLBH
-        CVZzNA0YhyRNJVNplpXQhO2JMCIGA1UdEQQbMBmCEWhhcmJvci50a2dpLmxvY2Fs
-        hwSsHQACMA0GCSqGSIb3DQEBCwUAA4IBgQAUF4FwmT9rkeqXNTUB2Ztxphvq3y+K
-        J9MNYYV020klPfg9xUWnDMkdj+8j4AFSlq/h1/mopfFhWXSgOZhGx6SHu4oXyvNX
-        XBeQW9Qaa0gY4LTOT1CkKTeptsJt7Mfu/pvIbwrL4xrn5PxH4d0sKz1fGLsfmcwO
-        bahHMeeLG2wHYMAubj+hRFxMZwFD5KCpXrELr+GYCp7Ea9F4XsqKF82sh9qVWuzL
-        7RvXkQioMjjLe5NHP2L6UeSWLW5mHjfJEVb1yM8ChYGLjFe6fxeXFp+LDcRwDo2k
-        +5Yj+v3pfIh7WkxURK/1SQdHkIkGrwJ5wPf176Y5hbCmIeRPVbdF5J+QlY3L34qa
-        75C9Lg4ISae24ocNNcErZTVcdDwCSiAmgO3AepfPL6irihB7/B4e31hxQSCxY+kY
-        JqOf4ZGjsKVYHDC3BiF9AA8kPF61J/EP7+5vd0iqN7OOHgPWvLXuOwqbZ3b+kISf
-        ULNXWakBYSBDC5AA2FSSmSWrBu12QML3PYY=
-        -----END CERTIFICATE-----
-
-      private_key: |-
-        -----BEGIN PRIVATE KEY-----
-        MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDVv7KL3YdIqZsH
-        VLo9iorCNCOdAOrK10Rs2W2W5jIUrW/SAcoX6kqpGqrun+E/FoRRWBuBatrHxlFf
-        jBed9R+DTI+Nu84Dpq0+PSDhy5OR6/ODRhtyTxzu8hmVuwuckgdr6rHK2Qtj2mQt
-        UZn3VxtwRacVR+LgZ8Pk3qNlL/9jz/NgqAIisIV+gw50V8DmtUN37YD4EfiX9I7d
-        h211b6fxRMxtYzgONVpWdRYyRdpomcZU4dq2bRcYiOjBMOOrd718LvBMrEPecg01
-        x59uSZYZHi3wnFkR/Kw7cbZH4sRi9LHSWI2MH7wluI/ZSzjNXCeopDIVm/EZ1AAO
-        lMi7q6+1AgMBAAECggEBAK1ib4mG7BskAS5EK0KKZB4+Pvk3aj2ZutZ01LGIDu24
-        9jCq5OzbTy63BBrGs+cB89ksGDu1mrxcgVt4/xtRX/uYmgXFZsqNZJBM86RVB2Jh
-        vEkrEE58ICMvXVOYw0WBKuX+HbRGtTeNSp98RuFc1lQPHAZmJoITidLYSkBlW8vw
-        wpszHbB2ib+TzmLlDk+Fbz354woE/GCK5wRYbWoooSeY2tFQ34JL0GzGw7RqxQDf
-        Y4hI/glTQ3diAk7WKbkiqJ4pcvGEtMn+6y9RNlqp60ptstB4Rsh5Jz1T69itK9cM
-        uUeGP6tXW0iXHFQDI3deapGJtc35LB8w1PV/keOKwE0CgYEA508dZewEnZBgK4v8
-        3qUCzi9+4RnlMYhxPN+34fUd6CFVXqXkDGjkPJjdJPasiZzbcdTulFMX0XRa7uQ5
-        Z/oTo2NrWx4v08AsZl9/y8caLNsT/OFvxnvBSaW/6UjCUuyRuL7CvTRfvDByu8Z9
-        W0a2HLMV6ATPCO9A5KHAwbRkbX8CgYEA7JC4w1jJ5XHgsRyCnbMUqH6T4eT75w15
-        gh8s9BjivU1gMVuNenYTHMPX3JtdGFIZvLIWXoRrW3FtFd8GiK8SqZFNTWzSBMQy
-        zERqU7f7Bdj2FKgCioqPMk02+qPxqszd1ehDCwW4vCaDySpl7cVvN8wPDQogTCjf
-        /dxdGvbdJMsCgYAO60BnKYDmtMAvLtlBdv0mVVPmqufoePdsyLUwgsHKDhRWhXaf
-        AkjuS6G/15UrTw2sWuKEeJOJs+qFi/zT4wJPQINVHi5RhwyWEcTJXO8oQ30Xi2bN
-        M4A1AtbM8h9uf8mqU8t1rqIaHjnYOKYvM/FdCoP4Mg80cVILLQ+krsDnewKBgQDg
-        thQb04JsxgCGnKth+1MbPqlgwa+a6czLEqwT7nOrGA3QtMOuWOyMvWeV8aq7yHkU
-        KiJfg++qvBK/3MuLGKpkklZYvo684lXSfQZ3IeN7yXzvYCyRx06AnKIl8YdFFDeA
-        0pCkrrmtV/SFKRYLhyi/WsHNRBor3gPvU9zJGUg1gwKBgD7hDLlrUk5eV/fJQ9FK
-        dMr5VyPJ4/j3f97acyekZex/x8zusKLwk6XHKIKZhhwhIFqfN8J0ERpb7Ffiy8o1
-        B4MAzH3dLja2yAaCK1jbLMOFwWNxLpYtmMkJGqmZ23+xu97Z/tRhcgHGdw/i8G7v
-        y3RR1mMQGakXEqt7V3H6pRd0
-        -----END PRIVATE KEY-----

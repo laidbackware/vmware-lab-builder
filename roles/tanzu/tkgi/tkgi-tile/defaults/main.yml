@@ -7,10 +7,9 @@ harbor_ip: "{{ tkgi.harbor.ip }}"
 harbor_fdqn: "{{ tkgi.harbor.fdqn }}"
 harbor_admin_password: "{{ tkgi.harbor.admin_password }}"
 
-harbor_public_key: "{{ tkgi.harbor.certificate.public_key }}"
-
-tkgi_dns: "{{ tkgi.dns }}"
+tkgi_api_fqdn: "{{ tkgi.api_fqdn }}"
 tkgi_k8s_services_cidr: "{{ tkgi.k8s_services_cidr }}"
+tkgi_dns_server: "{{ tkgi.dns_server }}"
 
 tkgi_vcenter_url: "{{ tkgi.vcenter_url }}"
 tkgi_vcenter_username: "{{ tkgi.vcenter_username }}"
@@ -27,10 +26,8 @@ tkgi_nsx_floating_pool: "{{ tkgi.nsx.floating_ip_pool }}"
 tkgi_nsx_node_block: "{{ tkgi.nsx.node_block }}"
 tkgi_nsx_pod_block: "{{ tkgi.nsx.pod_block }}"
 
-tkgi_api_certificate:
-  public_key: "{{ tkgi.api.certificate.public_key }}"
-  private_key: "{{ tkgi.api.certificate.private_key }}"
-
 tkgi_nsx_principal_identity:
-  public_key: "{{ tkgi.nsx.principal_identity.public_key }}"
-  private_key: "{{ tkgi.nsx.principal_identity.private_key }}"
+  public_key: |-
+    {{ tkgi.nsx.principal_identity.public_key }}
+  private_key: |-
+    {{ tkgi.nsx.principal_identity.private_key }}

@@ -70,7 +70,7 @@ alias lab-builder="docker run --rm \
     --env AVI_DEFAULT_PASSWORD=\"${AVI_DEFAULT_PASSWORD:-na}\" \
     --volume ${SOFTWARE_DIR}:/software_dir \
     --volume ${PWD}:/work \
-    laidbackware/vmware-lab-builder:v7 \
+    laidbackware/vmware-lab-builder:v8 \
     ansible-playbook"
 
 # This command is run inside the container, so point to the `/work` directory within the container.
@@ -100,7 +100,7 @@ docker run  -it --rm \
     --env AVI_DEFAULT_PASSWORD=${AVI_DEFAULT_PASSWORD:-na} \
     --volume ${SOFTWARE_DIR}:/software_dir \
     --volume ${PWD}:/work \
-    laidbackware/vmware-lab-builder:v7 \
+    laidbackware/vmware-lab-builder:v8 \
     /bin/bash
 
 # Then the playbook can be triggered
@@ -121,7 +121,7 @@ For solution specific features, check the relevant example directory.
 ## Docker Image Build
 From the root of the repo. Note no-cache flag used to force builds to pickup any changes to the git repos.
 ```
-docker build --no-cache ./docker/. -t laidbackware/vmware-lab-builder:v7
+docker build --no-cache ./docker/. -t laidbackware/vmware-lab-builder:v8
 ```
 
 ## Local Usage

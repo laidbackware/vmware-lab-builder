@@ -4,9 +4,9 @@ product-properties:
   .pivotal-container-service.pks_tls:
     value:
       cert_pem: |-
-        {{ tkgi_api_certificate.public_key | indent(8) }}
+        {{ tkgi_api_public_key | default(omit) | indent(8) }}
       private_key_pem: |-
-        {{ tkgi_api_certificate.private_key | indent(8) }}
+        {{ tkgi_api_private_key | default(omit) | indent(8) }}
   .properties.cloud_provider:
     selected_option: vsphere
     value: vSphere
@@ -30,7 +30,7 @@ product-properties:
     selected_option: nsx
     value: nsx
   .properties.network_selector.nsx.cloud-config-dns:
-    value: "{{ tkgi_dns }}"
+    value: "{{ tkgi_dns_server }}"
   .properties.network_selector.nsx.feign_client_read_timeout:
     value: 60000
   .properties.network_selector.nsx.floating-ip-pool-ids:
@@ -82,7 +82,7 @@ product-properties:
     selected_option: disabled
     value: disabled
   .properties.pks_api_hostname:
-    value: api.tkgi.local
+    value: "{{ tkgi_api_fqdn }}"
   .properties.plan1_selector:
     selected_option: active
     value: Plan Active
