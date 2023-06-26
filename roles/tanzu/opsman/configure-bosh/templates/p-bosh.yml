@@ -44,7 +44,7 @@ networks-configuration:
     - name: infra
       subnets:
         - iaas_identifier: "{{ bosh_network }}"
-          cidr: 172.29.0.0/24
+          cidr: "{{ bosh_network_cidr }}"
           dns: "{{ bosh_dns }}"
           gateway: "{{ bosh_gateway }}"
           reserved_ip_ranges: "{{ bosh_reserved_ip_range }}"
