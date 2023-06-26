@@ -46,7 +46,7 @@ opinionated:
     # Recommend reserving the first 10 IPs for use as API VIPs.
     workload:
       port_group: trunk
-      vlan_id: 10 # Optional. If unset VLAN 0 will be used
+      vlan_id: 10  # Optional. If unset VLAN 0 will be used
       cidr: "172.19.10.0/24"
       gateway: "172.19.10.1"
       vip_ip_range: "172.19.10.128-172.19.10.254"
@@ -124,7 +124,7 @@ distributed_switches:  # To not create any distributed switches, comment this se
       - vmnic1
     distributed_port_groups:
       - port_group_name: workload-pg
-        vlan_id: "{{ opinionated.hosting_network.workload.vlan_id |default(0) }}"
+        vlan_id: "{{ opinionated.hosting_network.workload.vlan_id | default(0) }}"
 
 vm_templates:
   - local_path: "{{ tkgm_os_kubernetes_ova }}"
@@ -190,7 +190,8 @@ nsx_alb:
   se_management_port_group: vm-network
   se_management_network_cidr: "{{ opinionated.hosting_network.base.cidr }}"
   se_management_network_range: >-
-    {{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(2) }}-{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(3) }}
+    {{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(2) }}-
+    {{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(3) }}
   se_management_network_gateway: "{{ opinionated.hosting_network.base.gateway }}"
   # The vip network will contain the virtual servers created by Avi
   se_vip_port_group: workload-pg

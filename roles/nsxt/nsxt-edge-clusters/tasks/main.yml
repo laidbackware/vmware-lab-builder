@@ -26,10 +26,8 @@
     validate_certs: false
   register: edge_clusters
 
-- debug: var=edge_cluster_result
-
 - name: Wait 5 minutes for the edge clusters to be fully configured
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 300
   when: edge_cluster_result.changed
 
@@ -40,5 +38,3 @@
     password: "{{ nsxt.manager.password }}"
     validate_certs: false
   register: edge_clusters
-
-- debug: var=edge_cluster_result

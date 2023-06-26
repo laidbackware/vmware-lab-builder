@@ -1,0 +1,97 @@
+---
+product-name: harbor-container-registry
+product-properties:
+  .harbor-app.static_ips:
+    value: "{{ harbor_ip }}"
+  .properties.admin_password:
+    value:
+      secret: "{{ harbor_admin_password }}"
+  .properties.admin_password_for_smoketest:
+    value:
+      secret: "{{ harbor_admin_password }}"
+  .properties.auth_mode:
+    selected_option: db_auth
+    value: db_auth
+  .properties.customize_container_network:
+    selected_option: default
+    value: default
+  .properties.hostname:
+    value: "{{ harbor_fdqn }}"
+  .properties.initial_delay_minutes:
+    value: 60
+  .properties.log_insight:
+    selected_option: disabled
+    value: disabled
+  .properties.no_proxy:
+    value: 127.0.0.1,localhost,.local,.internal,log,db,redis,nginx,core,portal,postgresql,jobservice,registry,registryctl,clair-adapter,chartmuseum,notary-server
+  .properties.registry_storage:
+    selected_option: filesystem
+    value: filesystem
+  .properties.server_cert_key:
+    value:
+      cert_pem: |-
+        {{ harbor_public_key | default(omit) | indent(8) }}
+      private_key_pem: |-
+        {{ harbor_private_key | default(omit) | indent(8) }}
+  .properties.server_cert_ca:
+    value: |-
+      {{ harbor_public_key | default(omit) | indent(6) }}
+  .properties.trivy_offline_scan:
+    value: true
+  .properties.trivy_skip_update:
+    value: false
+  .properties.vm_monitor:
+    selected_option: no_monitor
+    value: no_monitor
+  .properties.with_notary:
+    value: true
+  .properties.with_trivy:
+    value: true
+network-properties:
+  network:
+    name: infra
+  other_availability_zones:
+    - name: az1
+  singleton_availability_zone:
+    name: az1
+resource-config:
+  harbor-app:
+    max_in_flight: 1
+    additional_networks: []
+    additional_vm_extensions: []
+    instance_type:
+      id: automatic
+    instances: automatic
+    nsx:
+      lbs: []
+      security_groups: []
+    nsxt:
+      lb:
+        server_pools: []
+      ns_groups: []
+      vif_type: null
+    persistent_disk:
+      name: automatic
+      size_mb: automatic
+    swap_as_percent_of_memory_size: automatic
+  smoke-testing:
+    max_in_flight: 1
+    additional_networks: []
+    additional_vm_extensions: []
+    instance_type:
+      id: automatic
+    instances: automatic
+    nsx:
+      lbs: []
+      security_groups: []
+    nsxt:
+      lb:
+        server_pools: []
+      ns_groups: []
+      vif_type: null
+    swap_as_percent_of_memory_size: automatic
+errand-config:
+  smoke-testing:
+    post-deploy-state: when-changed
+  uaa-deregistration:
+    pre-delete-state: false

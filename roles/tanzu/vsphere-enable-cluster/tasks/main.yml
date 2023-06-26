@@ -47,7 +47,7 @@
   when: "tkg_haproxy is defined"
 
 - name: Extract certificate from haproxy output
-  set_fact:
+  ansible.builtin.set_fact:
     haproxy_ca_cert_raw: >-
       {
       {% for item in vminfo.instance.config.extraConfig %}
@@ -59,12 +59,12 @@
   when: "tkg_haproxy is defined"
 
 - name: Decode haproxy CA Cert
-  set_fact:
+  ansible.builtin.set_fact:
     haproxy_ca_cert: "{{ haproxy_ca_cert_raw.public_key | b64decode }}"
   when: "tkg_haproxy is defined"
 
 - name: Get a cert from NSX ALB Controller
-  get_certificate:
+  community.crypto.get_certificate:
     host: "{{ tanzu_vsphere.vds_networking.nsx_alb_server }}"
     port: 443
   delegate_to: localhost
@@ -72,9 +72,7 @@
   register: nsx_alb_cert
   when: "tanzu_vsphere.vds_networking.nsx_alb_server is defined"
 
-- debug: var=tanzu_vsphere
-
-- debug: var=nsx_alb_cert
+- ansible.builtin.debug: var=tanzu_vsphere
 
 - name: Create vsphere namespace cluster
   vmware.ansible_for_vsphere_with_tanzu.vsphere_tanzu_cluster_manage:
@@ -109,7 +107,7 @@
     nsx_alb_ca_chain: "{{ nsx_alb_cert.cert | default(omit) }}"
     nsx_alb_password: "{{ tanzu_vsphere.vds_networking.nsx_alb_password | default(omit) }}"
     nsx_alb_username: "{{ tanzu_vsphere.vds_networking.nsx_alb_username | default(omit) }}"
-    nsx_alb_server: "{{ tanzu_vsphere.vds_networking.nsx_alb_server | default(omit)  }}"
+    nsx_alb_server: "{{ tanzu_vsphere.vds_networking.nsx_alb_server | default(omit) }}"
     nsx_edge_cluster: "{{ tanzu_vsphere.nsxt.nsx_edge_cluster | default(omit) }}"
     pod_cidrs: "{{ tanzu_vsphere.nsxt.pod_cidrs | default(omit) }}"
     workload_dns_servers: "{{ tanzu_vsphere.workload_dns_servers }}"
@@ -126,7 +124,7 @@
   register: cluster_results
 
 - name: Check on enable namespace job
-  async_status:
+  ansible.builtin.async_status:
     jid: "{{ cluster_results.ansible_job_id }}"
   register: job_result
   until: job_result.finished

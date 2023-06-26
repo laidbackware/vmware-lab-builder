@@ -1,0 +1,90 @@
+---
+
+- name: NSX Manager cert check
+  ansible.builtin.shell: |
+    set -o pipefail && \
+    openssl s_client -connect {{ nsxt.manager.ip }}:443 </dev/null 2>/dev/null \
+      | openssl x509 -noout -text | grep DNS: | xargs
+  register: result_nsx_manager_cert_sans
+  args:
+    executable: /usr/bin/bash
+  changed_when: false
+
+- ansible.builtin.set_fact:
+    cert_replace: "{{ nsxt.manager.ip not in result_nsx_manager_cert_sans.stdout }}"
+
+# BROKEN MODULE
+# - name: Get google
+#   community.crypto.get_certificate:
+#     host: www.google.com
+#     port: 443
+#   delegate_to: localhost
+#   run_once: true
+#   register: result_nsx_mgr_cert
+
+- name: Create private key (RSA, 4096 bits
+  community.crypto.openssl_privatekey:
+    path: "{{ temp_dir }}/nsx.key"
+  when: cert_replace
+
+- name: Create certificate signing request (CSR) for self-signed certificate
+  community.crypto.openssl_csr_pipe:
+    privatekey_path: "{{ temp_dir }}/nsx.key"
+    common_name: "{{ nsxt.manager.ip }}"
+    country_name: US
+    state_or_province_name: California
+    locality_name: CA
+    organization_name: NSX
+    subject_alt_name:
+      - "DNS:{{ nsxt.manager.ip }}"
+      - "IP:{{ nsxt.manager.ip }}"
+  register: result_csr
+  when: cert_replace
+
+- name: Generate a Self Signed OpenSSL certificate
+  community.crypto.x509_certificate:
+    path: "{{ temp_dir }}/nsx.crt"
+    privatekey_path: "{{ temp_dir }}/nsx.key"
+    csr_content: "{{ result_csr.csr }}"
+    provider: selfsigned
+  when: cert_replace
+
+- name: Add NSX Machine certificate
+  vmware.ansible_for_nsxt.nsxt_certificates:
+    hostname: "{{ nsxt.manager.hostname }}"
+    username: "{{ nsxt.manager.username }}"
+    password: "{{ nsxt.manager.password }}"
+    validate_certs: false
+    display_name: "nsx_machine_cert"
+    pem_encoded_file: "{{ temp_dir }}/nsx.crt"
+    private_key_file: "{{ temp_dir }}/nsx.key"
+    state: "present"
+  register: cert_result
+  ignore_errors: true
+  when: cert_replace
+
+# boiler plate needed because certificates module is not idempotent
+- ansible.builtin.fail: msg="Certificate no added"
+  when: "cert_replace and not cert_result.changed and 'already exists' not in cert_result.msg"
+- ansible.builtin.debug: msg="Machine certificate added"
+  when: cert_replace and cert_result.changed
+- ansible.builtin.debug: msg="Machine certificate already exists"
+  when: "cert_replace and 'already exists' in cert_result.msg"
+  ignore_errors: true  # result.sg is only generated if not changed
+
+- name: Assign Machine Cert to API
+  ansible.builtin.uri:
+    url: >-
+      https://{{ nsxt.manager.hostname }}/api/v1/node/services/http?action=apply_certificate&certificate_id={{ cert_result.result.results[0].id }}
+    user: "{{ nsxt.manager.username }}"
+    password: "{{ nsxt.manager.password }}"
+    method: POST
+    force_basic_auth: true
+    validate_certs: false
+    status_code: [200, 202]
+  when: cert_replace and cert_result.changed
+
+- name: Wait 1 minute for the endpoint to come back
+  ansible.builtin.pause:
+    minutes: 1
+  when: cert_replace and cert_result.changed

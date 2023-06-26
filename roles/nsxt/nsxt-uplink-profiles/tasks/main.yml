@@ -7,7 +7,7 @@
     validate_certs: false
     resource_type: UplinkHostSwitchProfile
     display_name: "{{ item.display_name }}"
-    mtu: "{{ item.mtu | default(omit)}}"
+    mtu: "{{ item.mtu | default(omit) }}"
     teaming: "{{ item.teaming }}"
     transport_vlan: "{{ item.transport_vlan }}"
     state: "present"

@@ -1,0 +1,25 @@
+---
+opsman_image_path: "{{ opsman_ova }}"
+
+opsman_vm_name: "{{ tanzu_opsman_bosh.vm_name }}"
+opsman_hostname: "{{ tanzu_opsman_bosh.hostname }}"
+opsman_vm_path: "{{ opsman_vcenter_folder }}/{{ opsman_vm_name }}"
+
+opsman_ip: "{{ tanzu_opsman_bosh.opsman_ip }}"
+opsman_netmask: "{{ tanzu_opsman_bosh.netmask }}"
+opsman_gateway: "{{ tanzu_opsman_bosh.gateway }}"
+opsman_network: "{{ tanzu_opsman_bosh.network }}"
+opsman_dns: "{{ tanzu_opsman_bosh.dns }}"
+opsman_ntp: "{{ tanzu_opsman_bosh.ntp }}"
+
+opsman_vcenter_url: "{{ tanzu_opsman_bosh.vcenter_url }}"
+opsman_vcenter_datacenter: "{{ tanzu_opsman_bosh.vcenter_datacenter }}"
+opsman_vcenter_datastore: "{{ tanzu_opsman_bosh.vcenter_datastore }}"
+opsman_vcenter_folder: "{{ tanzu_opsman_bosh.vcenter_folder }}"
+opsman_vcenter_username: "{{ tanzu_opsman_bosh.vcenter_username }}"
+opsman_vcenter_password: "{{ tanzu_opsman_bosh.vcenter_password }}"
+opsman_vcenter_cluster: "{{ tanzu_opsman_bosh.vcenter_cluster }}"
+
+opsman_ssh_public_key: "{{ tanzu_opsman_bosh.ssh_public_key }}"
+opsman_username: "{{ tanzu_opsman_bosh.opsman_username }}"
+opsman_password: "{{ tanzu_opsman_bosh.opsman_password }}"

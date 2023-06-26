@@ -1,0 +1,9 @@
+---
+opsman_ip: "{{ tanzu_opsman_bosh.opsman_ip }}"
+opsman_username: "{{ tanzu_opsman_bosh.opsman_username }}"
+opsman_password: "{{ tanzu_opsman_bosh.opsman_password }}"
+bosh_trusted_ca_certs: "{{ tanzu_opsman_bosh.trusted_ca_certs | default('') }}"
+
+harbor_ip: "{{ tkgi.harbor.ip }}"
+harbor_fdqn: "{{ tkgi.harbor.fdqn }}"
+harbor_admin_password: "{{ tkgi.harbor.admin_password }}"

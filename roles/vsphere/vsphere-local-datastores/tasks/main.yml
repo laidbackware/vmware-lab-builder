@@ -5,20 +5,20 @@
     username: "{{ nested_vcenter.username }}"
     password: "{{ nested_vcenter.password }}"
     validate_certs: false
-    cluster_name: "{{item.key}}"
+    cluster_name: "{{ item.key }}"
   delegate_to: localhost
   register: cluster_host_disks
   with_dict: "{{ nested_clusters }}"
 
 - name: Build device lookup table
-  set_fact:
+  ansible.builtin.set_fact:
     host_disk_map: >-
       {
       {% for cluster in cluster_host_disks.results %}
       {% for host_name, disks in cluster.hosts_disk_info.items() %}
       {% for disk in disks %}
-      "{{cluster.invocation.module_args.cluster_name}}_{{host_name}}_{{disk.device_ctd_list[0]}}":
-        "{{disk.canonical_name}}",
+      "{{ cluster.invocation.module_args.cluster_name }}_{{ host_name }}_{{ disk.device_ctd_list[0] }}":
+        "{{ disk.canonical_name }}",
       {% endfor %}
       {% endfor %}
       {% endfor %}
@@ -26,16 +26,16 @@
 
 # Build a list of each datastore to add to each host
 - name: Build datastores to add
-  set_fact:
+  ansible.builtin.set_fact:
     datastores_to_add: >-
       [
       {% for host in nested_hosts %}
-      {% if "nested_hosts_disks" in  nested_clusters[host.nested_cluster] %}
-      {% for disk in nested_clusters[host.nested_cluster].nested_hosts_disks  %}
-      {% if "datastore_prefix" in  disk %}
+      {% if "nested_hosts_disks" in nested_clusters[host.nested_cluster] %}
+      {% for disk in nested_clusters[host.nested_cluster].nested_hosts_disks %}
+      {% if "datastore_prefix" in disk %}
       {
         "host_name": "{{ host.ip }}",
-        "datastore_prefix": "{{disk.datastore_prefix}}-{{ host.name }}",
+        "datastore_prefix": "{{ disk.datastore_prefix }}-{{ host.name }}",
         "disk_reference" : "{{ host.nested_cluster }}_{{ host.ip }}_vmhba0:C0:T{{ loop.index0 + 1 }}:L0",
       },
       {% endif %}
@@ -52,7 +52,7 @@
     validate_certs: false
     datastore_name: "{{ item.datastore_prefix }}"
     datastore_type: "vmfs"
-    vmfs_device_name: "{{host_disk_map[item.disk_reference]}}"
+    vmfs_device_name: "{{ host_disk_map[item.disk_reference] }}"
     vmfs_version: 6
     esxi_hostname: "{{ item.host_name }}"
     state: present

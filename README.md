@@ -32,12 +32,12 @@ The pattern names below match the sub-directory under `var-examples` where examp
 | Pattern Name              | Product Versions | Status                  |
 | ------------------------- | ---------------- | ----------------------- |
 | base-vsphere              | n/a              | Stable                  |
-| nsxt                      | NSX-T 3.1.3.1    | Stable                  |
+| nsxt                      | NSX-T 3.x,4.0    | Stable                  |
 | tanzu/multi-cloud         | NSX-ALB 20.1.7   | Stable                  |
 | tanzu/vsphere-nsxt        | NSX-T 3.1.3.1    | Stable                  |
 | tanzu/vsphere-vds-alb     | NSX-ALB 20.1.7   | Stable                  |
 | tanzu/vsphere-vds-haproxy | haproxy          | Stable                  |
-| tanzu/integrated          | NSX-T 3.0        | Work in progress/broken |
+| tanzu/integrated          | NSX-T 3.x,4.0    | Work in progress/broken |
 
 ## Usage with Docker
 Each deployment pattern has an opinionated and some have a custom example(which may be out of date). The idea of the opinionated deployment is that the user has to provide the minimum of configuration and the remainder of the options are calculated for them. Whereas the custom example has to have all sections built up by hand. Either of the examples types can be fully customized.<br/>
@@ -70,7 +70,7 @@ alias lab-builder="docker run --rm \
     --env AVI_DEFAULT_PASSWORD=\"${AVI_DEFAULT_PASSWORD:-na}\" \
     --volume ${SOFTWARE_DIR}:/software_dir \
     --volume ${PWD}:/work \
-    laidbackware/vmware-lab-builder:v7 \
+    laidbackware/vmware-lab-builder:v8 \
     ansible-playbook"
 
 # This command is run inside the container, so point to the `/work` directory within the container.
@@ -100,7 +100,7 @@ docker run  -it --rm \
     --env AVI_DEFAULT_PASSWORD=${AVI_DEFAULT_PASSWORD:-na} \
     --volume ${SOFTWARE_DIR}:/software_dir \
     --volume ${PWD}:/work \
-    laidbackware/vmware-lab-builder:v7 \
+    laidbackware/vmware-lab-builder:v8 \
     /bin/bash
 
 # Then the playbook can be triggered
@@ -121,7 +121,7 @@ For solution specific features, check the relevant example directory.
 ## Docker Image Build
 From the root of the repo. Note no-cache flag used to force builds to pickup any changes to the git repos.
 ```
-docker build --no-cache ./docker/. -t laidbackware/vmware-lab-builder:v7
+docker build --no-cache ./docker/. -t laidbackware/vmware-lab-builder:v8
 ```
 
 ## Local Usage

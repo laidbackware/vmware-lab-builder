@@ -4,9 +4,9 @@
 All base instructions. It is recommended to attempt a minimal deployment to first become comfortable with the processes.
 
 # Tested Versions
-- NSX-T 3.1.3
-  - NSX-T 3.2 has a bug where creation of the edge will fail, but then after a few hours start working
-- vSphere 7.0 U2
+- NSX-T 3.0.3, 3.1.3, 3.2.3, 4.0.1
+  - NSX-T 4.1 is not currently supported due to breaking changes in the transport_zone module
+- vSphere 7.0 U3
 
 ## Additional Dependencies
 - The NSX-T ISO must be added to your software directory and the filename updated in the vars file.  

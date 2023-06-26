@@ -2,8 +2,8 @@
 This will deploy NSX-T and enable Workload Management, aka deploy the Supervisor Cluster.
 
 ## Tested Versions
-- NSX-T 3.1.3
-  - NSX-T 3.2 has a bug where creation of the edge will fail, but then after a few hours start working
+- NSX-T 3.1.3, 3.2.3, 4.0.1
+  - NSX-T 4.1 is not currently supported due to breaking changes in the transport_zone module
 - vSphere 7.0 U3c
 
 ## Dependencies
@@ -21,8 +21,7 @@ Below is the layout of the opinionated deployment, which can be customized by ed
 - A single vCenter will be added and attached to the physical host.
 - All components will be added to a single nested ESXi host. This can be customized by editing the yaml.
 - A single T0 gateway will be deployed and the T0 uplink will share the same network as the management interfaces in vmnic0
-- If you want to have more that 1 nested host, then your TEP network should be set to MTU of at least 1600 to allow the nested ESXi hosts to communicate.
-- The tep network is used twice on the nested ESXi hosts because the edge TEP port group cannot be on the same VDS that will be used by the host transport nodes.
+- If you want to have more that 1 nested host, then your TEP network should be set to MTU of at least 1600 to allow the nested ESXi hosts to communicate and you must switch to using NFS shared storage as per [this example](../../base-vsphere/minimal-opinionated-nfs.yml).
 - During setup you will be prompted to add a static route to the T0 uplink when created.
 - A single T1 router and segment will be added, which will be used to host the supervisor cluster.
 

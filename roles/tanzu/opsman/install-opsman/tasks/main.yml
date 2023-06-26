@@ -1,0 +1,69 @@
+---
+
+# Importing templates as variables to allow for debugging
+- name: Set variables
+  ansible.builtin.set_fact:
+    # opsman_config: |
+    #   {{ lookup('template', 'opsman.yml') | from_yaml }}
+    opsman_env: |
+      {{ lookup('template', 'env.yml') | from_yaml }}
+
+- name: Deploy Opsman VM
+  community.vmware.vmware_deploy_ovf:
+    hostname: "{{ opsman_vcenter_url }}"
+    username: "{{ opsman_vcenter_username }}"
+    password: "{{ opsman_vcenter_password }}"
+    validate_certs: false
+    name: "{{ opsman_vm_name }}"
+    datacenter: "{{ opsman_vcenter_datacenter }}"
+    # folder: /SG1/vm
+    cluster: "{{ opsman_vcenter_cluster }}"
+    datastore: "{{ opsman_vcenter_datastore }}"
+    disk_provisioning: thin
+    networks:
+      "Network 1": "{{ opsman_network }}"
+    ova: "{{ opsman_image_path }}"
+    allow_duplicates: false
+    power_on: true
+    fail_on_spec_warnings: false
+    wait: true
+    wait_for_ip_address: true
+    inject_ovf_env: true
+    properties:
+      ip0: "{{ opsman_ip }} "
+      netmask0: "{{ opsman_netmask }}"
+      gateway: "{{ opsman_gateway }}"
+      DNS: "{{ opsman_dns }}"
+      ntp_servers: "{{ opsman_ntp }}"
+      public_ssh_key: "{{ opsman_ssh_public_key }}"
+  register: result_opsman_create
+  # Added retries to allow NSX segment to take time to propogate
+  retries: 3
+  delay: 10
+  until: result_opsman_create is success
+
+# - name: Pause 1 minute for Opsman to boot
+#   ansible.builtin.pause:
+#     minutes: 1
+#   when: not result_opsman_create.changed
+
+- name: Configure Opsman Auth
+  args:
+    executable: /bin/bash
+  ansible.builtin.shell:
+    cmd: |
+      #/bin/bash
+      set -eu
+      unset OM_PASSWORD OM_USERNAME OM_SKIP_SSL_VALIDATION OM_TARGET
+
+      env=$(cat << EOF
+      {{ opsman_env | to_nice_yaml }}
+      EOF
+      )
+
+      om --env <(echo "$env") configure-authentication --config <(echo "$env")
+
+  register: result_opsman_auth
+  retries: 24
+  delay: 10
+  until: result_opsman_auth.rc == 0

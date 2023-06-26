@@ -1,0 +1,79 @@
+---
+
+# Importing templates as variables to allow for debugging
+- name: Set variables for {{ item.slug }}
+  ansible.builtin.set_fact:
+    opsman_env: |
+      {{ lookup('template', 'env.yml') | from_yaml }}
+
+
+- name: Get product version from .pivotal file for {{ item.slug }}
+  args:
+    executable: /bin/bash
+  ansible.builtin.command:
+    cmd: |
+      om product-metadata -p {{ item.file_path }} --product-version
+  register: result_product_version
+
+- name: Upload and stage product for {{ item.slug }}
+  args:
+    executable: /bin/bash
+  ansible.builtin.shell:
+    cmd: |
+      #/bin/bash
+      set -eu
+
+      unset OM_PASSWORD OM_USERNAME OM_SKIP_SSL_VALIDATION OM_TARGET
+
+      env=$(cat << EOF
+      {{ opsman_env | to_nice_yaml }}
+      EOF
+      )
+
+      om --env <(echo "$env") upload-product -p {{ item.file_path }}
+
+      om --env <(echo "$env") stage-product -p {{ item.slug }} \
+        --product-version={{ result_product_version.stdout }}
+  register: result_opsman_create
+
+- name: Configure product for {{ item.slug }}
+  args:
+    executable: /bin/bash
+  ansible.builtin.shell:
+    cmd: |
+      #/bin/bash
+      set -eu
+
+      unset OM_PASSWORD OM_USERNAME OM_SKIP_SSL_VALIDATION OM_TARGET
+
+      env=$(cat << EOF
+      {{ opsman_env | to_nice_yaml }}
+      EOF
+      )
+
+      product_config="$(cat << EOF
+      {{ item.product_config | to_nice_yaml(width=9999) }}
+      EOF
+      )"
+
+      om --env <(echo "$env") configure-product \
+        --config <(echo "$product_config")
+  register: result_opsman_create
+
+- name: Apply changes for {{ item.slug }}
+  args:
+    executable: /bin/bash
+  ansible.builtin.shell:
+    cmd: |
+      #/bin/bash
+      set -eu
+
+      unset OM_PASSWORD OM_USERNAME OM_SKIP_SSL_VALIDATION OM_TARGET
+
+      env=$(cat << EOF
+      {{ opsman_env | to_nice_yaml }}
+      EOF
+      )
+
+      om --env <(echo "$env") apply-changes --product-name={{ item.slug }}
+  register: result_bosh_changes

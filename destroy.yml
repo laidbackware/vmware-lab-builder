@@ -2,6 +2,9 @@
 - name: Delete Deployment
   hosts: localhost
   gather_facts: false
-  strategy: free
+
+  vars:
+    debug_mode: "{{ debug | default(False) | bool }}"
+
   roles:
     - role: delete-deployment

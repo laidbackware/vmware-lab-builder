@@ -1,0 +1,129 @@
+---
+az-configuration:
+  - name: az1
+    iaas_configuration_name: default
+    clusters:
+      - cluster: "{{ bosh_vcenter_cluster }}"
+        drs_rule: MUST
+        host_group: null
+        resource_pool: null
+iaas-configurations:
+  - additional_cloud_properties: {}
+    bosh_disk_path: "{{ bosh_disk_path }}"
+    bosh_template_folder: "{{ bosh_template_folder }}"
+    bosh_vm_folder: "{{ bosh_vm_folder }}"
+    datacenter: "{{ bosh_vcenter_datacenter }}"
+    disk_type: thin
+    ephemeral_datastore_clusters_string: ""
+    ephemeral_datastores_string: "{{ bosh_vcenter_datastore_ephemeral }}"
+    name: default
+    nsx_address: "{{ bosh_nsx_url }}"
+    nsx_ca_certificate: |-
+      {{ nsx_ca_cert | indent(6) }}
+    nsx_mode: nsx-t
+    nsx_networking_enabled: true
+    nsx_password: "{{ bosh_nsx_password }}"
+    nsx_t_auth_type: local_user
+    nsx_t_use_policy_api: false
+    nsx_username: "{{ bosh_nsx_username }}"
+    persistent_datastore_clusters_string: ""
+    persistent_datastores_string: "{{ bosh_vcenter_datastore_persistent }}"
+    ssl_verification_enabled: false
+    vcenter_host: "{{ bosh_vcenter_url }}"
+    vcenter_password: "{{ bosh_vcenter_password }}"
+    vcenter_username: "{{ bosh_vcenter_username }}"
+network-assignment:
+  network:
+    name: infra
+  other_availability_zones: []
+  singleton_availability_zone:
+    name: az1
+networks-configuration:
+  icmp_checks_enabled: true
+  networks:
+    - name: infra
+      subnets:
+        - iaas_identifier: "{{ bosh_network }}"
+          cidr: 172.29.0.0/24
+          dns: "{{ bosh_dns }}"
+          gateway: "{{ bosh_gateway }}"
+          reserved_ip_ranges: "{{ bosh_reserved_ip_range }}"
+          availability_zone_names:
+            - az1
+properties-configuration:
+  director_configuration:
+    additional_ssh_users: []
+    blobstore_type: local
+    bosh_director_recreate_on_next_deploy: false
+    bosh_recreate_on_next_deploy: false
+    bosh_recreate_persistent_disks_on_next_deploy: false
+    ca_certificate_duration: 1460
+    database_type: internal
+    director_metrics_server_enabled: true
+    director_worker_count: 5
+    duration_overrides_enabled: false
+    encryption:
+      keys: []
+      providers: []
+    hm_emailer_options:
+      enabled: false
+    hm_pager_duty_options:
+      enabled: false
+    identification_tags: {}
+    job_configuration_on_tmpfs: false
+    keep_unreachable_vms: false
+    leaf_certificate_duration: 730
+    local_blobstore_options:
+      enable_signed_urls: true
+    metrics_server_enabled: true
+    ntp_servers_string: "{{ bosh_ntp }}"
+    post_deploy_enabled: false
+    resurrector_enabled: true
+    retry_bosh_deploys: false
+    short_lived_nats_bootstrap_credentials_enabled: false
+    skip_director_drain: false
+    system_metrics_runtime_enabled: true
+  dns_configuration:
+    excluded_recursors: []
+    handlers: []
+  security_configuration:
+    clear_default_trusted_certificates_store: false
+    generate_vm_passwords: true
+    opsmanager_root_ca_trusted_certs: false
+    trusted_certificates: |-
+      {{ bosh_trusted_ca_certs | default(omit) | indent(6) }}
+  syslog_configuration:
+    enabled: false
+resource-configuration:
+  compilation:
+    additional_networks: []
+    additional_vm_extensions: []
+    instance_type:
+      id: automatic
+    instances: automatic
+    nsx:
+      lbs: []
+      security_groups: []
+    nsxt:
+      lb:
+        server_pools: []
+      ns_groups: []
+    swap_as_percent_of_memory_size: automatic
+  director:
+    additional_networks: []
+    additional_vm_extensions: []
+    instance_type:
+      id: automatic
+    instances: automatic
+    nsx:
+      lbs: []
+      security_groups: []
+    nsxt:
+      lb:
+        server_pools: []
+      ns_groups: []
+    persistent_disk:
+      size_mb: automatic
+    swap_as_percent_of_memory_size: automatic
+vmextensions-configuration: []
+vmtypes-configuration: {}

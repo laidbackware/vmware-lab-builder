@@ -1,22 +1,4 @@
 ---
-- name: Create IP Blocks
-  vmware.ansible_for_nsxt.nsxt_ip_pools:
-    hostname: "{{ nsxt.manager.hostname }}"
-    username: "{{ nsxt.manager.username }}"
-    password: "{{ nsxt.manager.password }}"
-    validate_certs: false
-    display_name: "{{ item.display_name }}"
-    description: "{{ item.description | default(omit) }}"
-    subnets: "{{ item.subnets }}"
-    state: present
-    tags: "{{ item.tags | default(omit) }}"
-    ip_release_delay: "{{ item.ip_release_delay | default(omit) }}"
-  loop: "{{ nsxt.ip_pools }}"
-  register: result
-  retries: 5
-  delay: 10
-  until: "'module_stderr' not in result"
-
 - name: Create NSXT IP address blocks
   vmware.ansible_for_nsxt.nsxt_ip_blocks:
     hostname: "{{ nsxt.manager.hostname }}"

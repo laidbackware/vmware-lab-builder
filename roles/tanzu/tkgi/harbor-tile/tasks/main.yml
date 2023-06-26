@@ -1,0 +1,69 @@
+---
+
+- name: Harbor cert check
+  ansible.builtin.shell: |-
+    set -eo pipefail && \
+    openssl s_client -connect {{ harbor_ip }}:443 </dev/null 2>/dev/null \
+      | openssl x509 -noout -text | grep DNS: | xargs
+  register: result_harbor_cert_sans
+  ignore_errors: true
+  changed_when: false
+  args:
+    executable: /usr/bin/bash
+
+- ansible.builtin.set_fact:
+    harbor_cert_replace: "{{ result_harbor_cert_sans.rc != 0 or harbor_fdqn not in result_harbor_cert_sans.stdout }}"
+
+- name: Create Harbor private key
+  community.crypto.openssl_privatekey_pipe:
+    size: 2048
+    format: pkcs8
+  register: result_harbor_private_key
+  when: harbor_cert_replace
+
+- name: Create Harbor certificate signing request (CSR) for self-signed certificate
+  community.crypto.openssl_csr_pipe:
+    privatekey_content: "{{ result_harbor_private_key.privatekey }}"
+    common_name: "{{ harbor_fdqn }}"
+    country_name: US
+    state_or_province_name: California
+    locality_name: CA
+    organization_name: Harbor
+    subject_alt_name:
+      - "DNS:{{ harbor_fdqn }}"
+      - "IP:{{ harbor_ip }}"
+  register: result_harbor_csr
+  when: harbor_cert_replace
+
+- name: Generate Harbor Self Signed OpenSSL certificate
+  community.crypto.x509_certificate_pipe:
+    privatekey_content: "{{ result_harbor_private_key.privatekey }}"
+    csr_content: "{{ result_harbor_csr.csr }}"
+    provider: selfsigned
+  register: result_harbor_public_key
+  when: harbor_cert_replace
+
+- ansible.builtin.set_fact:
+    harbor_public_key: "{{ result_harbor_public_key.certificate }}"
+    harbor_private_key: "{{ result_harbor_private_key.privatekey }}"
+  when: harbor_cert_replace
+
+- name: Setting Harbor Tile vars
+  ansible.builtin.set_fact:
+    harbor_vars:
+      - slug: harbor-container-registry
+        file_path: "{{ harbor_tile }}"
+        product_config: "{{ lookup('template', 'harbor.yml') | from_yaml }}"
+
+- name: Dropping certificates if already set
+  ansible.builtin.set_fact:
+    harbor_vars: |
+      {% set a = harbor_vars[0]['product_config']['product-properties'].pop('.properties.server_cert_key') %}
+      {% set a = harbor_vars[0]['product_config']['product-properties'].pop('.properties.server_cert_ca') %}
+      {{ harbor_vars }}
+  when: not harbor_cert_replace
+
+- name: Deploy Harbor
+  ansible.builtin.include_role:
+    name: tanzu/opsman/upload-stage-configure-tile
+  with_items: "{{ harbor_vars }}"

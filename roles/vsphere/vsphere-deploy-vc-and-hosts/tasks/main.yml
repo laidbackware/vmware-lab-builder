@@ -1,11 +1,11 @@
 ---
 
-- debug: msg="Deploying the following ESXi hosts {{ nested_hosts }}"
+- ansible.builtin.debug: msg="Deploying the following ESXi hosts {{ nested_hosts }}"
 
-- stat: path={{ esxi_ova }}
+- ansible.builtin.stat: path={{ esxi_ova }}
   register: esxi_image
 
-- debug: msg="ESXi OVA file at path {{ esxi_ova }} does not exist"
+- ansible.builtin.debug: msg="ESXi OVA file at path {{ esxi_ova }} does not exist"
   when: not esxi_image.stat.exists
   failed_when: not esxi_image.stat.exists
 
@@ -49,7 +49,7 @@
   register: hosts_results
 
 - name: Result check for deployment of host
-  async_status:
+  ansible.builtin.async_status:
     jid: "{{ item.ansible_job_id }}"
   register: job_result
   until: job_result.finished
@@ -70,7 +70,7 @@
   loop: "{{ nested_hosts }}"
 
 
-- debug:
+- ansible.builtin.debug:
     msg:
       - "Configuring ESXi hosts to cluster spec"
       - "{{ nested_clusters }}"
@@ -78,16 +78,16 @@
 # Build list of hosts with disks to be added, inlcuding the 3 base disks
 # This is because the base ESXi OVA comes with 2 extra disks which might not be needed
 - name: Build list of disks to remove
-  set_fact:
+  ansible.builtin.set_fact:
     disks_to_remove: >-
       [
-      {% for host_result in disk_info.results  %}
+      {% for host_result in disk_info.results %}
       {% if "nested_hosts_disks" in nested_clusters[host_result.item.nested_cluster] %}
-      {% if (nested_clusters[host_result.item.nested_cluster].nested_hosts_disks | length) < (host_result.guest_disk_info | length)  %}
+      {% if (nested_clusters[host_result.item.nested_cluster].nested_hosts_disks | length) < (host_result.guest_disk_info | length) %}
       {
         "esxi_vm_name": "{{ environment_tag }}-{{ host_result.item.name }}",
         "disks": [{% for disk in host_result.guest_disk_info.values() %}
-                  {% if nested_clusters[host_result.item.nested_cluster].nested_hosts_disks | length < disk.unit_number  %}
+                  {% if nested_clusters[host_result.item.nested_cluster].nested_hosts_disks | length < disk.unit_number %}
                     {
                       "state": "absent",
                       "scsi_controller": "{{ disk.controller_bus_number }}",
@@ -116,10 +116,10 @@
 
 # Build list of hosts with disks to be added, including the base disk
 - name: Build list of disks to add/modify
-  set_fact:
+  ansible.builtin.set_fact:
     disks_to_add: >-
-      [{% for host in nested_hosts  %}
-      {% if "nested_hosts_disks" in  nested_clusters[host.nested_cluster] %}
+      [{% for host in nested_hosts %}
+      {% if "nested_hosts_disks" in nested_clusters[host.nested_cluster] %}
       {
       "name": "{{ environment_tag }}-{{ host.name }}",
       "disks" : [
@@ -131,14 +131,14 @@
                     "unit_number": 0,
                     "datastore": "{{ nested_clusters[host.nested_cluster].hosting_datastore }}"
                   },
-                  {% for disk in nested_clusters[host.nested_cluster].nested_hosts_disks  %}
+                  {% for disk in nested_clusters[host.nested_cluster].nested_hosts_disks %}
                     {
                       "size_gb": {{ disk.size_gb }},
                       "type": "{{ disk_mode }}",
                       "datastore": "{{ nested_clusters[host.nested_cluster].hosting_datastore }}",
                       "scsi_type": "paravirtual",
                       "scsi_controller": 0,
-                      "unit_number": {{loop.index0  + 1}}
+                      "unit_number": {{ loop.index0 + 1 }}
                     },
                   {% endfor %}
                 ]
@@ -168,9 +168,9 @@
     datacenter: "{{ hosting_vcenter.datacenter }}"
     name: "{{ environment_tag }}-{{ item.name }}"
     hardware:
-      memory_mb: "{{ nested_clusters[item.nested_cluster].ram_in_gb | int  *1024 }}"
+      memory_mb: "{{ nested_clusters[item.nested_cluster].ram_in_gb | int * 1024 }}"
       num_cpus: "{{ nested_clusters[item.nested_cluster].cpu_cores }}"
-    networks: "{{nested_clusters[item.nested_cluster].vmnic_physical_portgroup_assignment }}"
+    networks: "{{ nested_clusters[item.nested_cluster].vmnic_physical_portgroup_assignment }}"
   delegate_to: localhost
   loop: "{{ nested_hosts }}"
 
@@ -189,7 +189,7 @@
   register: hosts_power_on_result
 
 - name: Check if vCenter already exists so install steps can be skipped
-  uri:
+  ansible.builtin.uri:
     url: "https://{{ nested_vcenter.ip }}/ui/"
     method: GET
     status_code: 200
@@ -198,74 +198,77 @@
   ignore_errors: true
   register: vcenter_response
 
-- set_fact:
-    vcenter_exists={{vcenter_response.status == 200}}
+- ansible.builtin.set_fact:
+    vcenter_exists: "{{ vcenter_response.status == 200 }}"
 
-- name: vCenter install and configure tasks
+- name: Install vCenter and configure tasks
   when: not vcenter_exists
   block:
-    - debug:
+    - ansible.builtin.debug:
         msg:
           - "Deploying vCenter to spec"
           - "{{ nested_vcenter }}"
 
-    - stat: path={{vc_iso}}
+    - ansible.builtin.stat:
+        path: "{{ vc_iso }}"
       register: esxi_image
 
-    - debug: msg="vCenter ISO file at path {{vc_iso}} does not exist"
+    - ansible.builtin.debug: msg="vCenter ISO file at path {{ vc_iso }} does not exist"
       when: not esxi_image.stat.exists
       failed_when: not esxi_image.stat.exists
 
     - name: Create temporary build directory
-      tempfile:
+      ansible.builtin.tempfile:
         state: directory
         suffix: build
       register: temp_dir_results
 
-    - set_fact:
-        tmp_dir={{temp_dir_results.path}}
+    - ansible.builtin.set_fact:
+        tmp_dir={{ temp_dir_results.path }}
 
     - name: Create directory for VCSA extraction
-      file:
-        path: '{{tmp_dir}}/vcsa'
+      ansible.builtin.file:
+        path: "{{ tmp_dir }}/vcsa"
         state: directory
         mode: '0766'
 
     - name: Extract VCSA ISO image
-      command: bsdtar -xf {{vc_iso}} -C {{tmp_dir}}/vcsa
+      ansible.builtin.command: bsdtar -xf {{ vc_iso }} -C {{ tmp_dir }}/vcsa
 
     - name: Set permissions
-      file: dest={{tmp_dir}}/vcsa mode=777 recurse=yes
+      ansible.builtin.file: dest={{ tmp_dir }}/vcsa mode=777 recurse=yes
 
     - name: Create JSON template file for VCSA 6.7 with embeded PSC
-      template:
-        src=embedded_vCSA_on_VC_6.7.json
-        dest={{tmp_dir}}/vCSA_on_ESXi.json
+      ansible.builtin.template:
+        src: embedded_vCSA_on_VC_6.7.json
+        dest: "{{ tmp_dir }}/vCSA_on_ESXi.json"
+        mode: '660'
       when: vc_iso is search("-6.7.")
 
     - name: Create JSON template file for VCSA 7.0 with embeded PSC
-      template:
-        src=embedded_vCSA_on_VC_7.0.json
-        dest={{tmp_dir}}/vCSA_on_ESXi.json
+      ansible.builtin.template:
+        src: embedded_vCSA_on_VC_7.0.json
+        dest: "{{ tmp_dir }}/vCSA_on_ESXi.json"
+        mode: '660'
       when: vc_iso is search("-7.0.")
 
     - name: Perform VC CLI Install
-      command: "bash ./vcsa-deploy install --accept-eula --no-esx-ssl-verify {{tmp_dir}}/vCSA_on_ESXi.json"
+      ansible.builtin.command: "bash ./vcsa-deploy install --accept-eula --no-esx-ssl-verify {{ tmp_dir }}/vCSA_on_ESXi.json"
       args:
-        chdir: '{{tmp_dir}}/vcsa/vcsa-cli-installer/lin64/'
+        chdir: '{{ tmp_dir }}/vcsa/vcsa-cli-installer/lin64/'
       async: 9000
       poll: 0
       register: vcenter_result
 
-    - debug:
+    - ansible.builtin.debug:
         msg:
           - "The vCenter deployment can take a long time."
-          - "You can check progress at https://{{nested_vcenter.ip}}:5480 after the vCenter VM has booted."
+          - "You can check progress at https://{{ nested_vcenter.ip }}:5480 after the vCenter VM has booted."
           - "For detailed output browse to the most recent folder starting with vcsaCliInstaller under"
           - "/tmp and follow vcsa-cli-installer.log "
 
     - name: Result check for deployment of vCenter task
-      async_status:
+      ansible.builtin.async_status:
         jid: "{{ vcenter_result.ansible_job_id }}"
       register: job_result
       until: job_result.finished
@@ -273,7 +276,7 @@
       delay: 15
 
     - name: Check if the vSphere API is online
-      uri:
+      ansible.builtin.uri:
         url: "https://{{ nested_vcenter.ip }}/ui/"
         method: GET
         status_code: 200
@@ -286,18 +289,18 @@
       register: result_vc_check
 
     - name: Wait 30 seconds for the vCenter to settle
-      wait_for:
+      ansible.builtin.wait_for:
         timeout: 30
 
   always:
     - name: Remove the temp directory
-      file:
+      ansible.builtin.file:
         path: "{{ tmp_dir }}"
         state: absent
       when: tmp_dir is defined
 
 - name: Result check for deployment of host power on
-  async_status:
+  ansible.builtin.async_status:
     jid: "{{ item.ansible_job_id }}"
   register: job_result
   until: job_result.finished
@@ -306,7 +309,7 @@
   delay: 15
 
 - name: Check if hosts are online
-  uri:
+  ansible.builtin.uri:
     url: "https://{{ item.ip }}/ui/"
     method: GET
     status_code: 200

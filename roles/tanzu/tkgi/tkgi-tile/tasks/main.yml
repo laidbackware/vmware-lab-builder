@@ -1,0 +1,143 @@
+---
+
+# Creating here to allow capture of output IP
+- name: Create NSX Floating IP Pool
+  vmware.ansible_for_nsxt.nsxt_ip_pools:
+    hostname: "{{ tkgi_nsx_manager_url }}"
+    username: "{{ tkgi_nsx_username }}"
+    password: "{{ tkgi_nsx_password }}"
+    validate_certs: false
+    display_name: "{{ tkgi_nsx_floating_pool.display_name }}"
+    subnets: "{{ tkgi_nsx_floating_pool.subnets }}"
+    state: present
+  register: result_nsx_floating_pool
+
+- name: Create NSX Node IP block
+  vmware.ansible_for_nsxt.nsxt_ip_blocks:
+    hostname: "{{ tkgi_nsx_manager_url }}"
+    username: "{{ tkgi_nsx_username }}"
+    password: "{{ tkgi_nsx_password }}"
+    validate_certs: false
+    display_name: "{{ tkgi_nsx_node_block.display_name }}"
+    cidr: "{{ tkgi_nsx_node_block.cidr }}"
+    state: present
+  register: result_nsx_node_block
+
+- name: Create NSX Pod IP block
+  vmware.ansible_for_nsxt.nsxt_ip_blocks:
+    hostname: "{{ tkgi_nsx_manager_url }}"
+    username: "{{ tkgi_nsx_username }}"
+    password: "{{ tkgi_nsx_password }}"
+    validate_certs: false
+    display_name: "{{ tkgi_nsx_pod_block.display_name }}"
+    cidr: "{{ tkgi_nsx_pod_block.cidr }}"
+    state: present
+  register: result_nsx_pod_block
+
+- name: List Logical Routers
+  vmware.ansible_for_nsxt.nsxt_logical_routers_facts:
+    hostname: "{{ tkgi_nsx_manager_url }}"
+    username: "{{ tkgi_nsx_username }}"
+    password: "{{ tkgi_nsx_password }}"
+    validate_certs: false
+  register: result_nsx_routers
+
+- name: Fetch NSX Manager cert
+  ansible.builtin.shell: |-
+    set -o pipefail && \
+    openssl s_client -showcerts -servername {{ tkgi_nsx_manager_url }} \
+      -connect {{ tkgi_nsx_manager_url }}:443 </dev/null \
+      | openssl x509 -outform pem
+  register: result_nsx_manager_cert_pem
+  changed_when: false
+  args:
+    executable: /usr/bin/bash
+
+- name: Fetch Harbor cert
+  ansible.builtin.shell: |-
+    set -o pipefail && \
+    openssl s_client -showcerts -servername {{ harbor_ip }} \
+      -connect {{ harbor_ip }}:443 </dev/null \
+      | openssl x509 -outform pem
+  register: result_harbor_cert_pem
+  changed_when: false
+  args:
+    executable: /usr/bin/bash
+
+- name: Set Harbor/NSX facts
+  ansible.builtin.set_fact:
+    harbor_public_key: |-
+      {{ result_harbor_cert_pem.stdout }}
+    nsx_ca_cert: |-
+      {{ result_nsx_manager_cert_pem.stdout }}
+    nsx_floating_pool_id: "{{ result_nsx_floating_pool.id }}"
+    nsx_node_block_id: "{{ result_nsx_node_block.id }}"
+    nsx_pod_block_id: "{{ result_nsx_pod_block.id }}"
+    # Expects the T0 to be the first created router, which is not role agnostic
+    nsx_t0_id: "{{ result_nsx_routers.results[0].id }}"
+
+- name: TKGi API cert check
+  ansible.builtin.shell: |-
+    set -eo pipefail && \
+    openssl s_client -connect {{ tkgi_api_fqdn }}:443 </dev/null 2>/dev/null \
+      | openssl x509 -noout -text | grep DNS: | xargs
+  register: result_tkgi_cert_sans
+  ignore_errors: true
+  changed_when: false
+  args:
+    executable: /usr/bin/bash
+
+- ansible.builtin.set_fact:
+    tkgi_api_cert_replace: "{{ result_tkgi_cert_sans.rc != 0 or tkgi_api_fqdn not in result_tkgi_cert_sans.stdout }}"
+
+- name: Create API TKGi private key
+  community.crypto.openssl_privatekey_pipe:
+    size: 2048
+    format: pkcs8
+  register: result_tkgi_private_key
+  when: tkgi_api_cert_replace
+
+- name: Create TKGi API certificate signing request (CSR) for self-signed certificate
+  community.crypto.openssl_csr_pipe:
+    privatekey_content: "{{ result_tkgi_private_key.privatekey }}"
+    common_name: "{{ tkgi_api_fqdn }}"
+    country_name: US
+    state_or_province_name: California
+    locality_name: CA
+    organization_name: TKGi
+    subject_alt_name:
+      - "DNS:{{ tkgi_api_fqdn }}"
+  register: result_tkgi_csr
+  when: tkgi_api_cert_replace
+
+- name: Generate TKGi API Self Signed OpenSSL certificate
+  community.crypto.x509_certificate_pipe:
+    privatekey_content: "{{ result_tkgi_private_key.privatekey }}"
+    csr_content: "{{ result_tkgi_csr.csr }}"
+    provider: selfsigned
+  register: result_tkgi_public_key
+  when: tkgi_api_cert_replace
+
+- ansible.builtin.set_fact:
+    tkgi_api_public_key: "{{ result_tkgi_public_key.certificate }}"
+    tkgi_api_private_key: "{{ result_tkgi_private_key.privatekey }}"
+  when: tkgi_api_cert_replace
+
+- name: Setting TKGi Tile vars
+  ansible.builtin.set_fact:
+    tkgi_vars:
+      - slug: pivotal-container-service
+        file_path: "{{ tkgi_tile }}"
+        product_config: "{{ lookup('template', 'tkgi.yml') | from_yaml }}"
+
+- name: Dropping certificates if already set
+  ansible.builtin.set_fact:
+    tkgi_vars: |
+      {% set a = tkgi_vars[0]['product_config']['product-properties'].pop('.pivotal-container-service.pks_tls') %}
+      {{ tkgi_vars }}
+  when: not tkgi_api_cert_replace
+
+- name: Deploy TKGi
+  ansible.builtin.include_role:
+    name: tanzu/opsman/upload-stage-configure-tile
+  with_items: "{{ tkgi_vars }}"

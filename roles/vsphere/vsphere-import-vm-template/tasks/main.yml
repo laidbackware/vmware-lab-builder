@@ -1,6 +1,6 @@
 ---
 - name: Deploy OVA that will be imported as a template
-  vmware_deploy_ovf:
+  community.vmware.vmware_deploy_ovf:
     hostname: "{{ item.0.vcenter_server }}"
     username: "{{ item.0.vcenter_username }}"
     password: "{{ item.0.vcenter_password }}"
@@ -23,7 +23,7 @@
   register: vm_instance_data
 
 - name: Import Base Image Template into vSphere
-  vmware_guest:
+  community.vmware.vmware_guest:
     hostname: "{{ item.item.0.vcenter_server }}"
     username: "{{ item.item.0.vcenter_username }}"
     password: "{{ item.item.0.vcenter_password }}"

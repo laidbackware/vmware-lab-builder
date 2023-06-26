@@ -1,5 +1,5 @@
 ---
-- debug: msg="Creating transport node profiles {{ nsxt.transport_node_profiles }}"
+- ansible.builtin.debug: msg="Creating transport node profiles {{ nsxt.transport_node_profiles }}"
 
 - name: Create transport node profile
   vmware.ansible_for_nsxt.nsxt_transport_node_profiles:
@@ -8,16 +8,16 @@
     password: "{{ nsxt.manager.password }}"
     validate_certs: false
     resource_type: TransportNodeProfile
-    display_name: "{{ item.display_name}}"
-    description: "{{ item.description}}"
+    display_name: "{{ item.display_name }}"
+    description: "{{ item.description }}"
     host_switch_spec:
       resource_type: StandardHostSwitchSpec
       host_switches: "{{ item.host_switches }}"
-    transport_zone_endpoints: "{{ item.transport_zone_endpoints | default(omit)}}"
+    transport_zone_endpoints: "{{ item.transport_zone_endpoints | default(omit) }}"
     state: present
   loop: "{{ nsxt.transport_node_profiles }}"
 
-- debug: msg="Attaching transport node profiles {{ nsxt.cluster_attach }}"
+- ansible.builtin.debug: msg="Attaching transport node profiles {{ nsxt.cluster_attach }}"
 
 - name: Attach Transport node profile to cluster
   vmware.ansible_for_nsxt.nsxt_transport_node_collections:
@@ -46,10 +46,10 @@
   delay: 10
   until: host_transport_node_facts.results and host_transport_node_facts.results[0].node_deployment_info.managed_by_server
 
-- debug: msg="Creating edge nodes {{ nsxt.edge_nodes }}"
+- ansible.builtin.debug: msg="Creating edge nodes {{ nsxt.edge_nodes }}"
 
-- name: Waiting 30 seconds for vlan segments to propagate to the cluster
-  pause:
+- name: Waiting for vlan segments to propagate to the cluster
+  ansible.builtin.pause:
     echo: false
     seconds: 30
   when: tnp_attach_result.changed
@@ -94,7 +94,6 @@
           cli_username: admin
           root_password: "{{ nsxt.manager.password }}"
         vm_deployment_config:
-          # allow_ssh_root_login: true
           compute: "{{ item.cluster_name }}"
           data_networks:
             - "{{ item.network_uplink_name }}"
@@ -102,8 +101,6 @@
             - "{{ item.network_tep_name }}"
           default_gateway_addresses:
             - "{{ item.mgmt_default_gateway }}"
-          # enable_ssh: true
-          # hostname: "{{ item.mgmt_ip_address }}"
           management_network: "{{ item.network_management_name }}"
           management_port_subnets:
             - ip_addresses:
@@ -115,12 +112,12 @@
           vc_username: "{{ nested_vcenter.username }}"
           vc_password: "{{ nested_vcenter.password }}"
       deployment_type: VIRTUAL_MACHINE
-      display_name: "{{ item.display_name}}"
+      display_name: "{{ item.display_name }}"
       node_settings:
         allow_ssh_root_login: true
         enable_ssh: true
-        hostname: "{{ item.mgmt_ip_address }}"
-    # transport_zone_endpoints: "{{ item.transport_zone_endpoints }}"
+        hostname: "{{ item.mgmt_ip_address | replace('.', '-') }}.nip.io"
+        ntp_servers: ["{{ ntp_server_ip }}"]
     state: present
   async: 1800
   poll: 0
@@ -131,7 +128,7 @@
   loop: "{{ nsxt.edge_nodes }}"
 
 - name: Result check for deployment of transport node configuration
-  async_status:
+  ansible.builtin.async_status:
     jid: "{{ item.ansible_job_id }}"
   register: job_result
   until: job_result.finished

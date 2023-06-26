@@ -1,16 +1,16 @@
 ---
 - name: Pause for 60 seconds for system to stabilize
-  pause:
+  ansible.builtin.pause:
     seconds: 60
 
 - name: Create dummy Pool to force SE creation
-  avi_pool:
+  vmware.alb.avi_pool:
     avi_credentials: "{{ avi_credentials }}"
     name: dummy-pool
     state: present
 
 - name: Create vsvip for virtualservice for newtestvs
-  avi_vsvip:
+  vmware.alb.avi_vsvip:
     avi_credentials: "{{ avi_credentials }}"
     name: vsvip-dummy
     cloud_ref: /api/cloud/?name=Default-Cloud
@@ -27,7 +27,7 @@
             mask: "{{ dummy_service_subnet_mask }}"
 
 - name: Create dummy Virtual Service to force SE creation
-  avi_virtualservice:
+  vmware.alb.avi_virtualservice:
     avi_credentials: "{{ avi_credentials }}"
     name: dummy-vip
     state: present
@@ -40,23 +40,23 @@
     vsvip_ref: /api/vsvip/?name=vsvip-dummy
 
 - name: Pause for 60 seconds ensure SE is created
-  pause:
+  ansible.builtin.pause:
     seconds: 60
 
 - name: Delete dummy Virtual Service to force SE creation
-  avi_virtualservice:
+  vmware.alb.avi_virtualservice:
     avi_credentials: "{{ avi_credentials }}"
     name: dummy-vip
     state: absent
 
 - name: Delete vsvip for virtualservice for newtestvs
-  avi_vsvip:
+  vmware.alb.avi_vsvip:
     avi_credentials: "{{ avi_credentials }}"
     name: vsvip-dummy
     state: absent
 
 - name: Delete dummy Pool to force SE creation
-  avi_pool:
+  vmware.alb.avi_pool:
     avi_credentials: "{{ avi_credentials }}"
     name: dummy-pool
     state: absent

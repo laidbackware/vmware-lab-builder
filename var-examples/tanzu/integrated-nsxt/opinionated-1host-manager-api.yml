@@ -1,8 +1,11 @@
 ---
 # SOFTWARE_DIR must contain all required software
-vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.2-17958471.iso"
-esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u2_Appliance_Template_v1.ova"
-nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-3.1.3.1.0.18504672.ova"
+vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.3-21477706.iso"
+esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u3k_Appliance_Template_v1.ova"
+nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-3.2.3.0.0.21703641.ova"
+opsman_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/ops-manager-vsphere-3.0.8+LTS-T.ova"
+harbor_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/harbor-container-registry-2.8.1-build.4.pivotal"
+tkgi_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/pivotal-container-service-1.16.1-build.25.pivotal"
 
 environment_tag: "tkgi"  # Used to prepend object names in hosting vCenter
 dns_server: "192.168.0.1"
@@ -39,25 +42,68 @@ opinionated:
     nsxt_tep:
       port_group: TEP
       vlan_id: 0
-      cidr: "172.31.253.0/24"  # IP calculation depends on this being a /24
-  nsxt:
-    tier0_gateway_name: test-t0
-    tier1_gateways:
-      - display_name: infra-t1
-        route_advertisement_types:
-          - "TIER1_CONNECTED"
-          - "TIER1_NAT"
-        segments:
-          - display_name: infra-seg
-            default_gateway_cidr: "172.30.0.1/24"
-    ip_pools:
-      - display_name: floating-ips
-        subnets:
-          - allocation_ranges:
-              - start: "172.30.1.1"
-                end: "172.30.1.254"
-            cidr: "172.30.1.0/24"
+      cidr: 100.71.0.0/24
+  tkgi:
+    routeable_super_net: 172.29.0.0/23  # CIDR must be a minimum of a /24
+    private_node_cidr: 100.67.0.0/16
+    k8s_services_cidr: 100.68.0.0/16
+    node_ip_block: 100.69.0.0/16
+    pod_ip_block: 100.70.0.0/16
+    api_fqdn: api.tkgi.local
 
+  ssh_public_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC/qMIbcfUkClzrBi7QjUmtdfpjDlTSXsPcJsmdmezbem2SboQPujpFUGmzFXi5PqhPa3QOxvMn8oJpozlJYydDspFAAqX+0u8n0FrwMMn0ckwUtF4zxz/AnI8tUltjeN67M7mG+3W8ooRFeaY6nrjxEIXbkMOzSbeTaFcB9cDzRXcMmFiuoeDhUonEYbClrsPzLdzscw7Vz6BLMHwo9SBOqlaL25aG/DtZPB7jobQRh48q3RW+Hb29nH18biJNLiBDsRu1SJIzw7Dl+rNSX9Va56vX0cz5CDiTg9A69WgySDx7oZFZM3W6jyHCN0fQbw/OxE/2MemhfQbdJqgffA7zE0qx+/DVIoT5bBP7FPpQSxkMjC+AEAH4PPsDIP0KJH9do6+T/g/Mf6725IOaPSJyV0bAkz1T57T1ty19KdhvPVfjrMnCap+pLvD6Qd/lxzY9uFF4oOwWmo4xQ6hQXZ9oJUhrRsG2A5LF7XGXwOb8mHSG4InfUfjaov4gjLl5tN0=
+
+  # principal identity can be kept as default unless there is a security reason to change
+  nsx_principal_identity:
+    public_key: |-
+      -----BEGIN CERTIFICATE-----
+      MIIDADCCAeigAwIBAgIUJdyN7pMx9a5rFluqWIdBu05GGIcwDQYJKoZIhvcNAQEL
+      BQAwHjEcMBoGA1UEAwwTcGtzLW5zeC10LXN1cGVydXNlcjAeFw0yMzA0MDQxNDIy
+      NDlaFw0yNTA0MDMxNDIyNDlaMB4xHDAaBgNVBAMME3Brcy1uc3gtdC1zdXBlcnVz
+      ZXIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDXUJoCuRXNvfG24gCB
+      H367P3BjeCJ04utTCwgsj0fnk/MbUQagXidL/0azIoCvEJ6eA8n1SfD14kErnrOi
+      9TwOvy9E2MRoFYwpLcjv1oKm0SUsldFfEU0TWTIt2zJcintIWZkEzb63YK2gud0k
+      g/snCcggK1rH91SwUgi3qlXzIdsrxxaKyL5G/u2P9zUKIfYIq+S4K5hh6PNM/7Pd
+      BaSeu1Tv9AKTUrRMnporO1iopcZhcwX43YkSnSHcZqvOIOsi8cry3iaFgRbhxtEE
+      QCG0IMmtFWTFrtoNBhtjLCIQvje2pWCM5dRRHos+LN1IigtcoZAORAwtN+05z6+M
+      tZ7RAgMBAAGjNjA0MBMGA1UdJQQMMAoGCCsGAQUFBwMCMB0GA1UdDgQWBBTT5Fot
+      BYKTSO49UJHpIKZusO0ZezANBgkqhkiG9w0BAQsFAAOCAQEAw3afcTvhnbCwlzeY
+      cWOiRK+gJ3YWN+4pzY04y3A+mFhHDFZGy01eUuW1qPnV9HWyfB1GpnEtnu3aw89h
+      F0bBIJ9Tvx8bXCVnSIn/+Zea39/hOYqXHewVrennpMyCCiDu6lxadHKJVUCBDcqV
+      e9uUhEcPupNs6f8P8FflHf5jCQ95464d9sZ5caM19vfomg3bC7iLlo/Owo23nZlw
+      X2gpUu8hJFDbAeeW6Sx6ZbtVikTUFaiwTzMmSAt+xLeGmYqXNxUPDP8ORxAEcrKN
+      J9fWUWc/BhKzlXGqOf/EGjYs41OiAY/2ok1gODPZW/2nwPlFNrrq1Qv72jJ0GaWW
+      onRhDA==
+      -----END CERTIFICATE-----
+    private_key: |-
+      -----BEGIN PRIVATE KEY-----
+      MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDXUJoCuRXNvfG2
+      4gCBH367P3BjeCJ04utTCwgsj0fnk/MbUQagXidL/0azIoCvEJ6eA8n1SfD14kEr
+      nrOi9TwOvy9E2MRoFYwpLcjv1oKm0SUsldFfEU0TWTIt2zJcintIWZkEzb63YK2g
+      ud0kg/snCcggK1rH91SwUgi3qlXzIdsrxxaKyL5G/u2P9zUKIfYIq+S4K5hh6PNM
+      /7PdBaSeu1Tv9AKTUrRMnporO1iopcZhcwX43YkSnSHcZqvOIOsi8cry3iaFgRbh
+      xtEEQCG0IMmtFWTFrtoNBhtjLCIQvje2pWCM5dRRHos+LN1IigtcoZAORAwtN+05
+      z6+MtZ7RAgMBAAECggEAAeLouS23mq9XfvODmfNVhWdyC8phfDusCx9gHsp8kJ3+
+      YGwOePjfiENqx6aoO6Bo0K1A0jTSdx0DLCd+Sbxd89UfTA+dcjn/bzGW/pRBsxtx
+      o26GleTNaOYm/I7ckJdSqtjExe2AMRQYQVMPicKG60R4gTZQBnYiGE9dAzBAri9x
+      d2CMUYv+u8MgIz4UcNlOGT2m9pvOC/CX5YbDKP7GX3xuJ3Zg/XHmjvuEyBfKEGx2
+      9D7KKI9d8ra+KMJVqAR8NzubVVz0VDALXpFumbL2jJQb1jccyDbSTx619n4kRnIO
+      GtJqLWjuSAuRFk+PV6Vb48gmaKWSo5uXpvqeat/cdwKBgQDxq5J8xlXz/rzPLUS4
+      fraFTlR+MnwmN65FQyqHPYaGI4o9/DJJO7DuuUbj7fNta2FDuzR+ZQZgZhiBNqiq
+      RYL0sL6AHSnduka5XSbXRCDiwl7nfO6i4+iy52VeKdacrhV3YVDydx6hfxGPHDPo
+      F8pMpYC2mizFYPvTu1httfISgwKBgQDkFPgGSvWZt5BpkofTJfNNtQcg2eiFhnXn
+      bVaKScVmvk7AWpZ/FkmQRc1gXGKszDp1Zx7EgUBhCiN8YgxK8bQT2aVBViIaqG7N
+      mkN1RUIisBIaOPFURt1T1XAaZJxLPFD30ufv1dKhoNm50/SBUp6DITnhpNjNcT/s
+      DvQSIm+5GwKBgGQUbUGG0SmOIJqbYI4Wy3dBDPSF66vX+y9rtTz0WbVLGoC45Ao3
+      0fnKeHUDoX96rHjkGcUOCSn6ncNE42xABQ9X8kwTx7au4YL59I/JAuVlIPA0aI7E
+      WyVbdjsckGeqH/GkN2VxtxmiCZ9+SnCfCYPcNgVoq4nBtAfm2aP1aR4JAoGAHZay
+      zm4vCnAL5gZCZJwJwkz3zcU3KwtUhF9k2K/VUgziPoYB/B6yEGtdx2B01KHx+4UT
+      Mr7p0Sz1iY9WtOpCSEj17VH1PqwXI8kdczs25zUcRBabCCnhUJzh3CqtM/1xK5VK
+      zYxZtOofFMJwd852DeDjl2hBT/WfK0qNU0TwZX0CgYAm+wjS++HJBv9f2oZM2PjF
+      GVM9Bp/uEiG1z/4O7Rpsv9qJHCgVaZ3q2Qebppq4D4o7ELLcV15djClmv7qkaR9B
+      ZauGoYXF2AwcdX8JO4bWHc985IwdAfZohGEqYSOIDkwgOoDXbrtK3LE/R8XtmJJk
+      MQTQCVfQMqNNIHcVkgWBNg==
+      -----END PRIVATE KEY-----
 
 #####################################################################
 ### No need to edit below this line for an opinionated deployment ###
@@ -140,43 +186,34 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
     hosting_cluster: "{{ opinionated.hosting_cluster }}"
     license_key: "{{ lookup('env', 'NSXT_LICENSE_KEY') }}"
 
+  # If the section below is defined, the playbook will wait for the IP to become pingable
+  # For TKG service deployments this is the default gateway of the supervisor network
+  routing_test:
+    ip_to_ping: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(1) }}"
+    # The playbook will present a message using the params below
+    # A static route must be made to the router uplink for nsxt_supernet
+    router_uplink: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(3) }}"
+    nsxt_supernet: "{{ opinionated.tkgi.routeable_super_net }}"
+
   principal_identities:
     - display_name: tkgi-super-user
       role: "enterprise_admin"
       public_key: |-
-        -----BEGIN CERTIFICATE-----
-        MIIC4TCCAcmgAwIBAgIUcUSVwH8oE8BTBrF9clFe3v64YYkwDQYJKoZIhvcNAQEL
-        BQAwHjEcMBoGA1UEAwwTcGtzLW5zeC10LXN1cGVydXNlcjAeFw0yMTA0MDExNjE3
-        MzhaFw0yMzA0MDExNjE3MzhaMB4xHDAaBgNVBAMME3Brcy1uc3gtdC1zdXBlcnVz
-        ZXIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC9lFGyhqKqjX4d4sg5
-        wpPmjlIQsbpwyu1r3Jpvk8b+3KdpejUcI0UlfUAYsshhv4+g8s1/CyV6/rR4nfnL
-        sj+Da8WaGZSxQAnaBQdZS+E+xQ6JqnCmrCGZwFaTuooTt2l/cPbIeOLy1aEFb5Oy
-        5QJH155KJnpSBQwwOceKsxeeCAX+lESg7jeM+IuE5Fpix9LFNCskUyWDWIOgsT0h
-        G2ybAgIMjaqCSjneEkQGkryorhSShffG8SkYx9g/AI0Es1J4CfTuxfZZDBIFMnij
-        gLmhXejXzqI69DK8PHiR9UYIuDROJl0nYelg4bih1b6DjAqLzxpeCNZE3VLIwES/
-        nSV1AgMBAAGjFzAVMBMGA1UdJQQMMAoGCCsGAQUFBwMCMA0GCSqGSIb3DQEBCwUA
-        A4IBAQAN7Zg5YCYtF8PPjjJSEwDJ3+kZGpvEeZpva4moJs741LF6BXlwl1bM2w7e
-        hc++zn4J5oNBPiGmfoNeIZVIJmKAJG/Sj1zIiboMLelxzTW2rZBXLPST/2Sm/edF
-        XgtZsI/yL2oh6lnlGXyQRvHdH185wC9LGYwWN+t2cv2VH2IqryrtmgGn5DNdREVK
-        QAxcle1oHgzTkA6cOE2nJSlzBw4V5kXP6cLMgr5XFjA7bnkBta3XFQubZdEUGdfd
-        xMWz87g/O6p9n8UtBfW/EfRQJswn3CMRPcOW8DaPoxTLSr/p8/Jbaji3UmcnfsKS
-        2ahXFX/S0BIbF2E57GVY5djChgzW
-        -----END CERTIFICATE-----
+        {{ opinionated.nsx_principal_identity.public_key }}
+
   ip_pools:
     - display_name: tep-pool  # This is a non-routable range which is used for the overlay tunnels.
       subnets:
         - allocation_ranges:
-            - start: "{{ opinionated.hosting_network.nsxt_tep.cidr | ansible.utils.ipmath(1) }}"
-              end: "{{ opinionated.hosting_network.nsxt_tep.cidr | ansible.utils.ipmath(254) }}"
+            - start: "{{ opinionated.hosting_network.nsxt_tep.cidr | ansible.utils.ipaddr('1') | ansible.utils.ipv4('address') }}"
+              end: "{{ opinionated.hosting_network.nsxt_tep.cidr | ansible.utils.ipaddr('-2') | ansible.utils.ipv4('address') }}"
           cidr: "{{ opinionated.hosting_network.nsxt_tep.cidr }}"
-    - display_name: "{{ opinionated.nsxt.ip_pools[0].display_name }}"
-      subnets: "{{ opinionated.nsxt.ip_pools[0].subnets }}"
 
-  ip_blocks:
-    - display_name: tkgi-nodes  # This is a non-routable range which is used for the overlay tunnels.
-      cidr: 172.30.32.0/19
-    - display_name: tkgi-pods
-      cidr: 172.30.64.0/19
+  # ip_blocks:
+  #   - display_name: tkgi-nodes  # This is a non-routable range which is used for the overlay tunnels.
+  #     cidr: "{{ opinionated.tkgi.node_ip_block }}"
+  #   - display_name: tkgi-pods
+  #     cidr: "{{ opinionated.tkgi.pod_ip_block }}"
 
   uplink_profiles:
     - display_name: host-tep-profile
@@ -206,12 +243,12 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
   transport_zones:
     - display_name: tz-overlay
       transport_type: OVERLAY
-      host_switch_name: sw_overlay
+      # host_switch_name: sw_overlay  # Not required for NSX-T 3.2, but needed for 3.1
       nested_nsx: true  # Set this to true if you use NSX-T for your physical host networking
       description: "Overlay Transport Zone"
     - display_name: tz-vlan
       transport_type: VLAN
-      host_switch_name: sw_vlan
+      # host_switch_name: sw_vlan  # Not required for NSX-T 3.2, but needed for 3.1
       description: "Uplink Transport Zone"
 
   transport_node_profiles:
@@ -254,7 +291,7 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
       cluster_name: compute
       host_switches:
         tep:
-          host_switch_name: "sw_overlay"
+          # host_switch_name: "sw_overlay"  # Not required for NSX-T 3.2, but needed for 3.1
           uplink_profile_name: edge-tep-profile
           ip_assignment_spec:
             resource_type: StaticIpPoolSpec
@@ -262,12 +299,12 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
           transport_zone_endpoints:
             - transport_zone_name: "tz-overlay"
         uplink:
-          host_switch_name: "sw_vlan"
+          host_switch_name: "sw_vlan"  # Not required for NSX-T 3.2, but needed for 3.1
           uplink_profile_name: edge-uplink-profile
           transport_zone_endpoints:
             - transport_zone_name: "tz-vlan"
       transport_zone_endpoints:
-        - transport_zone_name: "tz-overlay-2"
+        - transport_zone_name: "tz-overlay"
         - transport_zone_name: "tz-vlan"
 
   edge_clusters:
@@ -285,7 +322,7 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
 
   # For full spec see - https://github.com/laidbackware/ansible-for-nsxt/blob/vmware-lab-builder/library/nsxt_policy_tier0.py
   tier_0:
-    display_name: "{{ opinionated.nsxt.tier0_gateway_name }}"
+    display_name: "t0-router"
     ha_mode: ACTIVE_STANDBY
     uplink_ip: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(3) }}"
     disable_firewall: true
@@ -297,11 +334,11 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
           - ip_address: "{{ opinionated.hosting_network.base.gateway }}"
     locale_services:
       - state: present
-        display_name: "{{ opinionated.nsxt.tier0_gateway_name }}-ls"
+        display_name: "t0-router-ls"
         edge_cluster_info:
           edge_cluster_display_name: edge-cluster-1
         interfaces:
-          - display_name: "test-t0-t0ls-iface"
+          - display_name: "t0-router-ls-iface"
             state: present
             subnets:
               - ip_addresses: ["{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(3) }}"]
@@ -313,39 +350,106 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
             mtu: 1500
 
   # build list of segments from opinionated section. See custom deployment for example of how to configurre
-  overlay_segments: >-
-    [
-      {% if "overlay_segment" in  opinionated.nsxt %}
-      {% for overlay_segment in opinionated.nsxt.standalone_overlay_segments %}
-      {
-        "display_name": "{{ overlay_segment.display_name }}",
-        "transport_zone_display_name": "tz-overlay"
-      },
-      {% endfor %}
-      {% endif %}
-      {% for tier1_gateway in opinionated.nsxt.tier1_gateways %}
-      {% if "segments" in  tier1_gateway %}
-      {% for segment in tier1_gateway.segments %}
-      {
-        "display_name": "{{ segment.display_name }}",
-        "transport_zone_display_name": "tz-overlay",
-        "tier1_display_name": "{{ tier1_gateway.display_name }}",
-        "subnets": [
-          {"gateway_address": "{{ segment.default_gateway_cidr }}"}
-        ]
-      },
-      {% endfor %}
-      {% endif %}
-      {% endfor %}
-    ]
+  overlay_segments:
+    - display_name: tkgi-infra-seg
+      transport_zone_display_name: tz-overlay
+      tier1_display_name: tkgi-infra-t1
+      subnets:
+        - gateway_address: >-
+            {{ opinionated.tkgi.routeable_super_net |
+            ansible.utils.ipmath(1) }}/{{ opinionated.tkgi.routeable_super_net.split('/')[1] |int +3 }}
 
-  tier_1_gateways: >-
-    [
-      {% for tier1_gateway in opinionated.nsxt.tier1_gateways %}
-      {
-        "display_name": "{{ tier1_gateway.display_name }}",
-        "route_advertisement_types": "{{ tier1_gateway.route_advertisement_types }}",
-        "tier0_display_name": "{{ opinionated.nsxt.tier0_gateway_name }}"
-      },
-      {% endfor %}
-    ]
+  tier_1_gateways:
+    - display_name: tkgi-infra-t1
+      route_advertisement_types:
+        - "TIER1_CONNECTED"
+        - "TIER1_NAT"
+      tier0_display_name: t0-router
+
+tanzu_opsman_bosh:
+  vm_name: "{{ environment_tag }}-ops-manager"
+  hostname: "{{ environment_tag }}-ops-manager"
+  opsman_username: admin
+  opsman_password: "{{ opinionated.master_password }}"
+  ssh_public_key: "{{ opinionated.ssh_public_key }}"
+
+  opsman_ip: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(2) }}"
+  netmask: >-
+    {{ opinionated.tkgi.routeable_super_net |
+    ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+4, 0) |
+    ansible.utils.ipaddr('netmask') }}
+  gateway: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(1) }}"
+  network: tkgi-infra-seg
+  network_cidr: >-
+    {{ opinionated.tkgi.routeable_super_net |
+    ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+4, 0) }}
+  dns: "{{ dns_server }}"
+  ntp: "{{ ntp_server_ip }}"
+
+  vcenter_url: "{{ nested_vcenter.ip }}"
+  vcenter_cluster: compute
+  vcenter_datacenter: "{{ nested_vcenter.datacenter }}"
+  vcenter_datastore: datastore-esx1
+  vcenter_folder: "/{{ nested_vcenter.datacenter }}/vm"
+  vcenter_username: "{{ nested_vcenter.username }}"
+  vcenter_password: "{{ nested_vcenter.password }}"
+  # vcenter_resource_pool: "/{{ nested_vcenter.datacenter }}/host/compute"
+
+  nsx_url: "{{ nsxt.manager.ip }}"
+  nsx_username: "{{ nsxt.manager.username }}"
+  nsx_password: "{{ nsxt.manager.password }}"
+
+  # Reserve opsman IP.
+  bosh_reserved_ip_ranges: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(2) }}"
+
+tkgi:
+  vcenter_url: "{{ nested_vcenter.ip }}"
+  vcenter_username: "{{ nested_vcenter.username }}"
+  vcenter_password: "{{ nested_vcenter.password }}"
+  vcenter_cluster: compute
+  vcenter_datacenter: "{{ nested_vcenter.datacenter }}"
+  vcenter_datastore: datastore-esx1
+  vcenter_folder: "pcf_vms"
+
+  api_fqdn: "{{ opinionated.tkgi.api_fqdn }}"
+  dns_server: "{{ dns_server }}"
+  k8s_services_cidr: "{{ opinionated.tkgi.k8s_services_cidr }}"
+
+  nsx:
+    manager_url: "{{ nsxt.manager.ip }}"
+    manager_username: "{{ nsxt.manager.username }}"
+    manager_password: "{{ nsxt.manager.password }}"
+    floating_ip_pool:
+      display_name: tkgi-floating-ips
+      subnets:
+        - allocation_ranges:
+            - start: >-
+                {{ opinionated.tkgi.routeable_super_net |
+                ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+1, 1) |
+                ansible.utils.ipaddr('1') | ansible.utils.ipv4('address') }}
+              end: >-
+                {{ opinionated.tkgi.routeable_super_net |
+                ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+1, 1) |
+                ansible.utils.ipaddr('-2') | ansible.utils.ipv4('address') }}
+
+          cidr: >-
+              {{ opinionated.tkgi.routeable_super_net |
+              ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+1, 1) }}
+
+    node_block:
+      display_name: tkgi-nodes  # This is a non-routable range which is used tkgi nodes.
+      cidr: "{{ opinionated.tkgi.node_ip_block }}"
+    pod_block:
+      display_name: tkgi-pods  # This is a non-routable range which is used tkgi pods.
+      cidr: "{{ opinionated.tkgi.pod_ip_block }}"
+
+    principal_identity:
+      public_key: |-
+        {{ opinionated.nsx_principal_identity.public_key }}
+      private_key: |-
+        {{ opinionated.nsx_principal_identity.private_key }}
+
+  harbor:
+    ip: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(15) }}"
+    fdqn: harbor.tkgi.local
+    admin_password: "{{ opinionated.master_password }}"

@@ -1,0 +1,253 @@
+---
+product-name: pivotal-container-service
+product-properties:
+  .pivotal-container-service.pks_tls:
+    value:
+      cert_pem: |-
+        {{ tkgi_api_public_key | default(omit) | indent(8) }}
+      private_key_pem: |-
+        {{ tkgi_api_private_key | default(omit) | indent(8) }}
+  .properties.cloud_provider:
+    selected_option: vsphere
+    value: vSphere
+  .properties.cloud_provider.vsphere.vcenter_dc:
+    value: "{{ tkgi_vcenter_datacenter }}"
+  .properties.cloud_provider.vsphere.vcenter_ds:
+    value: "{{ tkgi_vcenter_datastore }}"
+  .properties.cloud_provider.vsphere.vcenter_ip:
+    value: "{{ tkgi_vcenter_url}}"
+  .properties.cloud_provider.vsphere.vcenter_master_creds:
+    value:
+      identity: "{{ tkgi_vcenter_username }}"
+      password: "{{ tkgi_vcenter_password }}"
+  .properties.cloud_provider.vsphere.vcenter_vms:
+    value: "{{ tkgi_vcenter_folder }}"
+  .properties.log_sink_resources_deploy:
+    value: true
+  .properties.metric_sink_resources_deploy:
+    value: true
+  .properties.network_selector:
+    selected_option: nsx
+    value: nsx
+  .properties.network_selector.nsx.cloud-config-dns:
+    value: "{{ tkgi_dns_server }}"
+  .properties.network_selector.nsx.feign_client_read_timeout:
+    value: 60000
+  .properties.network_selector.nsx.floating-ip-pool-ids:
+    value: "{{ nsx_floating_pool_id }}"
+  .properties.network_selector.nsx.ip-block-id:
+    value: "{{ nsx_pod_block_id }}"
+  .properties.network_selector.nsx.nat_mode:
+    value: true
+  .properties.network_selector.nsx.ncp-ha-heartbeat-period:
+    value: 6
+  .properties.network_selector.nsx.ncp-ha-master-timeout:
+    value: 18
+  .properties.network_selector.nsx.ncp-ha-update-timeout:
+    value: 12
+  .properties.network_selector.nsx.network_automation:
+    value: true
+  .properties.network_selector.nsx.nodes-ip-block-id:
+    value: "{{ nsx_node_block_id }}"
+  .properties.network_selector.nsx.nsx-t-ca-cert:
+    value: |-
+      {{ nsx_ca_cert | indent(6) }}
+  .properties.network_selector.nsx.nsx-t-host:
+    value: "{{ tkgi_nsx_manager_url }}"
+  .properties.network_selector.nsx.nsx-t-insecure:
+    value: true
+  .properties.network_selector.nsx.nsx-t-superuser-certificate:
+    value:
+      cert_pem: |-
+        {{ tkgi_nsx_principal_identity.public_key | indent(8) }}
+      private_key_pem: |-
+        {{ tkgi_nsx_principal_identity.private_key | indent(8) }}
+  .properties.network_selector.nsx.policy_api:
+    value: false
+  .properties.network_selector.nsx.service_cluster_cidr:
+    value: "{{ tkgi_k8s_services_cidr }}"
+  .properties.network_selector.nsx.t0-router-id:
+    value: "{{ nsx_t0_id }}"
+  .properties.network_selector.nsx.vcenter_cluster:
+    value: "{{ tkgi_vcenter_cluster }}"
+  .properties.node_exporter_deploy:
+    value: false
+  .properties.oidc_selector:
+    selected_option: disabled
+    value: disabled
+  .properties.pks-vrli:
+    selected_option: disabled
+    value: disabled
+  .properties.pks-vrops:
+    selected_option: disabled
+    value: disabled
+  .properties.pks_api_hostname:
+    value: "{{ tkgi_api_fqdn }}"
+  .properties.plan1_selector:
+    selected_option: active
+    value: Plan Active
+  .properties.plan1_selector.active.admission_plugins:
+    value: []
+  .properties.plan1_selector.active.allow_privileged_containers:
+    value: false
+  .properties.plan1_selector.active.description:
+    value: 'Example: This plan will configure a lightweight kubernetes cluster. Not
+      recommended for production workloads.'
+  .properties.plan1_selector.active.kubelet_drain_delete_local_data:
+    value: true
+  .properties.plan1_selector.active.kubelet_drain_force:
+    value: true
+  .properties.plan1_selector.active.kubelet_drain_force_node:
+    value: false
+  .properties.plan1_selector.active.kubelet_drain_grace_period:
+    value: 10
+  .properties.plan1_selector.active.kubelet_drain_ignore_daemonsets:
+    value: true
+  .properties.plan1_selector.active.kubelet_drain_timeout:
+    value: 0
+  .properties.plan1_selector.active.master_az_placement:
+    value:
+      - az1
+  .properties.plan1_selector.active.master_instances:
+    value: 1
+  .properties.plan1_selector.active.max_worker_instances:
+    value: 50
+  .properties.plan1_selector.active.name:
+    value: small
+  .properties.plan1_selector.active.worker_az_placement:
+    value:
+      - az1
+  .properties.plan1_selector.active.worker_instances:
+    value: 1
+  .properties.plan1_selector.active.worker_vm_type:
+    value: xlarge
+  .properties.plan2_selector:
+    selected_option: inactive
+    value: Plan Inactive
+  .properties.plan3_selector:
+    selected_option: inactive
+    value: Plan Inactive
+  .properties.plan4_selector:
+    selected_option: inactive
+    value: Plan Inactive
+  .properties.plan5_selector:
+    selected_option: inactive
+    value: Plan Inactive
+  .properties.plan6_selector:
+    selected_option: inactive
+    value: Plan Inactive
+  .properties.plan7_selector:
+    selected_option: inactive
+    value: Plan Inactive
+  .properties.plan8_selector:
+    selected_option: inactive
+    value: Plan Inactive
+  .properties.plan9_selector:
+    selected_option: inactive
+    value: Plan Inactive
+  .properties.plan10_selector:
+    selected_option: inactive
+    value: Plan Inactive
+  .properties.plan11_selector:
+    selected_option: inactive
+    value: Plan Inactive
+  .properties.plan12_selector:
+    selected_option: inactive
+    value: Plan Inactive
+  .properties.plan13_selector:
+    selected_option: inactive
+    value: Plan Inactive
+  .properties.proxy_selector:
+    selected_option: disabled
+    value: Disabled
+  .properties.syslog_selector:
+    selected_option: disabled
+    value: disabled
+  .properties.telegraf_selector:
+    selected_option: disabled
+    value: disabled
+  .properties.telemetry_installation_purpose_selector:
+    selected_option: demo_or_poc
+    value: demo_or_poc
+  .properties.telemetry_selector:
+    selected_option: disabled
+    value: disabled
+  .properties.tmc:
+    selected_option: disabled
+    value: disabled
+  .properties.uaa:
+    selected_option: internal
+    value: internal
+  .properties.uaa_pks_cli_access_token_lifetime:
+    value: 600
+  .properties.uaa_pks_cli_refresh_token_lifetime:
+    value: 21600
+  .properties.uaa_pks_cluster_client_access_token_lifetime:
+    value: 600
+  .properties.uaa_pks_cluster_client_refresh_token_lifetime:
+    value: 21600
+  .properties.vsphere_csi:
+    selected_option: enabled
+    value: enabled
+  .properties.wavefront:
+    selected_option: disabled
+    value: disabled
+  .properties.worker_max_in_flight:
+    value: 4
+network-properties:
+  network:
+    name: infra
+  other_availability_zones:
+    - name: az1
+  service_network:
+    name: infra
+  singleton_availability_zone:
+    name: az1
+resource-config:
+  pivotal-container-service:
+    max_in_flight: 1
+    additional_networks: []
+    additional_vm_extensions: []
+    instance_type:
+      id: automatic
+    instances: automatic
+    nsx:
+      lbs: []
+      security_groups: []
+    nsxt:
+      lb:
+        server_pools: []
+      ns_groups: []
+      vif_type: null
+    persistent_disk:
+      name: automatic
+      size_mb: automatic
+    swap_as_percent_of_memory_size: automatic
+  pks-db:
+    max_in_flight: 1
+    additional_networks: []
+    additional_vm_extensions: []
+    instance_type:
+      id: automatic
+    instances: automatic
+    nsx:
+      lbs: []
+      security_groups: []
+    nsxt:
+      lb:
+        server_pools: []
+      ns_groups: []
+      vif_type: null
+    persistent_disk:
+      name: automatic
+      size_mb: automatic
+    swap_as_percent_of_memory_size: automatic
+errand-config:
+  delete-all-clusters:
+    pre-delete-state: true
+  pks-nsx-t-precheck:
+    post-deploy-state: true
+  smoke-tests:
+    post-deploy-state: true
+  upgrade-all-service-instances:
+    post-deploy-state: false

@@ -1,7 +1,7 @@
 ---
 
 - name: Create a VMWare cloud with write access mode
-  avi_cloud:
+  vmware.alb.avi_cloud:
     avi_credentials: "{{ avi_credentials }}"
     apic_mode: false
     dhcp_enabled: true
@@ -19,7 +19,7 @@
   register: cloud_config
 
 - name: Set Management Network Default Gateway
-  avi_vrfcontext:
+  vmware.alb.avi_vrfcontext:
     avi_credentials: "{{ avi_credentials }}"
     cloud_ref: "/api/cloud?name=Default-Cloud"
     name: "management"
@@ -35,13 +35,13 @@
           addr: "{{ se_management_network_gateway }}"
 
 - name: Wait for cloud to configure
-  pause:
+  ansible.builtin.pause:
     echo: false
     seconds: 30
   when: cloud_config.changed
 
 - name: Check to ensure that cloud is in a sync'd state
-  avi_api_session:
+  vmware.alb.avi_api_session:
     avi_credentials: "{{ avi_credentials }}"
     http_method: get
     path: cloudruntime
@@ -50,14 +50,14 @@
   register: cloud_status
 
 - name: Abort on sync error
-  fail:
+  ansible.builtin.fail:
     msg:
       - "The cloud is still not synchronised"
       - "Check the status of the cloud in the console using https://{{ controller_ip }}"
   when: not cloud_status.obj.results[0].network_sync_complete
 
 - name: Set VIP Network Default Gateway
-  avi_vrfcontext:
+  vmware.alb.avi_vrfcontext:
     avi_credentials: "{{ avi_credentials }}"
     cloud_ref: "/api/cloud?name=Default-Cloud"
     name: "global"
@@ -74,7 +74,7 @@
     system_default: true
 
 - name: Update Management Network with CIDR and range
-  avi_network:
+  vmware.alb.avi_network:
     avi_credentials: "{{ avi_credentials }}"
     name: "{{ se_management_port_group }}"
     dhcp_enabled: false
@@ -95,7 +95,7 @@
   register: management_network_result
 
 - name: Create IPAM provider
-  avi_ipamdnsproviderprofile:
+  vmware.alb.avi_ipamdnsproviderprofile:
     avi_credentials: "{{ avi_credentials }}"
     internal_profile:
       usable_networks:
@@ -106,7 +106,7 @@
   register: ipam_profile_results
 
 - name: Configure SE Group
-  avi_serviceenginegroup:
+  vmware.alb.avi_serviceenginegroup:
     avi_credentials: "{{ avi_credentials }}"
     name: "Default-Group"
     cloud_ref: "/api/cloud?name=Default-Cloud"
@@ -130,7 +130,7 @@
   register: se_group_result
 
 - name: Update Default cloud with IPAM/DNS profiles
-  avi_cloud:
+  vmware.alb.avi_cloud:
     avi_credentials: "{{ avi_credentials }}"
     apic_mode: false
     dhcp_enabled: false
@@ -154,13 +154,13 @@
   register: cloud_config
 
 - name: Wait for cloud to configure
-  pause:
+  ansible.builtin.pause:
     echo: false
     seconds: 30
   when: cloud_config.changed
 
 - name: Update VIP network
-  avi_network:
+  vmware.alb.avi_network:
     avi_credentials: "{{ avi_credentials }}"
     name: "{{ se_vip_port_group }}"
     dhcp_enabled: false

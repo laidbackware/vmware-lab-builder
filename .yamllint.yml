@@ -12,3 +12,4 @@ rules:
 ignore: |
   temp/*
   .github/workflows/*
+  tmp/*

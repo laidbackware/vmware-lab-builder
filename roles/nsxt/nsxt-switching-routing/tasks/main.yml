@@ -19,8 +19,9 @@
     tags: "{{ item.tags | default(omit) }}"
   retries: 3
   delay: 5
+  when: nsxt.tier_0 is defined
 
-- debug: var=nsxt.tier_1_gateways
+- ansible.builtin.debug: var=nsxt.tier_1_gateways
 
 - name: Create Tier 1 Gateways
   vmware.ansible_for_nsxt.nsxt_policy_tier1:
@@ -39,7 +40,7 @@
     tier0_display_name: "{{ item.tier0_display_name }}"
     # locale_services: "{{ item.locale_services | default(omit) }}"
     tags: "{{ item.tags | default(omit) }}"
-  loop: "{{ nsxt.tier_1_gateways }}"
+  loop: "{{ nsxt.tier_1_gateways | default([]) }}"
 
 - name: Create overlay segments
   vmware.ansible_for_nsxt.nsxt_policy_segment:
@@ -53,9 +54,9 @@
     tier1_display_name: "{{ item.tier1_display_name | default(omit) }}"
     transport_zone_display_name: "{{ item.transport_zone_display_name }}"
     tags: "{{ item.tags | default(omit) }}"
-  loop: "{{ nsxt.overlay_segments }}"
+  loop: "{{ nsxt.overlay_segments | default([]) }}"
 
-- debug:
+- ansible.builtin.debug:
     msg:
       - The next step will check and wait for NSX-T networks to be available
       - You must add a static route to {{ nsxt.routing_test.nsxt_supernet }} with next hop {{ nsxt.routing_test.router_uplink }}
@@ -63,6 +64,6 @@
   when: "nsxt.routing_test is defined"
 
 - name: Checking static route to NSX-T is in place by pinging {{ nsxt.routing_test.ip_to_ping }}
-  shell: "while true; do ping -c1 {{ nsxt.routing_test.ip_to_ping }} > /dev/null && break; done"
+  ansible.builtin.shell: "while true; do ping -c1 {{ nsxt.routing_test.ip_to_ping }} > /dev/null && break; done"
   delegate_to: localhost
   when: "nsxt.routing_test is defined"

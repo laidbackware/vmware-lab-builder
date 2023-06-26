@@ -1,0 +1,68 @@
+---
+
+- name: Create Tier 0 Gateway
+  vmware.ansible_for_nsxt.nsxt_policy_tier0:
+    hostname: "{{ nsxt.manager.hostname }}"
+    username: "{{ nsxt.manager.username }}"
+    password: "{{ nsxt.manager.password }}"
+    validate_certs: false
+    display_name: "{{ nsxt.tier_0.display_name }}"
+    state: present
+    ha_mode: "{{ nsxt.tier_0.ha_mode }}"
+    failover_mode: "{{ nsxt.tier_0.failover_mode | default(omit) }}"
+    disable_firewall: "{{ nsxt.tier_0.disable_firewall | default(omit) }}"
+    force_whitelisting: "{{ nsxt.tier_0.force_whitelisting | default(omit) }}"
+    static_routes: "{{ nsxt.tier_0.static_routes | default(omit) }}"
+    bfd_peers: "{{ nsxt.tier_0.bfd_peers | default(omit) }}"
+    locale_services: "{{ nsxt.tier_0.locale_services | default(omit) }}"
+    vrf_config: "{{ nsxt.tier_0.vrf_config | default(omit) }}"
+    tags: "{{ item.tags | default(omit) }}"
+  retries: 3
+  delay: 5
+
+- ansible.builtin.debug: var=nsxt.tier_1_gateways
+
+- name: Create Tier 1 Gateways
+  vmware.ansible_for_nsxt.nsxt_policy_tier1:
+    hostname: "{{ nsxt.manager.hostname }}"
+    username: "{{ nsxt.manager.username }}"
+    password: "{{ nsxt.manager.password }}"
+    validate_certs: false
+    display_name: "{{ item.display_name }}"
+    state: "{{ item.state | default('present') }}"
+    failover_mode: "{{ item.failover_mode | default(omit) }}"
+    disable_firewall: "{{ item.disable_firewall | default(omit) }}"
+    force_whitelisting: "{{ item.force_whitelisting | default(omit) }}"
+    enable_standby_relocation: "{{ item.enable_standby_relocation | default(omit) }}"
+    route_advertisement_rules: "{{ item.route_advertisement_rules | default(omit) }}"
+    route_advertisement_types: "{{ item.route_advertisement_types | default(omit) }}"
+    tier0_display_name: "{{ item.tier0_display_name }}"
+    # locale_services: "{{ item.locale_services | default(omit) }}"
+    tags: "{{ item.tags | default(omit) }}"
+  loop: "{{ nsxt.tier_1_gateways }}"
+
+- name: Create overlay segments
+  vmware.ansible_for_nsxt.nsxt_policy_segment:
+    hostname: "{{ nsxt.manager.hostname }}"
+    username: "{{ nsxt.manager.username }}"
+    password: "{{ nsxt.manager.password }}"
+    validate_certs: false
+    display_name: "{{ item.display_name }}"
+    state: present
+    subnets: "{{ item.subnets | default(omit) }}"
+    tier1_display_name: "{{ item.tier1_display_name | default(omit) }}"
+    transport_zone_display_name: "{{ item.transport_zone_display_name }}"
+    tags: "{{ item.tags | default(omit) }}"
+  loop: "{{ nsxt.overlay_segments }}"
+
+- ansible.builtin.debug:
+    msg:
+      - The next step will check and wait for NSX-T networks to be available
+      - You must add a static route to {{ nsxt.routing_test.nsxt_supernet }} with next hop {{ nsxt.routing_test.router_uplink }}
+      - It may take a short while for NSX-T to complete the configuration and respond
+  when: "nsxt.routing_test is defined"
+
+- name: Checking static route to NSX-T is in place by pinging {{ nsxt.routing_test.ip_to_ping }}
+  ansible.builtin.shell: "while true; do ping -c1 {{ nsxt.routing_test.ip_to_ping }} > /dev/null && break; done"
+  delegate_to: localhost
+  when: "nsxt.routing_test is defined"

@@ -17,10 +17,8 @@
 
 # TODO, build lookup table for names to IDs
 
-- debug: msg="{{ tag_category_result }}"
-
 - name: Build device lookup table
-  set_fact:
+  ansible.builtin.set_fact:
     tag_category_map: >-
       {
       {% for tag_category in tag_category_result.results %}
@@ -28,9 +26,7 @@
       {% endfor %}
       }
 
-- debug: msg="{{ tag_category_map }}"
-
-- debug: msg="{{tspbm.datastore_tags}}"
+- ansible.builtin.debug: var=tspbm.datastore_tags
 
 - name: Add datastore tags
   community.vmware.vmware_tag:

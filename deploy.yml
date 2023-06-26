@@ -3,78 +3,154 @@
   hosts: localhost
   gather_facts: false
   collections:
-  - vmware.alb
-  - vmware.ansible_for_nsxt
+    - vmware.alb
+    - vmware.ansible_for_nsxt
+    - crypto
+
+  pre_tasks:
+    - name: Create the temporary directory
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: setup
+      register: temp_dir_results
+      tags: ["pre"]
+
+    - ansible.builtin.set_fact:
+        temp_dir: "{{ temp_dir_results.path }}"
+      tags: ["pre"]
+
+  vars:
+    debug_mode: "{{ debug | default(False) | bool }}"
+
   roles:
     # Base vsphere section
     - role: vsphere/vsphere-deploy-vc-and-hosts
+      tags: ["vsphere"]
     - role: vsphere/vsphere-datacenter
+      tags: ["vsphere"]
     - role: vsphere/vsphere-clusters
+      tags: ["vsphere"]
     - role: vsphere/vsphere-vswitch0-port-groups
+      tags: ["vsphere"]
     - role: vsphere/vsphere-local-datastores
+      tags: ["vsphere"]
     - role: vsphere/vsphere-nfs-datastores
+      tags: ["vsphere"]
     - role: vsphere/vsphere-enable-cluster-services
+      tags: ["vsphere"]
     - role: vsphere/vsphere-resource-pools
+      tags: ["vsphere"]
     - role: vsphere/vsphere-distributed-switches
       when: 'distributed_switches is defined'
+      tags: ["vsphere"]
     - role: vsphere/vsphere-distributed-port-groups
       when: 'distributed_switches is defined'
+      tags: ["vsphere"]
     - role: vsphere/vsphere-import-vm-template
       when: 'vm_templates is defined'
+      tags: ["vsphere"]
 
     # NSX-T Section
-    - role: nsxt/nsxt-manager
+    - role: nsxt/nsxt-mgmt-appliance
       when: 'nsxt is defined'
+      tags: ["nsxt", "nsxt-mgr"]
+    - role: nsxt/nsxt-mgmt-certificate
+      when: 'nsxt is defined'
+      tags: ["nsxt", "nsxt-mgr-cert"]
     - role: nsxt/nsxt-ip-pools
       when: 'nsxt.ip_pools is defined'
+      tags: ["nsxt", "nsxt-ip-pools"]
     - role: nsxt/nsxt-policy-ip-pools
       when: 'nsxt.policy_ip_pools is defined'
+      tags: ["nsxt", "nsxt-policy-ip-pools"]
     - role: nsxt/nsxt-ip-blocks
       when: 'nsxt.ip_blocks is defined'
+      tags: ["nsxt", "nsxt-ip-blocks"]
     - role: nsxt/nsxt-uplink-profiles
       when: 'nsxt is defined'
+      tags: ["nsxt", "nsxt-uplink-profiles"]
     - role: nsxt/nsxt-transport-zones
       when: 'nsxt is defined'
+      tags: ["nsxt", "nsxt-transport-zones"]
     - role: nsxt/nsxt-compute-manager
       when: 'nsxt is defined'
+      tags: ["nsxt", "nsxt-compute-mgr"]
     - role: nsxt/nsxt-principal-identities
       when: 'nsxt.principal_identities is defined'
+      tags: ["nsxt", "nsxt-pis"]
     - role: nsxt/nsxt-vlan-segments
       when: 'nsxt is defined'
+      tags: ["nsxt", "nsxt-vlan-segments"]
     - role: nsxt/nsxt-transport-nodes
       when: 'nsxt is defined'
+      tags: ["nsxt", "nsxt-transport-nodes"]
     - role: nsxt/nsxt-edge-clusters
       when: 'nsxt is defined'
+      tags: ["nsxt", "nsxt-edge-clusters"]
     - role: nsxt/nsxt-switching-routing
       when: 'nsxt is defined'
+      tags: ["nsxt", "nsxt-switching-routing"]
 
     # NSX-ALB (Avi) Section
     - role: nsx-alb/deploy-controller
       when: 'nsx_alb is defined'
+      tags: ["nsx-alb"]
     - role: nsx-alb/configure-cloud
       when: 'nsx_alb is defined'
+      tags: ["nsx-alb"]
     - role: nsx-alb/dummy-service
       when: 'nsx_alb.dummy_service is defined'
+      tags: ["nsx-alb"]
 
     # Tanzu Multi-Cloud Secton
     - role: tanzu/multi-cloud-generate-config
       when: 'tanzu_multi_cloud.generated_config_file_name is defined'
+      tags: ["tkgm-config"]
 
     # vSphere with Kubernetes Section
     - role: vsphere/vsphere-storage-based-policy-management
       when: 'tspbm is defined'
+      tags: ["tkgs"]
     - role: tanzu/vsphere-content-library
       when: 'tanzu_vsphere is defined'
+      tags: ["tkgs"]
     - role: tanzu/vyos-router
       when: 'tkg_router is defined'
+      tags: ["tkgs"]
     - role: tanzu/ha-proxy
       when: 'tkg_haproxy is defined'
+      tags: ["tkgs"]
     - role: tanzu/vsphere-enable-cluster
       when: 'tanzu_vsphere is defined'
+      tags: ["tkgs"]
 
-    # Harbor section
+    # Opsman/Bosh Secton
+    - role: tanzu/opsman/install-opsman
+      when: 'tanzu_opsman_bosh is defined'
+      tags: ["opsman"]
+    - role: tanzu/opsman/configure-bosh
+      when: 'tanzu_opsman_bosh is defined'
+      tags: ["bosh"]
+
+    # TKGi section
+    - role: tanzu/tkgi/harbor-tile
+      when: 'tkgi is defined'
+      tags: ["harbor-tile"]
+    - role: tanzu/tkgi/tkgi-tile
+      when: 'tkgi is defined'
+      tags: ["tkgi-tile"]
+
+    # Harbor VM section
     - role: harbor-standalone/harbor-vm
       when: 'harbor_standalone is defined'
+      tags: ["harbor"]
+
+  post_tasks:
+    - name: Remove the temporary directory
+      ansible.builtin.file:
+        path: "{{ temp_dir }}"
+        state: absent
+      no_log: true
 
 # Separate section to run commands inside harbor VM if created
 - name: Setup Standalone Harbor
@@ -83,6 +159,7 @@
   roles:
     - role: harbor-standalone/harbor-configuration
       when: 'harbor_standalone is defined'
+      tags: ["harbor"]
 
 - name: Display Summary
   hosts: localhost
@@ -90,3 +167,4 @@
   roles:
     ### Show outputs at the end
     - role: display-configuration
+      tags: ["summary"]

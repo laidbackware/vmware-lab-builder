@@ -1,8 +1,8 @@
 ---
-- stat: path={{ nsxt_ova }}
+- ansible.builtin.stat: path={{ nsxt_ova }}
   register: esxi_image
 
-- debug: msg="NSX-T OVA file at path {{ nsxt_ova }} does not exist"
+- ansible.builtin.debug: msg="NSX-T OVA file at path {{ nsxt_ova }} does not exist"
   when: not esxi_image.stat.exists
   failed_when: not esxi_image.stat.exists
 
@@ -46,7 +46,7 @@
   register: nsxt_manager_results
 
 - name: Check on NSX-T Manager Deploy Job
-  async_status:
+  ansible.builtin.async_status:
     jid: "{{ nsxt_manager_results.ansible_job_id }}"
   register: job_result
   until: job_result.finished
@@ -62,7 +62,7 @@
     wait_time: 50
 
 - name: Check all services are up
-  uri:
+  ansible.builtin.uri:
     url: https://{{ nsxt.manager.ip }}/api/v1/cluster-manager/status
     user: "{{ nsxt.manager.username }}"
     password: "{{ nsxt.manager.password }}"
@@ -73,7 +73,7 @@
   retries: 60
   delay: 10
   register: result
-  until: "'UNKNOWN' not in result.content and 'DOWN' not in result.content"
+  until: "'UNKNOWN' not in result.content and '\"DOWN\"' not in result.content"
 
 - name: Add license
   vmware.ansible_for_nsxt.nsxt_licenses:
@@ -81,6 +81,6 @@
     username: "{{ nsxt.manager.username }}"
     password: "{{ nsxt.manager.password }}"
     validate_certs: false
-    license_key: "{{nsxt.manager.license_key}}"
+    license_key: "{{ nsxt.manager.license_key }}"
     state: present
   when: 'nsxt.manager.license_key is defined'

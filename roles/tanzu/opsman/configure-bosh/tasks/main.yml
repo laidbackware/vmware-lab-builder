@@ -1,0 +1,70 @@
+---
+
+- name: Fetch NSX Manager cert
+  ansible.builtin.shell: |
+    set -o pipefail && \
+    openssl s_client -showcerts -servername {{ nsxt.manager.ip }} -connect {{ nsxt.manager.ip }}:443 </dev/null \
+      | openssl x509 -outform pem
+  args:
+    executable: /usr/bin/bash
+  register: result_nsx_manager_cert_pem
+  changed_when: false
+
+- name: Set NSX CA Cert
+  ansible.builtin.set_fact:
+    nsx_ca_cert: |-
+      {{ result_nsx_manager_cert_pem.stdout }}
+
+- name: Set variables
+  ansible.builtin.set_fact:
+    bosh_config: |
+      {{ lookup('template', 'p-bosh.yml') | from_yaml }}
+    opsman_env: |
+      {{ lookup('template', 'env.yml') | from_yaml }}
+
+- name: Configure Bosh Director
+  args:
+    executable: /bin/bash
+  ansible.builtin.shell:
+    cmd: |
+      #/bin/bash
+      set -eu
+
+      unset OM_PASSWORD OM_USERNAME OM_SKIP_SSL_VALIDATION OM_TARGET
+
+      bosh_config=$(cat << EOF
+      {{ bosh_config | to_nice_yaml(width=9999) }}
+      EOF
+      )
+      env=$(cat << EOF
+      {{ opsman_env | to_nice_yaml }}
+      EOF
+      )
+
+      om --env <(echo "$env") configure-director \
+        --config <(echo "$bosh_config")
+  register: result_opsman_create
+  retries: 6
+  delay: 10
+  until: result_opsman_create.rc == 0
+
+- name: Applying bosh director changes
+  args:
+    executable: /bin/bash
+  ansible.builtin.shell:
+    cmd: |
+      #/bin/bash
+      set -eu
+
+      unset OM_PASSWORD OM_USERNAME OM_SKIP_SSL_VALIDATION OM_TARGET
+
+      env=$(cat << EOF
+      {{ opsman_env | to_nice_yaml }}
+      EOF
+      )
+
+      om --env <(echo "$env") apply-changes --skip-deploy-products --reattach
+  register: result_bosh_changes
+  retries: 1
+  delay: 10
+  until: result_bosh_changes.rc == 0

@@ -13,11 +13,12 @@
     resource_type: "TransportZone"
     tags: "{{ item.tags | default(omit) }}"
     transport_type: "{{ item.transport_type }}"
+    # tz_type: "{{ item.transport_type }}"
   loop: "{{ nsxt.transport_zones }}"
   register: tz_results
 
 - name: Waiting 20 seconds for transport zone to configured
-  pause:
+  ansible.builtin.pause:
     echo: false
     seconds: 20
   when: tz_results.changed

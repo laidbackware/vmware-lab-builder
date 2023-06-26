@@ -7,7 +7,7 @@
     validate_certs: false
     datacenter: "{{ nested_vcenter.datacenter }}"
     switch: "{{ item.vds_name }}"
-    version: "{{item.vds_version}}"
+    version: "{{ item.vds_version }}"
     mtu: "{{ item.mtu }}"
     uplink_quantity: "{{ item.uplink_quantity }}"
     state: present
@@ -16,14 +16,14 @@
 
 # Build of host to vds mapping buy using the nest_cluster field in the host spec
 - name: Build list of hosts to add to each vds
-  set_fact:
+  ansible.builtin.set_fact:
     host_vds_binding: >-
       [
       {% for distributed_switch in distributed_switches %}
       {% if "vmnics" in distributed_switch %}
       {% for cluster_mapping in distributed_switch.clusters %}
       {% for host in nested_hosts %}
-      {% if cluster_mapping ==  host.nested_cluster %}
+      {% if cluster_mapping == host.nested_cluster %}
       {
         "vds_name": "{{ distributed_switch.vds_name }}",
         "esxi_hostname": "{{ host.ip }}",
@@ -44,7 +44,7 @@
     validate_certs: false
     esxi_hostname: "{{ item.esxi_hostname }}"
     switch_name: "{{ item.vds_name }}"
-    vmnics: "{{ item.vmnics | default(omit)}}"
+    vmnics: "{{ item.vmnics | default(omit) }}"
     state: present
   loop: "{{ host_vds_binding }}"
   delegate_to: localhost

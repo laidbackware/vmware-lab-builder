@@ -1,0 +1,33 @@
+---
+opsman_ip: "{{ tanzu_opsman_bosh.opsman_ip }}"
+opsman_username: "{{ tanzu_opsman_bosh.opsman_username }}"
+opsman_password: "{{ tanzu_opsman_bosh.opsman_password }}"
+
+harbor_ip: "{{ tkgi.harbor.ip }}"
+harbor_fdqn: "{{ tkgi.harbor.fdqn }}"
+harbor_admin_password: "{{ tkgi.harbor.admin_password }}"
+
+tkgi_api_fqdn: "{{ tkgi.api_fqdn }}"
+tkgi_k8s_services_cidr: "{{ tkgi.k8s_services_cidr }}"
+tkgi_dns_server: "{{ tkgi.dns_server }}"
+
+tkgi_vcenter_url: "{{ tkgi.vcenter_url }}"
+tkgi_vcenter_username: "{{ tkgi.vcenter_username }}"
+tkgi_vcenter_password: "{{ tkgi.vcenter_password }}"
+tkgi_vcenter_cluster: "{{ tkgi.vcenter_cluster }}"
+tkgi_vcenter_datacenter: "{{ tkgi.vcenter_datacenter }}"
+tkgi_vcenter_datastore: "{{ tkgi.vcenter_datastore }}"
+tkgi_vcenter_folder: "{{ tkgi.vcenter_folder }}"
+
+tkgi_nsx_manager_url: "{{ tkgi.nsx.manager_url }}"
+tkgi_nsx_username: "{{ tkgi.nsx.manager_username }}"
+tkgi_nsx_password: "{{ tkgi.nsx.manager_password }}"
+tkgi_nsx_floating_pool: "{{ tkgi.nsx.floating_ip_pool }}"
+tkgi_nsx_node_block: "{{ tkgi.nsx.node_block }}"
+tkgi_nsx_pod_block: "{{ tkgi.nsx.pod_block }}"
+
+tkgi_nsx_principal_identity:
+  public_key: |-
+    {{ tkgi.nsx.principal_identity.public_key }}
+  private_key: |-
+    {{ tkgi.nsx.principal_identity.private_key }}

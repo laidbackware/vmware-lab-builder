@@ -11,9 +11,13 @@ RUN set -xe \
     && apt install -y --no-install-recommends \
         ca-certificates iputils-ping python3-apt libarchive-tools sshpass \
         build-essential python3 python3-jmespath python3-setuptools \
-        python3-pip python3-dev git \
+        python3-pip python3-dev git curl \
     \
     && ln --symbolic /usr/bin/python3 /usr/bin/python \
+    \
+    && echo "****** Installing OM CLI ******" \
+    && curl -L https://github.com/pivotal-cf/om/releases/download/7.9.0/om-linux-amd64-7.9.0 --output /usr/local/bin/om \
+    && chmod +x /usr/local/bin/om \
     \
     && echo "****** Installing Python modules ******" \
     && pip3 install ansible pyvmomi netaddr requests \
@@ -32,7 +36,7 @@ RUN set -xe \
     && ansible-galaxy collection install git+https://github.com/laidbackware/ansible-for-vsphere-tanzu.git,ansible-galaxy \
     \
     && echo "****** Removing build tools ******" \
-    && apt remove -y build-essential python3-pip python3-dev git \
+    && apt remove -y build-essential python3-pip python3-dev git curl \
     && apt autoremove -y \
     && rm -Rf /var/lib/apt/lists/* \
     && rm -Rf /usr/share/doc && rm -Rf /usr/share/man \
