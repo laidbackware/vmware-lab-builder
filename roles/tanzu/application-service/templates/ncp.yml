@@ -1,0 +1,61 @@
+product-name: VMware-NSX-T
+product-properties:
+  .properties.container_ip_blocks:
+    value:
+    - cidr: "{{ tas_nsx_container_block_cidr }}"
+      name: "{{ tas_nsx_container_block_name }}"
+  .properties.default_running_asg_use_ip_set:
+    value: false
+  .properties.enable_inventory:
+    value: true
+  .properties.enable_policy_api:
+    value: "{{ tas_nsx_policy_api | default(False) }}"
+  .properties.enable_snat:
+    value: true
+  .properties.exit_on_disconnection:
+    selected_option: enable
+    value: enable
+  .properties.external_ip_pools:
+    value:
+    - allocation_ranges: "{{ tas_nsx_egress_pool_ranges }}"
+      cidr: "{{ tas_nsx_egress_pool_cidr}}"
+      name: "{{ tas_nsx_egress_pool_name }}"
+  .properties.foundation_name:
+    value: tas
+  .properties.log_firewall_rules:
+    selected_option: disable
+    value: disable
+  .properties.master_timeout:
+    value: 18
+  .properties.ncp_debug_log:
+    value: false
+  .properties.nsx_api_ca_cert:
+    value: |-
+      {{ nsx_ca_cert | indent(6) }}
+  .properties.nsx_api_managers:
+    value: https://{{ tas_nsx_manager_url }}
+  .properties.nsx_auth:
+    selected_option: client_cert
+    value: client_cert
+  .properties.nsx_auth.client_cert.nsx_api_client_cert:
+    value:
+      cert_pem: |-
+        {{ tas_nsx_principal_identity.public_key | default(omit) | indent(8) }}
+      private_key_pem: |-
+        {{ tas_nsx_principal_identity.private_key | default(omit) | indent(8) }}
+  .properties.nsx_node_agent_debug_log:
+    value: false
+  .properties.overlay_tz:
+    value: "{{ tas_nsx_transport_zone }}"
+  .properties.remove_ovs_ports_timeout:
+    value: 1800
+  .properties.snat_rule_logging:
+    selected_option: extended
+    value: extended
+  .properties.subnet_prefix:
+    value: 26
+  .properties.tier0_router:
+    value: "{{ nsx_t0_id }}"
+  .properties.wait_for_security_policy_sync:
+    value: false
+

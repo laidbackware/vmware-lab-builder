@@ -3,12 +3,7 @@ opsman_ip: "{{ tanzu_opsman_bosh.opsman_ip }}"
 opsman_username: "{{ tanzu_opsman_bosh.opsman_username }}"
 opsman_password: "{{ tanzu_opsman_bosh.opsman_password }}"
 
-# bosh_netmask: "{{ tanzu_opsman_bosh.netmask}}"
-bosh_reserved_ip_range: "{{ tanzu_opsman_bosh.bosh_reserved_ip_ranges }}"
-bosh_gateway: "{{ tanzu_opsman_bosh.gateway }}"
-bosh_network: "{{ tanzu_opsman_bosh.network }}"
-bosh_network_cidr: "{{ tanzu_opsman_bosh.network_cidr }}"
-bosh_dns: "{{ tanzu_opsman_bosh.dns }}"
+bosh_networks: "{{ tanzu_opsman_bosh.bosh_networks }}"
 bosh_ntp: "{{ tanzu_opsman_bosh.ntp }}"
 
 bosh_vcenter_url: "{{ tanzu_opsman_bosh.vcenter_url }}"

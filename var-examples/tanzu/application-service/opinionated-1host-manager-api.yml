@@ -3,11 +3,12 @@
 vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.3-21477706.iso"
 esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u3k_Appliance_Template_v1.ova"
 nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-3.2.3.0.0.21703641.ova"
-opsman_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/ops-manager-vsphere-3.0.8+LTS-T.ova"
-harbor_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/harbor-container-registry-2.8.1-build.4.pivotal"
-tkgi_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/pivotal-container-service-1.16.1-build.25.pivotal"
+opsman_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/ops-manager-vsphere-3.0.11+LTS-T.ova"
+tas_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/srt-2.11.40-build.2.pivotal"
+tas_stemcell: "{{ lookup('env', 'SOFTWARE_DIR') }}/bosh-stemcell-621.561-vsphere-esxi-ubuntu-xenial-go_agent.tgz"
+ncp_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-NSX-T-4.0.1.20665035.pivotal"
 
-environment_tag: "tkgi"  # Used to prepend object names in hosting vCenter
+environment_tag: "tas"  # Used to prepend object names in hosting vCenter
 dns_server: "192.168.0.1"
 dns_domain: "home.local"
 ntp_server_ip: "192.168.0.1"  # Must be set to an IP address!
@@ -25,10 +26,10 @@ opinionated:
   master_password: "VMware1!"
   number_of_hosts: 1  # number of ESXi VMs to deploy
   nested_hosts:
-    cpu_cores: 8  # CPU count per nested host
-    ram_in_gb: 96  # memory per nested host
+    cpu_cores: 16  # CPU count per nested host
+    ram_in_gb: 128  # memory per nested host
     local_disks:  # (optional) this section can be removed to not modify local disks
-      - size_gb: 500
+      - size_gb: 700
         datastore_prefix: "datastore"  # omit this to not have a datastore created
   hosting_cluster: Physical
   hosting_datastore: NVME
@@ -38,18 +39,14 @@ opinionated:
       cidr: "192.168.0.0/22"
       gateway: "192.168.0.1"
       # A NSX-T deployment requires 4 IPs, plus 1 per esxi host. They MUST be contiguous.
-      starting_addr: "192.168.1.10"
+      starting_addr: "192.168.1.30"
     nsxt_tep:
       port_group: TEP
       vlan_id: 0
       cidr: 100.71.0.0/24
-  tkgi:
-    routeable_super_net: 172.29.0.0/23  # CIDR must be a minimum of a /24
-    private_node_cidr: 100.67.0.0/16
-    k8s_services_cidr: 100.68.0.0/16
-    node_ip_block: 100.69.0.0/16
-    pod_ip_block: 100.70.0.0/16
-    api_fqdn: api.tkgi.local
+  tas:
+    routeable_super_net: 172.29.80.0/22  # Needs to be visible via the T1. Smallest should be a /25.
+    container_block_cidr: 100.66.0.0/16  # No need to update unless is clashes elsewhere
 
   ssh_public_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC/qMIbcfUkClzrBi7QjUmtdfpjDlTSXsPcJsmdmezbem2SboQPujpFUGmzFXi5PqhPa3QOxvMn8oJpozlJYydDspFAAqX+0u8n0FrwMMn0ckwUtF4zxz/AnI8tUltjeN67M7mG+3W8ooRFeaY6nrjxEIXbkMOzSbeTaFcB9cDzRXcMmFiuoeDhUonEYbClrsPzLdzscw7Vz6BLMHwo9SBOqlaL25aG/DtZPB7jobQRh48q3RW+Hb29nH18biJNLiBDsRu1SJIzw7Dl+rNSX9Va56vX0cz5CDiTg9A69WgySDx7oZFZM3W6jyHCN0fQbw/OxE/2MemhfQbdJqgffA7zE0qx+/DVIoT5bBP7FPpQSxkMjC+AEAH4PPsDIP0KJH9do6+T/g/Mf6725IOaPSJyV0bAkz1T57T1ty19KdhvPVfjrMnCap+pLvD6Qd/lxzY9uFF4oOwWmo4xQ6hQXZ9oJUhrRsG2A5LF7XGXwOb8mHSG4InfUfjaov4gjLl5tN0=
 
@@ -189,14 +186,14 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
   # If the section below is defined, the playbook will wait for the IP to become pingable
   # For TKG service deployments this is the default gateway of the supervisor network
   routing_test:
-    ip_to_ping: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(1) }}"
+    ip_to_ping: "{{ opinionated.tas.routeable_super_net | ansible.utils.ipmath(1) }}"
     # The playbook will present a message using the params below
     # A static route must be made to the router uplink for nsxt_supernet
     router_uplink: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(3) }}"
-    nsxt_supernet: "{{ opinionated.tkgi.routeable_super_net }}"
+    nsxt_supernet: "{{ opinionated.tas.routeable_super_net }}"
 
   principal_identities:
-    - display_name: tkgi-super-user
+    - display_name: tas-super-user
       role: "enterprise_admin"
       public_key: |-
         {{ opinionated.nsx_principal_identity.public_key }}
@@ -208,12 +205,6 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
             - start: "{{ opinionated.hosting_network.nsxt_tep.cidr | ansible.utils.ipaddr('1') | ansible.utils.ipv4('address') }}"
               end: "{{ opinionated.hosting_network.nsxt_tep.cidr | ansible.utils.ipaddr('-2') | ansible.utils.ipv4('address') }}"
           cidr: "{{ opinionated.hosting_network.nsxt_tep.cidr }}"
-
-  # ip_blocks:
-  #   - display_name: tkgi-nodes  # This is a non-routable range which is used for the overlay tunnels.
-  #     cidr: "{{ opinionated.tkgi.node_ip_block }}"
-  #   - display_name: tkgi-pods
-  #     cidr: "{{ opinionated.tkgi.pod_ip_block }}"
 
   uplink_profiles:
     - display_name: host-tep-profile
@@ -351,16 +342,24 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
 
   # build list of segments from opinionated section. See custom deployment for example of how to configurre
   overlay_segments:
-    - display_name: tkgi-infra-seg
+    - display_name: tas-infra-seg
       transport_zone_display_name: tz-overlay
-      tier1_display_name: tkgi-infra-t1
+      tier1_display_name: tas-t1
       subnets:
         - gateway_address: >-
-            {{ opinionated.tkgi.routeable_super_net |
-            ansible.utils.ipmath(1) }}/{{ opinionated.tkgi.routeable_super_net.split('/')[1] |int +3 }}
+            {{ opinionated.tas.routeable_super_net |
+            ansible.utils.ipmath(1) }}/{{ opinionated.tas.routeable_super_net.split('/')[1] |int + 2 }}
+    - display_name: tas-deployment-seg
+      transport_zone_display_name: tz-overlay
+      tier1_display_name: tas-t1
+      subnets:
+        - gateway_address: >-
+            {{ opinionated.tas.routeable_super_net  | 
+            ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int) + 2, 1) |
+            ansible.utils.ipaddr('1') | ansible.utils.ipv4('address') }}/{{ opinionated.tas.routeable_super_net.split('/')[1] |int + 2 }}
 
   tier_1_gateways:
-    - display_name: tkgi-infra-t1
+    - display_name: tas-t1
       route_advertisement_types:
         - "TIER1_CONNECTED"
         - "TIER1_NAT"
@@ -373,18 +372,45 @@ tanzu_opsman_bosh:
   opsman_password: "{{ opinionated.master_password }}"
   ssh_public_key: "{{ opinionated.ssh_public_key }}"
 
-  opsman_ip: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(2) }}"
+  opsman_ip: "{{ opinionated.tas.routeable_super_net | ansible.utils.ipmath(2) }}"
   netmask: >-
-    {{ opinionated.tkgi.routeable_super_net |
-    ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+4, 0) |
+    {{ opinionated.tas.routeable_super_net |
+    ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int)+2, 0) |
     ansible.utils.ipaddr('netmask') }}
-  gateway: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(1) }}"
-  network: tkgi-infra-seg
-  network_cidr: >-
-    {{ opinionated.tkgi.routeable_super_net |
-    ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+4, 0) }}
+  gateway: "{{ opinionated.tas.routeable_super_net | ansible.utils.ipmath(1) }}"
+  network: tas-infra-seg
+  # network_cidr: >-
+  #   {{ opinionated.tas.routeable_super_net |
+  #   ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int)+4, 0) }}
   dns: "{{ dns_server }}"
   ntp: "{{ ntp_server_ip }}"
+
+  bosh_networks:
+    - name: infra
+      subnets:
+        - iaas_identifier: tas-infra-seg
+          cidr: >-
+            {{ opinionated.tas.routeable_super_net |
+            ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int) + 2, 0) }}
+          dns: "{{ dns_server }}"
+          gateway: "{{ opinionated.tas.routeable_super_net | ansible.utils.ipmath(1) }}"
+          reserved_ip_ranges: "{{ opinionated.tas.routeable_super_net | ansible.utils.ipmath(2) }}"
+          availability_zone_names:
+            - az1
+    - name: tas-deployment
+      subnets:
+        - iaas_identifier: tas-deployment-seg
+          cidr: >- # 172.29.65.0/24 #"{{ bosh_network_cidr }}" 
+            {{ opinionated.tas.routeable_super_net |
+            ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int) + 2, 1) }}
+          dns: "{{ dns_server }}"
+          gateway: >- 
+            {{ opinionated.tas.routeable_super_net  | 
+            ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int) + 2, 1) |
+            ansible.utils.ipaddr('1') | ansible.utils.ipv4('address') }}
+          # reserved_ip_ranges: ""
+          availability_zone_names:
+            - az1
 
   vcenter_url: "{{ nested_vcenter.ip }}"
   vcenter_cluster: compute
@@ -400,56 +426,46 @@ tanzu_opsman_bosh:
   nsx_password: "{{ nsxt.manager.password }}"
 
   # Reserve opsman IP.
-  bosh_reserved_ip_ranges: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(2) }}"
+  bosh_reserved_ip_ranges: "{{ opinionated.tas.routeable_super_net | ansible.utils.ipmath(2) }}"
 
-tkgi:
-  vcenter_url: "{{ nested_vcenter.ip }}"
-  vcenter_username: "{{ nested_vcenter.username }}"
-  vcenter_password: "{{ nested_vcenter.password }}"
-  vcenter_cluster: compute
-  vcenter_datacenter: "{{ nested_vcenter.datacenter }}"
-  vcenter_datastore: datastore-esx1
-  vcenter_folder: "pcf_vms"
-
-  api_fqdn: "{{ opinionated.tkgi.api_fqdn }}"
-  dns_server: "{{ dns_server }}"
-  k8s_services_cidr: "{{ opinionated.tkgi.k8s_services_cidr }}"
-
+tanzu_application_service:
+  deployment_network: tas-deployment
+  apps_domain: >-
+    apps.{{ opinionated.tas.routeable_super_net |
+    ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int) + 2, 1) | ansible.utils.ipaddr('-2') | ansible.utils.ipv4('address') }}.nip.io
+  sys_domain: >-
+    sys.{{ opinionated.tas.routeable_super_net |
+    ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int) + 2, 1) | ansible.utils.ipaddr('-2') | ansible.utils.ipv4('address') }}.nip.io
+  uaa_domain: >-
+    login.sys.{{ opinionated.tas.routeable_super_net |
+    ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int) + 2, 1) | ansible.utils.ipaddr('-2') | ansible.utils.ipv4('address') }}.nip.io
+  credhub_key: "{{ opinionated.master_password }}{{ opinionated.master_password }}{{ opinionated.master_password }}{{ opinionated.master_password }}"
+  gorouter_ip: >-
+    {{ opinionated.tas.routeable_super_net |
+    ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int) + 2, 1) | ansible.utils.ipaddr('-2') | ansible.utils.ipv4('address') }}
+  
   nsx:
-    manager_url: "{{ nsxt.manager.ip }}"
-    manager_username: "{{ nsxt.manager.username }}"
-    manager_password: "{{ nsxt.manager.password }}"
-    floating_ip_pool:
-      display_name: tkgi-floating-ips
-      subnets:
-        - allocation_ranges:
-            - start: >-
-                {{ opinionated.tkgi.routeable_super_net |
-                ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+1, 1) |
-                ansible.utils.ipaddr('1') | ansible.utils.ipv4('address') }}
-              end: >-
-                {{ opinionated.tkgi.routeable_super_net |
-                ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+1, 1) |
-                ansible.utils.ipaddr('-2') | ansible.utils.ipv4('address') }}
+    nsx_manager_url: "{{ nsxt.manager.ip }}"
+    username: "{{ nsxt.manager.username }}"
+    password: "{{ nsxt.manager.password }}"
+    transport_zone: tz-overlay
 
-          cidr: >-
-              {{ opinionated.tkgi.routeable_super_net |
-              ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+1, 1) }}
+    egress_pool_name: tas-egress
+    egress_pool_cidr: >-
+      {{ opinionated.tas.routeable_super_net |
+      ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int) + 1, 1) }}
+    egress_pool_ranges: >-
+      {{ opinionated.tas.routeable_super_net |
+      ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int) + 1, 1) | 
+      ansible.utils.ipaddr('1') | ansible.utils.ipv4('address') }}-{{ opinionated.tas.routeable_super_net |
+      ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int) + 1, 1) | ansible.utils.ipaddr('-2') | 
+      ansible.utils.ipv4('address') }}
 
-    node_block:
-      display_name: tkgi-nodes  # This is a non-routable range which is used tkgi nodes.
-      cidr: "{{ opinionated.tkgi.node_ip_block }}"
-    pod_block:
-      display_name: tkgi-pods  # This is a non-routable range which is used tkgi pods.
-      cidr: "{{ opinionated.tkgi.pod_ip_block }}"
+    container_block_name: tas-containers
+    container_block_cidr: "{{ opinionated.tas.container_block_cidr }}"
 
     principal_identity:
       public_key: |-
         {{ opinionated.nsx_principal_identity.public_key }}
       private_key: |-
         {{ opinionated.nsx_principal_identity.private_key }}
-
-  harbor:
-    ip: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(15) }}"
-    fdqn: harbor.tkgi.local
-    admin_password: "{{ opinionated.master_password }}"

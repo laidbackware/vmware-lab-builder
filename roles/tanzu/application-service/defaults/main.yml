@@ -1,0 +1,27 @@
+---
+opsman_ip: "{{ tanzu_opsman_bosh.opsman_ip }}"
+opsman_username: "{{ tanzu_opsman_bosh.opsman_username }}"
+opsman_password: "{{ tanzu_opsman_bosh.opsman_password }}"
+
+tas_nsx_transport_zone: "{{ tanzu_application_service.nsx.transport_zone }}"
+tas_nsx_manager_url: "{{ tanzu_application_service.nsx.nsx_manager_url }}"
+tas_nsx_username: "{{ tanzu_application_service.nsx.username }}"
+tas_nsx_password: "{{ tanzu_application_service.nsx.password }}"
+tas_nsx_principal_identity:
+  public_key: |-
+    {{ tanzu_application_service.nsx.principal_identity.public_key }}
+  private_key: |-
+    {{ tanzu_application_service.nsx.principal_identity.private_key }}
+
+tas_nsx_egress_pool_name: "{{ tanzu_application_service.nsx.egress_pool_name }}"
+tas_nsx_egress_pool_cidr: "{{ tanzu_application_service.nsx.egress_pool_cidr }}"
+tas_nsx_egress_pool_ranges: "{{ tanzu_application_service.nsx.egress_pool_ranges }}"
+tas_nsx_container_block_name: "{{ tanzu_application_service.nsx.container_block_name }}"
+tas_nsx_container_block_cidr: "{{ tanzu_application_service.nsx.container_block_cidr }}"
+
+tas_deployment_network: "{{ tanzu_application_service.deployment_network }}"
+tas_apps_domain: "{{ tanzu_application_service.apps_domain }}"
+tas_sys_domain: "{{ tanzu_application_service.sys_domain }}"
+tas_uaa_domain: "{{ tanzu_application_service.uaa_domain }}"
+tas_credhub_key: "{{ tanzu_application_service.credhub_key }}"
+tas_gorouter_ip: "{{ tanzu_application_service.gorouter_ip }}"

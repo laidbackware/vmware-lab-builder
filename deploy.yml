@@ -140,6 +140,11 @@
       when: 'tkgi is defined'
       tags: ["tkgi-tile"]
 
+    # TAS section
+    - role: tanzu/application-service
+      when: 'tanzu_application_service is defined'
+      tags: ["tas-tile"]
+
     # Harbor VM section
     - role: harbor-standalone/harbor-vm
       when: 'harbor_standalone is defined'

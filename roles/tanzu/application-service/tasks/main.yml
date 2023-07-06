@@ -1,0 +1,148 @@
+---
+
+- name: List Logical Routers
+  vmware.ansible_for_nsxt.nsxt_logical_routers_facts:
+    hostname: "{{ tas_nsx_manager_url }}"
+    username: "{{ tas_nsx_username }}"
+    password: "{{ tas_nsx_password }}"
+    validate_certs: false
+  register: result_nsx_routers
+
+- name: Fetch NSX Manager cert
+  ansible.builtin.shell: |-
+    set -o pipefail && \
+    openssl s_client -showcerts -servername {{ tas_nsx_manager_url }} \
+      -connect {{ tas_nsx_manager_url }}:443 </dev/null \
+      | openssl x509 -outform pem
+  register: result_nsx_manager_cert_pem
+  changed_when: false
+  args:
+    executable: /usr/bin/bash
+
+- name: Set NSX facts
+  ansible.builtin.set_fact:
+    nsx_ca_cert: |-
+      {{ result_nsx_manager_cert_pem.stdout }}
+    # Expects the T0 to be the first created router, which is not role agnostic
+    nsx_t0_id: "{{ result_nsx_routers.results[0].id }}"
+    opsman_env: |
+      {{ lookup('template', 'env.yml') | from_yaml }}
+
+- name: Check Gorouter cert hostname
+  args:
+    executable: /usr/bin/bash
+  ansible.builtin.shell: 
+    cmd: |-
+      set -eo pipefail
+
+      unset OM_PASSWORD OM_USERNAME OM_SKIP_SSL_VALIDATION OM_TARGET
+      env=$(cat << EOF
+      {{ opsman_env | to_nice_yaml }}
+      EOF
+      )
+
+      om --env <(echo "$env") staged-config -p cf --include-credentials  | \
+      om interpolate --path=/product-properties/.properties.networking_poe_ssl_certs/value/0/certificate/cert_pem | \
+      openssl x509 -noout -text | grep DNS: | xargs
+  register: result_tas_gorouter_cert_sans
+  ignore_errors: true
+  changed_when: false
+
+- name: Check UAA cert hostname
+  args:
+    executable: /usr/bin/bash
+  ansible.builtin.shell: 
+    cmd: |-
+      set -eo pipefail
+
+      unset OM_PASSWORD OM_USERNAME OM_SKIP_SSL_VALIDATION OM_TARGET
+      env=$(cat << EOF
+      {{ opsman_env | to_nice_yaml }}
+      EOF
+      )
+
+      om --env <(echo "$env") staged-config -p cf --include-credentials  | \
+      om interpolate --path=/product-properties/.uaa.service_provider_key_credentials/value/cert_pem | \
+      openssl x509 -noout -text | grep DNS: | xargs
+  register: result_tas_uaa_cert_sans
+  ignore_errors: true
+  changed_when: false
+
+- ansible.builtin.set_fact:
+    tas_gorouter_cert_replace: |-
+      {{ result_tas_gorouter_cert_sans.rc != 0 or 
+      ( tas_apps_domain not in result_tas_gorouter_cert_sans.stdout and 
+      tas_sys_domain not in result_tas_gorouter_cert_sans.stdout ) }}
+    tas_uaa_cert_replace: |-
+      {{ result_tas_uaa_cert_sans.rc != 0 or
+      tas_uaa_domain not in result_tas_uaa_cert_sans.stdout }}
+
+- name: Generate gorouter certificate
+  args:
+    executable: /usr/bin/bash
+  ansible.builtin.shell: 
+    cmd: |-
+      set -eo pipefail
+
+      unset OM_PASSWORD OM_USERNAME OM_SKIP_SSL_VALIDATION OM_TARGET
+      env=$(cat << EOF
+      {{ opsman_env | to_nice_yaml }}
+      EOF
+      )
+
+      om --env <(echo "$env") generate-certificate -d *.{{ tas_apps_domain }},*.{{ tas_sys_domain }}
+  register: result_tas_gorouter_cert_pair
+  when: tas_gorouter_cert_replace
+
+- name: Generate UAA certificate
+  args:
+    executable: /usr/bin/bash
+  ansible.builtin.shell: 
+    cmd: |-
+      set -eo pipefail
+
+      unset OM_PASSWORD OM_USERNAME OM_SKIP_SSL_VALIDATION OM_TARGET
+      env=$(cat << EOF
+      {{ opsman_env | to_nice_yaml }}
+      EOF
+      )
+
+      om --env <(echo "$env") generate-certificate -d *.{{ tas_uaa_domain }}
+  register: result_tas_uaa_cert_pair
+  when: tas_uaa_cert_replace
+
+- ansible.builtin.set_fact:
+    tas_gorouter_cert_pair: "{{ result_tas_gorouter_cert_pair.stdout | from_json }}"
+    tas_uaa_cert_pair: "{{ result_tas_uaa_cert_pair.stdout | from_json }}"
+  when: tas_gorouter_cert_replace
+
+- name: Setting TAS Tile vars
+  ansible.builtin.set_fact:
+    tas_vars:
+      - slug: VMware-NSX-T
+        file_path: "{{ ncp_tile }}"
+        product_config: "{{ lookup('template', 'ncp.yml') | from_yaml }}"
+        apply_changes: false
+      - slug: cf
+        file_path: "{{ tas_tile }}"
+        product_config: "{{ lookup('template', 'tas.yml') | from_yaml }}"
+        stemcell: "{{ tas_stemcell }}"
+
+- name: Dropping gorouter certificates if already set
+  ansible.builtin.set_fact:
+    tas_vars: |
+      {% set a = tas_vars[0]['product_config']['product-properties'].pop('.properties.networking_poe_ssl_certs') %}
+      {{ tas_vars }}
+  when: not tas_gorouter_cert_replace
+
+- name: Dropping UAA certificates if already set
+  ansible.builtin.set_fact:
+    tas_vars: |
+      {% set a = tas_vars[0]['product_config']['product-properties'].pop('.uaa.service_provider_key_credentials') %}
+      {{ tas_vars }}
+  when: not tas_uaa_cert_replace
+
+- name: Deploy TAS
+  ansible.builtin.include_role:
+    name: tanzu/opsman/upload-stage-configure-tile
+  with_items: "{{ tas_vars }}"
