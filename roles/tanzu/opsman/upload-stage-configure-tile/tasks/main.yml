@@ -83,7 +83,7 @@
       om --env <(echo "$env") upload-stemcell \
         --stemcell {{ item.stemcell }}
         
-      om --env <(echo "$env") assign-stemcell -p cf
+      om --env <(echo "$env") assign-stemcell -p {{ item.slug }}
 
   register: result_opsman_create
   when: 'item.stemcell is defined'
@@ -102,6 +102,10 @@
       EOF
       )
 
-      om --env <(echo "$env") apply-changes --product-name={{ item.slug }}
-  register: result_bosh_changes
+      om --env <(echo "$env") apply-changes \
+        --reattach
+  register: result_apply_changes
+  retries: 3
+  delay: 10
+  until: result_apply_changes.rc == 0
   when: 'not item.apply_changes is defined or item.apply_changes'

@@ -86,8 +86,7 @@
         {% if tkgi is defined %}
         "tanzu_kubernetes_grid_integrated": {
           "opsman_ip": "{{ tanzu_opsman_bosh.opsman_ip }}",
-          "apps_manager_url": "https://apps.{{ tanzu_application_service.sys_domain }}",
-          "api_fqdn": "api.{{ tanzu_application_service.sys_domain }}",
+
           "login_instructions": "username: admin. password: (opsman > TKGi tile > credentials > uaa.)"
         },
         {% endif %}

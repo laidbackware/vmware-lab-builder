@@ -129,6 +129,7 @@
       - slug: pivotal-container-service
         file_path: "{{ tkgi_tile }}"
         product_config: "{{ lookup('template', 'tkgi.yml') | from_yaml }}"
+        stemcell: "{{ tkgi_stemcell |default(omit) }}"
 
 - name: Dropping certificates if already set
   ansible.builtin.set_fact:

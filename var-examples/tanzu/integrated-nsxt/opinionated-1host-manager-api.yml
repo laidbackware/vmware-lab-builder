@@ -2,10 +2,11 @@
 # SOFTWARE_DIR must contain all required software
 vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.3-21477706.iso"
 esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u3k_Appliance_Template_v1.ova"
-nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-3.2.3.0.0.21703641.ova"
+nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-4.0.1.1.0.20598732.ova"
 opsman_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/ops-manager-vsphere-3.0.8+LTS-T.ova"
 harbor_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/harbor-container-registry-2.8.1-build.4.pivotal"
-tkgi_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/pivotal-container-service-1.16.1-build.25.pivotal"
+tkgi_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/pivotal-container-service-1.16.2-build.11.pivotal"
+tkgi_stemcell: "{{ lookup('env', 'SOFTWARE_DIR') }}/bosh-stemcell-1.125-vsphere-esxi-ubuntu-jammy-go_agent.tgz"
 
 environment_tag: "tkgi"  # Used to prepend object names in hosting vCenter
 dns_server: "192.168.0.1"
@@ -38,13 +39,13 @@ opinionated:
       cidr: "192.168.0.0/22"
       gateway: "192.168.0.1"
       # A NSX-T deployment requires 4 IPs, plus 1 per esxi host. They MUST be contiguous.
-      starting_addr: "192.168.1.10"
+      starting_addr: "192.168.1.20"
     nsxt_tep:
       port_group: TEP
       vlan_id: 0
       cidr: 100.71.0.0/24
   tkgi:
-    routeable_super_net: 172.29.0.0/23  # CIDR must be a minimum of a /24
+    routeable_super_net: 172.29.64.0/23  # CIDR must be a minimum of a /24
     private_node_cidr: 100.67.0.0/16
     k8s_services_cidr: 100.68.0.0/16
     node_ip_block: 100.69.0.0/16
@@ -380,11 +381,24 @@ tanzu_opsman_bosh:
     ansible.utils.ipaddr('netmask') }}
   gateway: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(1) }}"
   network: tkgi-infra-seg
-  network_cidr: >-
-    {{ opinionated.tkgi.routeable_super_net |
-    ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+4, 0) }}
+  # network_cidr: >-
+  #   {{ opinionated.tkgi.routeable_super_net |
+  #   ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+4, 0) }}
   dns: "{{ dns_server }}"
   ntp: "{{ ntp_server_ip }}"
+
+  bosh_networks:
+    - name: infra
+      subnets:
+        - iaas_identifier: tkgi-infra-seg
+          cidr: >-
+            {{ opinionated.tkgi.routeable_super_net |
+            ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+4, 0) }}
+          dns: "{{ dns_server }}"
+          gateway: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(1) }}"
+          reserved_ip_ranges: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(2) }}"
+          availability_zone_names:
+            - az1
 
   vcenter_url: "{{ nested_vcenter.ip }}"
   vcenter_cluster: compute
