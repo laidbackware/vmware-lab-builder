@@ -65,6 +65,6 @@
 
       om --env <(echo "$env") apply-changes --skip-deploy-products --reattach
   register: result_bosh_changes
-  retries: 1
-  delay: 10
+  retries: 2
+  delay: 15
   until: result_bosh_changes.rc == 0

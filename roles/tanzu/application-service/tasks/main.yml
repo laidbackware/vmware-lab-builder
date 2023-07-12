@@ -113,8 +113,11 @@
 
 - ansible.builtin.set_fact:
     tas_gorouter_cert_pair: "{{ result_tas_gorouter_cert_pair.stdout | from_json }}"
-    tas_uaa_cert_pair: "{{ result_tas_uaa_cert_pair.stdout | from_json }}"
   when: tas_gorouter_cert_replace
+
+- ansible.builtin.set_fact:
+    tas_uaa_cert_pair: "{{ result_tas_uaa_cert_pair.stdout | from_json }}"
+  when: tas_uaa_cert_replace
 
 - name: Setting TAS Tile vars
   ansible.builtin.set_fact:
@@ -131,14 +134,14 @@
 - name: Dropping gorouter certificates if already set
   ansible.builtin.set_fact:
     tas_vars: |
-      {% set a = tas_vars[0]['product_config']['product-properties'].pop('.properties.networking_poe_ssl_certs') %}
+      {% set a = tas_vars[1]['product_config']['product-properties'].pop('.properties.networking_poe_ssl_certs') %}
       {{ tas_vars }}
   when: not tas_gorouter_cert_replace
 
 - name: Dropping UAA certificates if already set
   ansible.builtin.set_fact:
     tas_vars: |
-      {% set a = tas_vars[0]['product_config']['product-properties'].pop('.uaa.service_provider_key_credentials') %}
+      {% set a = tas_vars[1]['product_config']['product-properties'].pop('.uaa.service_provider_key_credentials') %}
       {{ tas_vars }}
   when: not tas_uaa_cert_replace
 

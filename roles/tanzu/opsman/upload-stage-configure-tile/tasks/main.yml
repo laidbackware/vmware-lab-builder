@@ -88,7 +88,7 @@
   register: result_opsman_create
   when: 'item.stemcell is defined'
 
-- name: Apply changes for {{ item.slug }}
+- name: Apply changes - check progress on Opsman at https://{{ opsman_ip }}
   args:
     executable: /bin/bash
   ansible.builtin.shell:

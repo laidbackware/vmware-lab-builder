@@ -30,12 +30,12 @@ product-properties:
   .properties.server_cert_key:
     value:
       cert_pem: |-
-        {{ harbor_public_key | default(omit) | indent(8) }}
+        {{ harbor_cert_pair.certificate | default(omit) | indent(8) }}
       private_key_pem: |-
-        {{ harbor_private_key | default(omit) | indent(8) }}
+        {{ harbor_cert_pair.key | default(omit) | indent(8) }}
   .properties.server_cert_ca:
     value: |-
-      {{ harbor_public_key | default(omit) | indent(6) }}
+      {{ harbor_cert_pair.certificate | default(omit) | indent(6) }}
   .properties.trivy_offline_scan:
     value: true
   .properties.trivy_skip_update:

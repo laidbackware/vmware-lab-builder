@@ -1,51 +1,55 @@
 ---
 
-- name: Harbor cert check
-  ansible.builtin.shell: |-
-    set -eo pipefail && \
-    openssl s_client -connect {{ harbor_ip }}:443 </dev/null 2>/dev/null \
-      | openssl x509 -noout -text | grep DNS: | xargs
+- name: Set Opsman env
+  ansible.builtin.set_fact:
+    opsman_env: |
+      {{ lookup('template', 'env.yml') | from_yaml }}
+
+- name: Check Harbor cert hostname
+  args:
+    executable: /usr/bin/bash
+  ansible.builtin.shell: 
+    cmd: |-
+      set -eo pipefail
+
+      unset OM_PASSWORD OM_USERNAME OM_SKIP_SSL_VALIDATION OM_TARGET
+      env=$(cat << EOF
+      {{ opsman_env | to_nice_yaml }}
+      EOF
+      )
+
+      om --env <(echo "$env") staged-config -p harbor-container-registry --include-credentials  | \
+      om interpolate --path=/product-properties/.properties.server_cert_key/value/cert_pem | \
+      openssl x509 -noout -text | grep DNS: | xargs
   register: result_harbor_cert_sans
   ignore_errors: true
   changed_when: false
+
+- ansible.builtin.set_fact:
+    harbor_cert_replace: |-
+      {{ result_harbor_cert_sans.rc != 0 or 
+      ( tas_apps_domain not in result_harbor_cert_sans.stdout and 
+      tas_sys_domain not in result_harbor_cert_sans.stdout ) }}
+
+- name: Generate gorouter certificate
   args:
     executable: /usr/bin/bash
+  ansible.builtin.shell: 
+    cmd: |-
+      set -eo pipefail
 
-- ansible.builtin.set_fact:
-    harbor_cert_replace: "{{ result_harbor_cert_sans.rc != 0 or harbor_fdqn not in result_harbor_cert_sans.stdout }}"
+      unset OM_PASSWORD OM_USERNAME OM_SKIP_SSL_VALIDATION OM_TARGET
+      env=$(cat << EOF
+      {{ opsman_env | to_nice_yaml }}
+      EOF
+      )
 
-- name: Create Harbor private key
-  community.crypto.openssl_privatekey_pipe:
-    size: 2048
-    format: pkcs8
-  register: result_harbor_private_key
-  when: harbor_cert_replace
-
-- name: Create Harbor certificate signing request (CSR) for self-signed certificate
-  community.crypto.openssl_csr_pipe:
-    privatekey_content: "{{ result_harbor_private_key.privatekey }}"
-    common_name: "{{ harbor_fdqn }}"
-    country_name: US
-    state_or_province_name: California
-    locality_name: CA
-    organization_name: Harbor
-    subject_alt_name:
-      - "DNS:{{ harbor_fdqn }}"
-      - "IP:{{ harbor_ip }}"
-  register: result_harbor_csr
-  when: harbor_cert_replace
-
-- name: Generate Harbor Self Signed OpenSSL certificate
-  community.crypto.x509_certificate_pipe:
-    privatekey_content: "{{ result_harbor_private_key.privatekey }}"
-    csr_content: "{{ result_harbor_csr.csr }}"
-    provider: selfsigned
-  register: result_harbor_public_key
+      om --env <(echo "$env") generate-certificate -d {{ harbor_fdqn }},{{ harbor_ip }}
+  register: result_harbor_cert_pair
   when: harbor_cert_replace
 
 - ansible.builtin.set_fact:
-    harbor_public_key: "{{ result_harbor_public_key.certificate }}"
-    harbor_private_key: "{{ result_harbor_private_key.privatekey }}"
+    harbor_cert_pair: "{{ result_harbor_cert_pair.stdout | from_json }}"
   when: harbor_cert_replace
 
 - name: Setting Harbor Tile vars
@@ -54,6 +58,7 @@
       - slug: harbor-container-registry
         file_path: "{{ harbor_tile }}"
         product_config: "{{ lookup('template', 'harbor.yml') | from_yaml }}"
+        apply_changes: false
 
 - name: Dropping certificates if already set
   ansible.builtin.set_fact:

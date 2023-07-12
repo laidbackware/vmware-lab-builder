@@ -53,21 +53,8 @@
   args:
     executable: /usr/bin/bash
 
-- name: Fetch Harbor cert
-  ansible.builtin.shell: |-
-    set -o pipefail && \
-    openssl s_client -showcerts -servername {{ harbor_ip }} \
-      -connect {{ harbor_ip }}:443 </dev/null \
-      | openssl x509 -outform pem
-  register: result_harbor_cert_pem
-  changed_when: false
-  args:
-    executable: /usr/bin/bash
-
 - name: Set Harbor/NSX facts
   ansible.builtin.set_fact:
-    harbor_public_key: |-
-      {{ result_harbor_cert_pem.stdout }}
     nsx_ca_cert: |-
       {{ result_nsx_manager_cert_pem.stdout }}
     nsx_floating_pool_id: "{{ result_nsx_floating_pool.id }}"
