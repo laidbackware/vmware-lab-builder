@@ -37,6 +37,7 @@
           {% endif %}
         },
         {% endif %}
+
         {% if tanzu_vsphere is defined %}
         "tanzu_vsphere": {
           {% if tkg_router is defined %}
@@ -57,6 +58,7 @@
           {% endif %}
         },
         {% endif %}
+
         {% if harbor is defined %}
         "harbor": {
           "ip": "{{ harbor.ip }}",
@@ -66,9 +68,26 @@
           "admin_password": "{{ harbor.password }}"
         },
         {% endif %}
+
         {% if tanzu_multi_cloud.generated_config_file_name is defined %}
         "tanzu_multi_cloud": {
           "config_file": "{{ playbook_dir }}/{{ tanzu_multi_cloud.generated_config_file_name }}"
+        },
+        {% endif %}
+
+        {% if tanzu_application_service is defined %}
+        "tanzu_application_service": {
+          "opsman_ip": "{{ tanzu_opsman_bosh.opsman_ip }}",
+          "apps_manager_url": "https://apps.{{ tanzu_application_service.sys_domain }}",
+          "api_fqdn": "api.{{ tanzu_application_service.sys_domain }}",
+          "login_instructions": "username: admin. password: (opsman > TAS tile > credentials > uaa.)"
+        },
+        {% endif %}
+        {% if tkgi is defined %}
+        "tanzu_kubernetes_grid_integrated": {
+          "opsman_ip": "{{ tanzu_opsman_bosh.opsman_ip }}",
+
+          "login_instructions": "username: admin. password: (opsman > TKGi tile > credentials > uaa.)"
         },
         {% endif %}
 

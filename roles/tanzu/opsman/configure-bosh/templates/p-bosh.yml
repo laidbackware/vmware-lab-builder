@@ -41,15 +41,7 @@ network-assignment:
 networks-configuration:
   icmp_checks_enabled: true
   networks:
-    - name: infra
-      subnets:
-        - iaas_identifier: "{{ bosh_network }}"
-          cidr: "{{ bosh_network_cidr }}"
-          dns: "{{ bosh_dns }}"
-          gateway: "{{ bosh_gateway }}"
-          reserved_ip_ranges: "{{ bosh_reserved_ip_range }}"
-          availability_zone_names:
-            - az1
+    {{ bosh_networks | to_yaml | indent(4) }}
 properties-configuration:
   director_configuration:
     additional_ssh_users: []
@@ -89,7 +81,7 @@ properties-configuration:
   security_configuration:
     clear_default_trusted_certificates_store: false
     generate_vm_passwords: true
-    opsmanager_root_ca_trusted_certs: false
+    opsmanager_root_ca_trusted_certs: true
     trusted_certificates: |-
       {{ bosh_trusted_ca_certs | default(omit) | indent(6) }}
   syslog_configuration:

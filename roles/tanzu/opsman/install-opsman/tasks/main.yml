@@ -24,10 +24,10 @@
       "Network 1": "{{ opsman_network }}"
     ova: "{{ opsman_image_path }}"
     allow_duplicates: false
-    power_on: true
+    power_on: false
     fail_on_spec_warnings: false
     wait: true
-    wait_for_ip_address: true
+    # wait_for_ip_address: true
     inject_ovf_env: true
     properties:
       ip0: "{{ opsman_ip }} "
@@ -42,10 +42,25 @@
   delay: 10
   until: result_opsman_create is success
 
-# - name: Pause 1 minute for Opsman to boot
-#   ansible.builtin.pause:
-#     minutes: 1
-#   when: not result_opsman_create.changed
+- name: Edit VM CPU, Memory and networks
+  community.vmware.vmware_guest:
+    hostname: "{{ opsman_vcenter_url }}"
+    username: "{{ opsman_vcenter_username }}"
+    password: "{{ opsman_vcenter_password }}"
+    validate_certs: false
+    datacenter: "{{ opsman_vcenter_datacenter }}"
+    name: "{{ opsman_vm_name }}"
+    hardware:
+      num_cpus: 2
+
+- name: Set the state of a virtual machine to power on
+  community.vmware.vmware_guest_powerstate:
+    hostname: "{{ opsman_vcenter_url }}"
+    username: "{{ opsman_vcenter_username }}"
+    password: "{{ opsman_vcenter_password }}"
+    validate_certs: false
+    name: "{{ opsman_vm_name }}"
+    state: powered-on
 
 - name: Configure Opsman Auth
   args:
@@ -64,6 +79,6 @@
       om --env <(echo "$env") configure-authentication --config <(echo "$env")
 
   register: result_opsman_auth
-  retries: 24
+  retries: 30
   delay: 10
   until: result_opsman_auth.rc == 0

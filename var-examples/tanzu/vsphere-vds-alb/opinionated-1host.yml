@@ -206,13 +206,14 @@ nsx_alb:
   se_management_port_group: vm-network
   se_management_network_cidr: "{{ opinionated.hosting_network.base.cidr }}"
   se_management_network_range: >-
-    {{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(2) }}-
-    {{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(3) }}
+    {{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(2) }}-{{
+    opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(3) }}
   se_management_network_gateway: "{{ opinionated.hosting_network.base.gateway }}"
   # The vip network will contain the virtual servers created by Avi
   se_vip_port_group: workload-pg
   se_vip_network_cidr: "{{ opinionated.hosting_network.workload.cidr }}"
   se_vip_network_range: >-
-    {{ opinionated.hosting_network.workload.cidr | ansible.utils.ipmath(128) }}-{{ opinionated.hosting_network.workload.cidr |
-    ansible.utils.ipaddr('-2') | ansible.utils.ipaddr('address') }}
+    {{ opinionated.hosting_network.workload.cidr | ansible.utils.ipmath(128) }}-{{
+    opinionated.hosting_network.workload.cidr | ansible.utils.ipaddr('-2') |
+     ansible.utils.ipaddr('address') }}
   se_vip_network_gateway: "{{ opinionated.hosting_network.workload.gateway }}"
