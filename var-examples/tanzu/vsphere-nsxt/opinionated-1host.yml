@@ -1,8 +1,8 @@
 ---
 # SOFTWARE_DIR must contain all required software
-vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.3-21290409.iso"
-esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u3j_Appliance_Template_v1.ova"
-nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-3.1.3.1.0.18504672.ova"
+vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-8.0.1-21860503.iso"
+esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi8.0u1a_Appliance_Template_v1.ova"
+nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-4.0.1.1.0.20598732.ova"
 
 environment_tag: "tanzu-vsphere-nsxt"  # Used to prepend object names in hosting vCenter
 dns_server: "192.168.0.1"
@@ -237,10 +237,6 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
       # host_switch_name: "{{ distributed_switches[0].vds_name }}"
       # nested_nsx: true  # Set this to true if you use NSX-T for your physical host networking
       description: "Overlay Transport Zone"
-    # - display_name: nsx-vlan-transportzone
-    #   transport_type: VLAN
-    #   # host_switch_name: sw_vlan
-    #   description: "Uplink Transport Zone"
 
   transport_node_profiles:
     - display_name: tnp1

@@ -241,19 +241,19 @@
     - name: Create JSON template file for VCSA 6.7 with embeded PSC
       ansible.builtin.template:
         src: embedded_vCSA_on_VC_6.7.json
-        dest: "{{ tmp_dir }}/vCSA_on_ESXi.json"
+        dest: "{{ tmp_dir }}/vCSA_on_VC.json"
         mode: '660'
       when: vc_iso is search("-6.7.")
 
     - name: Create JSON template file for VCSA 7.0 with embeded PSC
       ansible.builtin.template:
         src: embedded_vCSA_on_VC_7.0.json
-        dest: "{{ tmp_dir }}/vCSA_on_ESXi.json"
+        dest: "{{ tmp_dir }}/vCSA_on_VC.json"
         mode: '660'
-      when: vc_iso is search("-7.0.")
+      when: vc_iso is search("-7.0.") or vc_iso is search("-8.0.")
 
     - name: Perform VC CLI Install
-      ansible.builtin.command: "bash ./vcsa-deploy install --accept-eula --no-esx-ssl-verify {{ tmp_dir }}/vCSA_on_ESXi.json"
+      ansible.builtin.command: "bash ./vcsa-deploy install --accept-eula --no-esx-ssl-verify {{ tmp_dir }}/vCSA_on_VC.json"
       args:
         chdir: '{{ tmp_dir }}/vcsa/vcsa-cli-installer/lin64/'
       async: 9000
@@ -298,6 +298,7 @@
         path: "{{ tmp_dir }}"
         state: absent
       when: tmp_dir is defined
+      no_log: true
 
 - name: Result check for deployment of host power on
   ansible.builtin.async_status:
