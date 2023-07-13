@@ -145,6 +145,13 @@
       {{ tas_vars }}
   when: not tas_uaa_cert_replace
 
+- name: Dropping HAProxy section unless TAS is 2.x
+  ansible.builtin.set_fact:
+    tas_vars: |
+      {% set a = tas_vars[1]['product_config']['product-properties'].pop('.properties.haproxy_forward_tls') %}
+      {{ tas_vars }}
+  when: not "srt-2." in tas_tile
+
 - name: Deploy TAS
   ansible.builtin.include_role:
     name: tanzu/opsman/upload-stage-configure-tile

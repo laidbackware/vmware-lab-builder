@@ -446,19 +446,19 @@ resource-config:
       name: automatic
       size_mb: automatic
     swap_as_percent_of_memory_size: automatic
-  ha_proxy:
-    max_in_flight: 1
-    additional_networks: []
-    additional_vm_extensions: []
-    instance_type:
-      id: automatic
-    instances: 0
-    nsxt:
-      lb:
-        server_pools: []
-      ns_groups: []
-      vif_type: null
-    swap_as_percent_of_memory_size: automatic
+  # ha_proxy:
+  #   max_in_flight: 1
+  #   additional_networks: []
+  #   additional_vm_extensions: []
+  #   instance_type:
+  #     id: automatic
+  #   instances: 0
+  #   nsxt:
+  #     lb:
+  #       server_pools: []
+  #     ns_groups: []
+  #     vif_type: null
+  #   swap_as_percent_of_memory_size: automatic
   mysql_monitor:
     max_in_flight: 1
     additional_networks: []
