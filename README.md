@@ -1,7 +1,9 @@
 # vmware-lab-builder
 Build a nested vSphere lab with Ansible.
 
-## <span style="color:red">Breaking Changes</span>
+## <span style="color:red">Warnings</span>
+
+**NSX-T 4.1 does not work**. An API was removed and `ansible-for-nsxt` introduced a breaking change to remove backware compatibility.
 
 When pulling this repo, be sure to use the latest version of the container image or check the dependency setup, to ensure the the roles have all the required dependencies.
 
@@ -16,8 +18,8 @@ Infrastructure:
 - A licensed vSphere cluster.
 - A datastore to host VMs of at least 200GB.
 - An NTP server which is reachable by IP.
-- All port groups assigned to nested ESXi VMs should have promiscuous or [Mac Learning](https://www.virtuallyghetto.com/2018/04/native-mac-learning-in-vsphere-6-7-removes-the-need-for-promiscuous-mode-for-nested-esxi.html) enabled on the parent port group.
-Software downloads should be placed in a single directory:
+- All port groups assigned to nested ESXi VMs should have [Mac Learning](https://www.virtuallyghetto.com/2018/04/native-mac-learning-in-vsphere-6-7-removes-the-need-for-promiscuous-mode-for-nested-esxi.html) or promiscuous mode enabled on the parent port group. Mac learning is preferred.
+- Software downloads should be placed in a single directory:
 - [ESXi OVA images](https://williamlam.com/nested-virtualization/nested-esxi-virtual-appliance)
 - [vCenter ISO](https://my.vmware.com/en/group/vmware/downloads/info/slug/datacenter_cloud_infrastructure/vmware_vsphere/7_0) - For command line downloading see [vmd](https://github.com/laidbackware/vmd)
 
@@ -29,15 +31,16 @@ This release has been tested with the following components and should be backwar
 
 The pattern names below match the sub-directory under `var-examples` where examples can be found.</br>
 
-| Pattern Name              | Product Versions | Status                  |
-| ------------------------- | ---------------- | ----------------------- |
-| base-vsphere              | n/a              | Stable                  |
-| nsxt                      | NSX-T 3.x,4.0    | Stable                  |
-| tanzu/multi-cloud         | NSX-ALB 20.1.7   | Stable                  |
-| tanzu/vsphere-nsxt        | NSX-T 3.1.3.1    | Stable                  |
-| tanzu/vsphere-vds-alb     | NSX-ALB 20.1.7   | Stable                  |
-| tanzu/vsphere-vds-haproxy | haproxy          | Stable                  |
-| tanzu/integrated          | NSX-T 3.x,4.0    | Work in progress/broken |
+| Pattern Name              | Product Versions                     | Status |
+| ------------------------- | ------------------------------------ | ------ |
+| base-vsphere              | n/a                                  | Stable |
+| nsxt                      | NSX-T 3.x,4.0                        | Stable |
+| tanzu/multi-cloud         | NSX-ALB 20.1.7                       | Stable |
+| tanzu/vsphere-nsxt        | NSX-T 3.1, 3.2, 4.0                  | Stable |
+| tanzu/vsphere-vds-alb     | NSX-ALB 20.1.7                       | Stable |
+| tanzu/vsphere-vds-haproxy | haproxy                              | Stable |
+| tanzu/integrated          | TKGi 1.13-1.16 & NSX-T 3.x, 4.0      | Stable |
+| tanzu/application-service | TAS 2.11, 2.13, 4.0 & NSX-T 3.2, 4.0 | Stable |
 
 ## Usage with Docker
 Each deployment pattern has an opinionated and some have a custom example(which may be out of date). The idea of the opinionated deployment is that the user has to provide the minimum of configuration and the remainder of the options are calculated for them. Whereas the custom example has to have all sections built up by hand. Either of the examples types can be fully customized.<br/>
@@ -110,8 +113,8 @@ If adding new variables to the vars file be sure to only use underscores as vari
 
 ## Roadmap
 For solution specific features, check the relevant example directory.
+- Add vSphere 8 support
 - Switch all OVAs to be uploaded and used from a Content library, to speed up deployment
-- Support for NSX-T 3.2
 - Support for NSX-ALB 21.1
 - Add ability to create TKGS namespaces
 - Add ability to create guest clusters for TKGS
