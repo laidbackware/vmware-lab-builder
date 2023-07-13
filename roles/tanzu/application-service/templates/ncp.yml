@@ -1,9 +1,10 @@
+---
 product-name: VMware-NSX-T
 product-properties:
   .properties.container_ip_blocks:
     value:
-    - cidr: "{{ tas_nsx_container_block_cidr }}"
-      name: "{{ tas_nsx_container_block_name }}"
+      - cidr: "{{ tas_nsx_container_block_cidr }}"
+        name: "{{ tas_nsx_container_block_name }}"
   .properties.default_running_asg_use_ip_set:
     value: false
   .properties.enable_inventory:
@@ -17,9 +18,9 @@ product-properties:
     value: enable
   .properties.external_ip_pools:
     value:
-    - allocation_ranges: "{{ tas_nsx_egress_pool_ranges }}"
-      cidr: "{{ tas_nsx_egress_pool_cidr}}"
-      name: "{{ tas_nsx_egress_pool_name }}"
+      - allocation_ranges: "{{ tas_nsx_egress_pool_ranges }}"
+        cidr: "{{ tas_nsx_egress_pool_cidr}}"
+        name: "{{ tas_nsx_egress_pool_name }}"
   .properties.foundation_name:
     value: tas
   .properties.log_firewall_rules:
@@ -58,4 +59,3 @@ product-properties:
     value: "{{ nsx_t0_id }}"
   .properties.wait_for_security_policy_sync:
     value: false
-

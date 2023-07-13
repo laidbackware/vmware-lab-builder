@@ -354,7 +354,7 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
       tier1_display_name: tas-t1
       subnets:
         - gateway_address: >-
-            {{ opinionated.tas.routeable_super_net  | 
+            {{ opinionated.tas.routeable_super_net  |
             ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int) + 2, 1) |
             ansible.utils.ipaddr('1') | ansible.utils.ipv4('address') }}/{{ opinionated.tas.routeable_super_net.split('/')[1] |int + 2 }}
 
@@ -400,12 +400,12 @@ tanzu_opsman_bosh:
     - name: tas-deployment
       subnets:
         - iaas_identifier: tas-deployment-seg
-          cidr: >- # 172.29.65.0/24 #"{{ bosh_network_cidr }}" 
+          cidr: >- # 172.29.65.0/24 #"{{ bosh_network_cidr }}"
             {{ opinionated.tas.routeable_super_net |
             ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int) + 2, 1) }}
           dns: "{{ dns_server }}"
-          gateway: >- 
-            {{ opinionated.tas.routeable_super_net  | 
+          gateway: >-
+            {{ opinionated.tas.routeable_super_net  |
             ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int) + 2, 1) |
             ansible.utils.ipaddr('1') | ansible.utils.ipv4('address') }}
           # reserved_ip_ranges: ""
@@ -432,18 +432,22 @@ tanzu_application_service:
   deployment_network: tas-deployment
   apps_domain: >-
     apps.{{ opinionated.tas.routeable_super_net |
-    ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int) + 2, 1) | ansible.utils.ipaddr('-2') | ansible.utils.ipv4('address') }}.nip.io
+    ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int) + 2, 1) |
+    ansible.utils.ipaddr('-2') | ansible.utils.ipv4('address') }}.nip.io
   sys_domain: >-
     sys.{{ opinionated.tas.routeable_super_net |
-    ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int) + 2, 1) | ansible.utils.ipaddr('-2') | ansible.utils.ipv4('address') }}.nip.io
+    ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int) + 2, 1) |
+    ansible.utils.ipaddr('-2') | ansible.utils.ipv4('address') }}.nip.io
   uaa_domain: >-
     login.sys.{{ opinionated.tas.routeable_super_net |
-    ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int) + 2, 1) | ansible.utils.ipaddr('-2') | ansible.utils.ipv4('address') }}.nip.io
+    ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int) + 2, 1) |
+    ansible.utils.ipaddr('-2') | ansible.utils.ipv4('address') }}.nip.io
   credhub_key: "{{ opinionated.master_password }}{{ opinionated.master_password }}{{ opinionated.master_password }}{{ opinionated.master_password }}"
   gorouter_ip: >-
     {{ opinionated.tas.routeable_super_net |
-    ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int) + 2, 1) | ansible.utils.ipaddr('-2') | ansible.utils.ipv4('address') }}
-  
+    ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int) + 2, 1) |
+    ansible.utils.ipaddr('-2') | ansible.utils.ipv4('address') }}
+
   nsx:
     nsx_manager_url: "{{ nsxt.manager.ip }}"
     username: "{{ nsxt.manager.username }}"
@@ -456,9 +460,9 @@ tanzu_application_service:
       ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int) + 1, 1) }}
     egress_pool_ranges: >-
       {{ opinionated.tas.routeable_super_net |
-      ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int) + 1, 1) | 
+      ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int) + 1, 1) |
       ansible.utils.ipaddr('1') | ansible.utils.ipv4('address') }}-{{ opinionated.tas.routeable_super_net |
-      ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int) + 1, 1) | ansible.utils.ipaddr('-2') | 
+      ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int) + 1, 1) | ansible.utils.ipaddr('-2') |
       ansible.utils.ipv4('address') }}
 
     container_block_name: tas-containers

@@ -82,7 +82,7 @@
 
       om --env <(echo "$env") upload-stemcell \
         --stemcell {{ item.stemcell }}
-        
+
       om --env <(echo "$env") assign-stemcell -p {{ item.slug }}
 
   register: result_opsman_create

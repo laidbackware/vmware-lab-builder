@@ -1,3 +1,4 @@
+---
 product-name: cf
 product-properties:
   .cloud_controller.allow_app_ssh_access:
@@ -120,10 +121,10 @@ product-properties:
   #   value: {}
   .properties.credhub_internal_provider_keys:
     value:
-    - key:
-        secret: "{{ tas_credhub_key }}"
-      name: int-encrypt
-      primary: true
+      - key:
+          secret: "{{ tas_credhub_key }}"
+        name: int-encrypt
+        primary: true
   # .properties.default_loggregator_drain_metadata:
   #   value: true
   # .properties.diego_database_max_open_connections:
@@ -182,12 +183,12 @@ product-properties:
   #   value: connect,query
   .properties.networking_poe_ssl_certs:
     value:
-    - certificate:
-        cert_pem: |
-          {{ tas_gorouter_cert_pair.certificate | default(omit) | indent(10) }}
-        private_key_pem: |
-          {{ tas_gorouter_cert_pair.key | default(omit) | indent(10) }}
-      name: tas-gorouters
+      - certificate:
+          cert_pem: |
+            {{ tas_gorouter_cert_pair.certificate | default(omit) | indent(12) }}
+          private_key_pem: |
+            {{ tas_gorouter_cert_pair.key | default(omit) | indent(12) }}
+        name: tas-gorouters
   # .properties.networkpolicyserver_database_max_open_connections:
   #   value: 200
   # .properties.networkpolicyserverinternal_database_max_open_connections:
@@ -368,7 +369,7 @@ network-properties:
   network:
     name: "{{ tas_deployment_network }}"
   other_availability_zones:
-  - name: az1
+    - name: az1
   singleton_availability_zone:
     name: az1
 resource-config:
@@ -524,4 +525,3 @@ errand-config:
     post-deploy-state: true
   test-autoscaling:
     post-deploy-state: true
-

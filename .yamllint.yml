@@ -4,10 +4,13 @@ extends: default
 rules:
   # 80 chars should be enough, but don't fail if a line is longer
   line-length:
-    max: 140
+    max: 160
     level: warning
     allow-non-breakable-words: true
     allow-non-breakable-inline-mappings: true
+
+  braces:
+    max-spaces-inside: 1  # Allows for jinja templating
 
 ignore: |
   temp/*

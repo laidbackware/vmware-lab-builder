@@ -31,7 +31,7 @@
 - name: Check Gorouter cert hostname
   args:
     executable: /usr/bin/bash
-  ansible.builtin.shell: 
+  ansible.builtin.shell:
     cmd: |-
       set -eo pipefail
 
@@ -51,7 +51,7 @@
 - name: Check UAA cert hostname
   args:
     executable: /usr/bin/bash
-  ansible.builtin.shell: 
+  ansible.builtin.shell:
     cmd: |-
       set -eo pipefail
 
@@ -70,8 +70,8 @@
 
 - ansible.builtin.set_fact:
     tas_gorouter_cert_replace: |-
-      {{ result_tas_gorouter_cert_sans.rc != 0 or 
-      ( tas_apps_domain not in result_tas_gorouter_cert_sans.stdout and 
+      {{ result_tas_gorouter_cert_sans.rc != 0 or
+      ( tas_apps_domain not in result_tas_gorouter_cert_sans.stdout and
       tas_sys_domain not in result_tas_gorouter_cert_sans.stdout ) }}
     tas_uaa_cert_replace: |-
       {{ result_tas_uaa_cert_sans.rc != 0 or
@@ -80,7 +80,7 @@
 - name: Generate gorouter certificate
   args:
     executable: /usr/bin/bash
-  ansible.builtin.shell: 
+  ansible.builtin.shell:
     cmd: |-
       set -eo pipefail
 
@@ -97,7 +97,7 @@
 - name: Generate UAA certificate
   args:
     executable: /usr/bin/bash
-  ansible.builtin.shell: 
+  ansible.builtin.shell:
     cmd: |-
       set -eo pipefail
 

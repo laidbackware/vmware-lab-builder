@@ -8,7 +8,7 @@
 - name: Check Harbor cert hostname
   args:
     executable: /usr/bin/bash
-  ansible.builtin.shell: 
+  ansible.builtin.shell:
     cmd: |-
       set -eo pipefail
 
@@ -27,14 +27,14 @@
 
 - ansible.builtin.set_fact:
     harbor_cert_replace: |-
-      {{ result_harbor_cert_sans.rc != 0 or 
-      ( tas_apps_domain not in result_harbor_cert_sans.stdout and 
+      {{ result_harbor_cert_sans.rc != 0 or
+      ( tas_apps_domain not in result_harbor_cert_sans.stdout and
       tas_sys_domain not in result_harbor_cert_sans.stdout ) }}
 
 - name: Generate gorouter certificate
   args:
     executable: /usr/bin/bash
-  ansible.builtin.shell: 
+  ansible.builtin.shell:
     cmd: |-
       set -eo pipefail
 

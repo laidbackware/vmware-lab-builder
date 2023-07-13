@@ -61,14 +61,6 @@
     validate_certs: false
     name: "{{ opsman_vm_name }}"
     state: powered-on
-  # async: 7200
-  # poll: 0
-  # register: hosts_power_on_result
-
-# - name: Pause 1 minute for Opsman to boot
-#   ansible.builtin.pause:
-#     minutes: 1
-#   when: not result_opsman_create.changed
 
 - name: Configure Opsman Auth
   args:
