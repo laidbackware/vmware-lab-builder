@@ -1,8 +1,8 @@
 ---
 # SOFTWARE_DIR must contain all required software
-vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.3-20395099.iso"
-esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u3g_Appliance_Template_v1.ova"
-nsx_alb_controller_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/controller-20.1.7-9154.ova"
+vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-8.0.1-21860503.iso"
+esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi8.0u1a_Appliance_Template_v1.ova"
+nsx_alb_controller_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/controller-21.1.4-9210.ova"
 
 environment_tag: "tanzu-vsphere-vds-avi"  # Used to prepend object names in hosting vCenter
 dns_server: "192.168.0.1"

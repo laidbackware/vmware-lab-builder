@@ -28,6 +28,7 @@ This release has been tested with the following components and should be backwar
 | vCenter Version | ESXi Version |
 | --------------- | ------------ |
 | 7.0U3           | 7.0U3        |
+| 8.0U1           | 8.0U1        |
 
 The pattern names below match the sub-directory under `var-examples` where examples can be found.</br>
 
