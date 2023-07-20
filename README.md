@@ -18,7 +18,8 @@ Infrastructure:
 - A licensed vSphere cluster.
 - A datastore to host VMs of at least 200GB.
 - An NTP server which is reachable by IP.
-- All port groups assigned to nested ESXi VMs should have [Mac Learning](https://www.virtuallyghetto.com/2018/04/native-mac-learning-in-vsphere-6-7-removes-the-need-for-promiscuous-mode-for-nested-esxi.html) or promiscuous mode enabled on the parent port group. Mac learning is preferred.
+- All port groups assigned to nested ESXi VMs should have [Mac Learning](https://www.virtuallyghetto.com/2018/04/native-mac-learning-in-vsphere-6-7-removes-the-need-for-promiscuous-mode-for-nested-esxi.html) or promiscuous mode enabled on the parent port group. Mac learning is preferred. If your physical host is vSphere 8.0, you also need to enable Forget Transmits.
+  
 - Software downloads should be placed in a single directory:
 - [ESXi OVA images](https://williamlam.com/nested-virtualization/nested-esxi-virtual-appliance)
 - [vCenter ISO](https://my.vmware.com/en/group/vmware/downloads/info/slug/datacenter_cloud_infrastructure/vmware_vsphere/7_0) - For command line downloading see [vmd](https://github.com/laidbackware/vmd)
