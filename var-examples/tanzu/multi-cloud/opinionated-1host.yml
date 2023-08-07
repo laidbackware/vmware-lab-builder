@@ -1,9 +1,9 @@
 ---
 # SOFTWARE_DIR must contain all required software
-vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.3-20990077.iso"
-esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u3j_Appliance_Template_v1.ova"
+vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-8.0.1-21860503.iso"
+esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi8.0u1a_Appliance_Template_v1.ova"
 nsx_alb_controller_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/controller-21.1.4-9210.ova"
-tkgm_os_kubernetes_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/ubuntu-2004-kube-v1.24.9+vmware.1-tkg.1-b030088fe71fea7ff1ecb87a4d425c93.ova"
+tkgm_os_kubernetes_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/ubuntu-2004-kube-v1.25.7+vmware.2-tkg.1-8a74b9f12e488c54605b3537acb683bc.ova"
 
 environment_tag: "tanzu-multi-cloud-avi"  # Used to prepend object names in hosting vCenter
 dns_server: "192.168.0.1"
@@ -190,8 +190,8 @@ nsx_alb:
   se_management_port_group: vm-network
   se_management_network_cidr: "{{ opinionated.hosting_network.base.cidr }}"
   se_management_network_range: >-
-    {{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(2) }}-
-    {{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(3) }}
+    {{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(2) }}-{{
+    opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(3) }}
   se_management_network_gateway: "{{ opinionated.hosting_network.base.gateway }}"
   # The vip network will contain the virtual servers created by Avi
   se_vip_port_group: workload-pg

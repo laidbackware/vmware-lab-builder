@@ -4,7 +4,7 @@ This will deploy NSX-T and enable Workload Management, aka deploy the Supervisor
 ## Tested Versions
 - NSX-T 3.1.3, 3.2.3, 4.0.1
   - NSX-T 4.1 is not currently supported due to breaking changes in the transport_zone module
-- vSphere 7.0 U3c
+- vSphere 7.0 U3c and 8.0 U1 (with NSX 4.0.1)
 
 ## Dependencies
 - The NSX-T ISO must be added to your software directory and the filename updated in the vars file.  

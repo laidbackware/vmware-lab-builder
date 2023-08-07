@@ -20,6 +20,8 @@
   with_subelements:
     - "{{ vm_templates }}"
     - "vsphere_clusters"
+  retries: 4  # retrie allow for newly configured clusters to settle
+  delay: 15
   register: vm_instance_data
 
 - name: Import Base Image Template into vSphere
