@@ -3,7 +3,7 @@ This will deploy using the standard 2 network topology
 
 ## Tested Versions
 - vSphere 7.0 U3i and 8.0 U1
-- NSX ALB Controller 22.1.3
+- NSX ALB Controller 22.1.5
 
 # Dependencies
 In addition to the base dependencies, you will need to download and store the NSX-ALB OVA file in your software directory:

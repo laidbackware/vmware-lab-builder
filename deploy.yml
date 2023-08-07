@@ -122,7 +122,7 @@
       tags: ["tkgs"]
     - role: tanzu/vsphere-enable-cluster
       when: 'tanzu_vsphere is defined'
-      tags: ["tkgs"]
+      tags: ["tkgs", "tkgs-enable"]
 
     # Opsman/Bosh Secton
     - role: tanzu/opsman/install-opsman
