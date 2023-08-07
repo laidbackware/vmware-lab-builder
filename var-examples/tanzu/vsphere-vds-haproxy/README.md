@@ -8,7 +8,44 @@ In addition the base dependencies, the following files need to be downloaded and
 ## Architecture
 Below is the layout of the opinionated deployment, which can be customized by editing the vars file.
 
-![Architecture Diagram](architecture-tanzu-vsphere-haproxy.png)
+</br></br>
+
+```mermaid
+flowchart LR
+  router_net("Routed\nNetwork")
+  esxi_host["Physical\nESXi Host"]
+  base_pg("Base\nPort Group")
+  trunk_pg("Trunk\nPort Group")
+  nested_host["Nested\nHost"]
+  vcenter["vCenter"]
+  base_vss("VM network\nStandard Switch")
+  trunk_vds("Trunk\nDistributed Switch")
+  nsx_seg["Haproxy\nVM"]
+  tkg_vms["TKG VMs"]
+
+  router_net --- esxi_host
+  esxi_host --- base_pg & trunk_pg
+  base_pg -- ESXi MGMT\n&\nVM Network ---- nested_host
+  trunk_pg -- Trunked Node\n& VIP VLANs --- nested_host
+  nested_host --- base_vss & trunk_vds
+  base_vss & trunk_vds --- nsx_seg
+  trunk_vds --- tkg_vms
+  
+  linkStyle 2,4,6,8,9 stroke:#00f
+
+  style router_net fill:#aaa
+  style base_pg fill:#aaa
+  style trunk_pg fill:#aaa
+  style base_vss fill:#aaa
+  style trunk_vds fill:#aaa
+  style esxi_host fill:#0ff
+  style nested_host fill:#0c0
+  style vcenter fill:#0c0
+  style nsx_seg fill:#FBCEB1
+  style tkg_vms fill:#FBCEB1
+```
+
+</br>
 
 - A single vCenter will be added.
 - 2 networks are required. 

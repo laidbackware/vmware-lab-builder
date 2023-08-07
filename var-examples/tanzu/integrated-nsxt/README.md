@@ -15,9 +15,46 @@ This pattern will deploy NSX-T and TKGi.
 - The OM CLI is used for all TKGi related tasks. This is included in v8+ of the docker image.
 
 ## Architecture
-Below is the layout of the opinionated deployment, which can be customized by editing the vars file.
+Below is the layout of the opinionated deployment, which can be customized by editing the vars file.</br>
 
-![Architecture Diagram](architecture-tanzu-integrated-nsxt.png)
+```mermaid
+flowchart LR
+  router_net("Routed\nNetwork")
+  esxi_host["Physical\nESXi Host"]
+  base_pg("Base Port Group\n(Routed)")
+  tep_pg("TEP Port Group\n(Private)")
+  nested_host["Nested\nHost"]
+  vcenter["vCenter"]
+  nsx_mgr[NSX Manager]
+  base_vss("VM network\nStandard Switch")
+  nsx_vds(NSX Overlay\nSwitch)
+  nsx_edge[NSX Edge]
+  tkgi_vms[TKGi VMs]
+
+  base_vss & nsx_vds --- nsx_edge
+  router_net --- esxi_host
+  esxi_host --- base_pg & tep_pg
+  base_pg -- ESXi MGMT\n&\nVM Network ---- nested_host
+  tep_pg -- NSX\nOverlay --- nested_host
+  base_pg --- vcenter & nsx_mgr
+  nested_host --- base_vss & nsx_vds
+  nsx_vds --- tkgi_vms
+  
+  linkStyle 2,4,8,10 stroke:#f00
+
+  style router_net fill:#aaa
+  style base_pg fill:#aaa
+  style tep_pg fill:#aaa
+  style base_vss fill:#aaa
+  style nsx_vds fill:#aaa
+  style esxi_host fill:#0ff
+  style nested_host fill:#0c0
+  style vcenter fill:#0c0
+  style nsx_mgr fill:#0c0
+  style nsx_edge fill:#FBCEB1
+  style tkgi_vms fill:#FBCEB1
+```
+</br>
 
 - The NSX-T Manager VM will be deployed as a standard VM on your physical host.
 - A single vCenter will be added and attached to the physical host.

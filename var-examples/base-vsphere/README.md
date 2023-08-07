@@ -6,17 +6,18 @@
 ## Architecture
 Below is the layout of the opinionated deployment, which can be customized by editing the vars file.</br></br>
 ```mermaid
-flowchart TD
-  router_net(Routed Network)
-  esxi_host[Physical\nESXi Host]
+flowchart LR
+  router_net("Routed\nNetwork")
+  esxi_host["Physical\nESXi Host"]
+  base_pg("Base\nPort Group")
+  nested_host["Nested\nHost"]
+  vcenter["vCenter"]
+  base_vss("VM network\nStandard Switch")
+
   router_net ---esxi_host
-  base_pg(Base Port Group)
   esxi_host ---base_pg
-  nested_host[Nested Host]
-  vcenter[vCenter]
-  base_pg -- ESXi Management\n&\nVM Network ---nested_host
+  base_pg -- ESXi MGMT\n&\nVM Network ---nested_host
   base_pg ---vcenter
-  base_vss(VM network\nStandard Switch)
   nested_host ---base_vss
 
   style router_net fill:#aaa
