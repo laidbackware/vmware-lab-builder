@@ -15,8 +15,44 @@ All base instructions. It is recommended to attempt a minimal deployment to firs
 - After the deployment you will need to add a static route to the T0 gateway uplink for any addresses that will be behind NSX-T.
 
 ## Architecture
-Below is the layout of the opinionated deployment, which can be customized by editing the vars file.</br></br>
-![Architecture Diagram](architecture-nsx-t.png)
+Below is the layout of the opinionated deployment, which can be customized by editing the vars file.</br>
+
+
+```mermaid
+flowchart LR
+  router_net("Routed\nNetwork")
+  esxi_host["Physical\nESXi Host"]
+  base_pg("Base Port Group\n(Routed)")
+  tep_pg("TEP Port Group\n(Private)")
+  nested_host["Nested\nHost"]
+  vcenter["vCenter"]
+  nsx_mgr[NSX Manager]
+  base_vss("VM network\nStandard Switch")
+  nsx_vds(NSX Overlay\nSwitch)
+  nsx_edge[NSX Edge]
+
+  router_net --- esxi_host
+  esxi_host --- base_pg & tep_pg
+  base_pg -- ESXi MGMT\n&\nVM Network --- nested_host
+  tep_pg -- NSX\nOverlay --- nested_host
+  base_pg --- vcenter & nsx_mgr
+  nested_host --- base_vss & nsx_vds
+  base_vss & nsx_vds --- nsx_edge
+  
+  linkStyle 2,4,8 stroke:#f00
+
+  style router_net fill:#aaa
+  style base_pg fill:#aaa
+  style tep_pg fill:#aaa
+  style base_vss fill:#aaa
+  style nsx_vds fill:#aaa
+  style esxi_host fill:#0ff
+  style nested_host fill:#0c0
+  style vcenter fill:#0c0
+  style nsx_mgr fill:#0c0
+  style nsx_edge fill:#FBCEB1
+```
+</br>
 - The NSX-T Manager VM will be deployed as a standard VM on your physical host.
 - A single vCenter will be added.
 - All components will be added to a single nested ESXi host. This can be customized by editing the yaml.

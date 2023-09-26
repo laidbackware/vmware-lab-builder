@@ -10,10 +10,47 @@ In addition to the base dependencies, you will need to download and store the NS
 - [Tanzu download page](https://my.vmware.com/en/group/vmware/downloads/info/slug/infrastructure_operations_management/vmware_tanzu_kubernetes_grid/1_x)
 
 ## Architecture
-Below is the layout of the opinionated deployment, which can be customized by editing the vars file.
+Below is the layout of the opinionated deployment, which can be customized by editing the vars file.</br></br>
 
+```mermaid
+flowchart LR
+  router_net("Routed\nNetwork")
+  esxi_host["Physical\nESXi Host"]
+  base_pg("Base\nPort Group")
+  trunk_pg("Trunk\nPort Group")
+  nested_host["Nested\nHost"]
+  vcenter["vCenter"]
+  nsx_alb_cont["NSX-ALB\nControllers"]
+  base_vss("VM network\nStandard Switch")
+  trunk_vds("Trunk\nDistributed Switch")
+  nsx_seg["NSX-ALB\nSE Group"]
+  tkg_vms["TKG VMs"]
 
-![Architecture Diagram](architecture-tanzu-mulit-cloud-alb.png)
+  router_net --- esxi_host
+  esxi_host --- base_pg & trunk_pg
+  base_pg -- ESXi MGMT\n&\nVM Network ---- nested_host
+  trunk_pg -- "Trunked Node\n& VIP VLANs" --- nested_host
+  base_pg --- vcenter & nsx_alb_cont
+  nested_host --- base_vss & trunk_vds
+  base_vss & trunk_vds --- nsx_seg
+  trunk_vds --- tkg_vms
+  
+  linkStyle 2,4,8,10,11 stroke:#00f
+
+  style router_net fill:#aaa
+  style base_pg fill:#aaa
+  style trunk_pg fill:#aaa
+  style base_vss fill:#aaa
+  style trunk_vds fill:#aaa
+  style esxi_host fill:#0ff
+  style nested_host fill:#0c0
+  style vcenter fill:#0c0
+  style nsx_alb_cont fill:#0c0
+  style nsx_seg fill:#FBCEB1
+  style tkg_vms fill:#FBCEB1
+```
+
+</br>
 
 - A single vCenter will be added.
 - 2 networks are required. 
