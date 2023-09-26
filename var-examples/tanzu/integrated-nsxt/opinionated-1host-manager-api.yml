@@ -288,7 +288,7 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
       network_management_name: vm-network
       network_uplink_name: vm-network
       network_tep_name: edge-tep-seg
-      datastore_name: datastore-esx1
+      datastore_name: "{{ opinionated.nested_hosts.local_disks[0].datastore_prefix }}-esx1"
       cluster_name: compute
       host_switches:
         tep:
@@ -403,7 +403,7 @@ tanzu_opsman_bosh:
   vcenter_url: "{{ nested_vcenter.ip }}"
   vcenter_cluster: compute
   vcenter_datacenter: "{{ nested_vcenter.datacenter }}"
-  vcenter_datastore: datastore-esx1
+  vcenter_datastore: "{{ opinionated.nested_hosts.local_disks[0].datastore_prefix }}-esx1"
   vcenter_folder: "/{{ nested_vcenter.datacenter }}/vm"
   vcenter_username: "{{ nested_vcenter.username }}"
   vcenter_password: "{{ nested_vcenter.password }}"
@@ -422,7 +422,7 @@ tkgi:
   vcenter_password: "{{ nested_vcenter.password }}"
   vcenter_cluster: compute
   vcenter_datacenter: "{{ nested_vcenter.datacenter }}"
-  vcenter_datastore: datastore-esx1
+  vcenter_datastore: "{{ opinionated.nested_hosts.local_disks[0].datastore_prefix }}-esx1"
   vcenter_folder: "pcf_vms"
 
   api_fqdn: "{{ opinionated.tkgi.api_fqdn }}"
