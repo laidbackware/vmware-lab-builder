@@ -168,7 +168,7 @@ tanzu_vsphere:
         # formula to split the workload subnet in 2 and calculate the number of usable IPs
         num_of_ips: >-
           {{ opinionated.hosting_network.workload.cidr |
-          ansible.utils.ipsubnet((opinionated.hosting_network.workload.cidr.split('/')[1] |int)+1, 1) | ipsubnet(32) |int -1 }}
+          ansible.utils.ipsubnet((opinionated.hosting_network.workload.cidr.split('/')[1] |int)+1, 1) | ansible.utils.ipsubnet(32) |int -1 }}
     workload_gateway: "{{ opinionated.hosting_network.workload.gateway }}"
     workload_ip_range_list:
       # formula to split the workload subnet in 2 and take the first available IP
@@ -176,7 +176,7 @@ tanzu_vsphere:
         # formula to split the workload subnet in 2 and calculate the number of usable IPs
         num_of_ips: >-
           {{ opinionated.hosting_network.workload.cidr |
-          ansible.utils.ipsubnet((opinionated.hosting_network.workload.cidr.split('/')[1] |int)+1, 0) | ipsubnet(32) |int -4 }}
+          ansible.utils.ipsubnet((opinionated.hosting_network.workload.cidr.split('/')[1] |int)+1, 0) | ansible.utils.ipsubnet(32) |int -4 }}
     workload_netmask: "{{ opinionated.hosting_network.workload.cidr | ansible.utils.ipaddr('netmask') }}"
     workload_port_group: workload-pg
 

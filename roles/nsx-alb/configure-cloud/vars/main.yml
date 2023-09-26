@@ -3,6 +3,7 @@ controller_ip: "{{ nsx_alb.controller_ip }}"
 controller_username: "{{ nsx_alb.controller_username }}"
 controller_password: "{{ nsx_alb.controller_password }}"
 api_version: "{{ nsx_alb.api_version }}"
+# api_version: 22.1.3
 
 avi_credentials:
   controller: "{{ controller_ip }}"

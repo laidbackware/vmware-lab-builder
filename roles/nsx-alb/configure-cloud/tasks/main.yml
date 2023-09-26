@@ -3,7 +3,7 @@
 - name: Create a VMWare cloud with write access mode
   vmware.alb.avi_cloud:
     avi_credentials: "{{ avi_credentials }}"
-    apic_mode: false
+    # apic_mode: false
     dhcp_enabled: true
     enable_vip_static_routes: false
     name: Default-Cloud
@@ -15,6 +15,7 @@
       privilege: WRITE_ACCESS
       username: "{{ cloud_vcenter_username }}"
       vcenter_url: "{{ cloud_vcenter_url }}"
+      use_content_lib: false
     vtype: CLOUD_VCENTER
   register: cloud_config
 
@@ -132,7 +133,7 @@
 - name: Update Default cloud with IPAM/DNS profiles
   vmware.alb.avi_cloud:
     avi_credentials: "{{ avi_credentials }}"
-    apic_mode: false
+    # apic_mode: false
     dhcp_enabled: false
     enable_vip_static_routes: false
     ipam_provider_ref: /api/ipamdnsproviderprofile/?name=tkg-ipam-profile
@@ -150,6 +151,7 @@
           addr: "{{ se_management_network_cidr.split('/')[0] }}"
           type: V4
         mask: "{{ se_management_network_cidr.split('/')[1] }}"
+      use_content_lib: false
     vtype: CLOUD_VCENTER
   register: cloud_config
 

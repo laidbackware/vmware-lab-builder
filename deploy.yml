@@ -48,7 +48,7 @@
       tags: ["vsphere"]
     - role: vsphere/vsphere-import-vm-template
       when: 'vm_templates is defined'
-      tags: ["vsphere"]
+      tags: ["vsphere", "vm-template"]
 
     # NSX-T Section
     - role: nsxt/nsxt-mgmt-appliance
@@ -97,7 +97,7 @@
       tags: ["nsx-alb"]
     - role: nsx-alb/configure-cloud
       when: 'nsx_alb is defined'
-      tags: ["nsx-alb"]
+      tags: ["nsx-alb", "alb-cloud"]
     - role: nsx-alb/dummy-service
       when: 'nsx_alb.dummy_service is defined'
       tags: ["nsx-alb"]

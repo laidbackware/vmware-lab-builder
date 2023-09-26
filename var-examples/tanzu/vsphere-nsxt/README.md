@@ -21,7 +21,7 @@ flowchart LR
   esxi_host["Physical\nESXi Host"]
   base_pg("Base Port Group\n(Routed)")
   tep_pg("TEP Port Group\n(Private)")
-  nested_host["Nested\nHost"]
+  nested_host["Nested\nESXi Host"]
   vcenter["vCenter"]
   nsx_mgr[NSX Manager]
   base_vss("VM network\nStandard Switch")

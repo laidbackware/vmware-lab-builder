@@ -1,5 +1,5 @@
 ---
-- name: Deploy OVA that will be imported as a template
+- name: Upload OVA that will be converted into a template
   community.vmware.vmware_deploy_ovf:
     hostname: "{{ item.0.vcenter_server }}"
     username: "{{ item.0.vcenter_username }}"
