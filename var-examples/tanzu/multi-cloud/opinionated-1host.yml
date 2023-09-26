@@ -2,8 +2,8 @@
 # SOFTWARE_DIR must contain all required software
 vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-8.0.1-21860503.iso"
 esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi8.0u1a_Appliance_Template_v1.ova"
-nsx_alb_controller_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/controller-21.1.4-9210.ova"
-tkgm_os_kubernetes_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/ubuntu-2004-kube-v1.25.7+vmware.2-tkg.1-8a74b9f12e488c54605b3537acb683bc.ova"
+nsx_alb_controller_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/controller-21.1.5-9172.ova"
+tkgm_os_kubernetes_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/ubuntu-2004-kube-v1.26.5+vmware.2-tkg.1-814430d158ce7889d5a7b60efeda67ca.ova"
 
 environment_tag: "tanzu-multi-cloud-avi"  # Used to prepend object names in hosting vCenter
 dns_server: "192.168.0.1"

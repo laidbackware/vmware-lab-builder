@@ -1,8 +1,8 @@
 ---
 # SOFTWARE_DIR must contain all required software
-vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-8.0.1-21860503.iso"
-esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi8.0u1a_Appliance_Template_v1.ova"
-nsx_alb_controller_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/controller-21.1.5-9172.ova"
+vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-8.0.2-22385739.iso"
+esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi8.0u2_Appliance_Template_v1.ova"
+nsx_alb_controller_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/controller-22.1.3-9096.ova"
 
 environment_tag: "tanzu-vsphere-vds-avi"  # Used to prepend object names in hosting vCenter
 dns_server: "192.168.0.1"
@@ -173,10 +173,10 @@ tanzu_vsphere:
       - starting_ip: "{{ opinionated.hosting_network.workload.cidr | ansible.utils.ipmath(2) }}"
         num_of_ips: >-
           {{ opinionated.hosting_network.workload.cidr |
-          ansible.utils.ipsubnet((opinionated.hosting_network.workload.cidr.split('/')[1] |int)+1, 1) | ipsubnet(32) |int -2 }}
+          ansible.utils.ipsubnet((opinionated.hosting_network.workload.cidr.split('/')[1] |int)+1, 1) | ansible.utils.ipsubnet(32) |int -2 }}
 
 nsx_alb:
-  api_version: "20.1.7"
+  api_version: "{{ nsx_alb_controller_ova | regex_search('(?<=controller-).*?(?=-)') }}"
   controller_username: admin
   controller_password: "{{ opinionated.master_password }}"
   controller_ssh_public_key: "{{ opinionated.ssh_public_key }}"

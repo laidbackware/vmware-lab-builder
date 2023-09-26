@@ -10,7 +10,7 @@ flowchart LR
   router_net("Routed\nNetwork")
   esxi_host["Physical\nESXi Host"]
   base_pg("Base\nPort Group")
-  nested_host["Nested\nHost"]
+  nested_host["Nested\nESXi Host"]
   vcenter["vCenter"]
   base_vss("VM network\nStandard Switch")
 

@@ -16,7 +16,7 @@ flowchart LR
   esxi_host["Physical\nESXi Host"]
   base_pg("Base\nPort Group")
   trunk_pg("Trunk\nPort Group")
-  nested_host["Nested\nHost"]
+  nested_host["Nested\nESXi Host"]
   vcenter["vCenter"]
   base_vss("VM network\nStandard Switch")
   trunk_vds("Trunk\nDistributed Switch")
