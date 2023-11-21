@@ -2,8 +2,8 @@
 This will deploy using the standard 2 network topology
 
 ## Tested Versions
-- NSX ALB Controller 20.1.7
-- Tanzu Kubernetes Grid 1.6.0
+- NSX ALB Controller 22.1.4
+- Tanzu Kubernetes Grid 2.4.0
 
 ## Additional Dependencies
 In addition to the base dependencies, you will need to download and store the NSX-ALB OVA file in your software directory:

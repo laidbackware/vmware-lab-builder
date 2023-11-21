@@ -10,7 +10,7 @@
     prefer_static_routes: false
     vcenter_configuration:
       datacenter: "{{ cloud_vcenter_datacenter }}"
-      management_network: /api/vimgrnwruntime/?name={{ se_management_port_group }}
+      management_network: "{{ se_management_port_group }}"
       password: "{{ cloud_vcenter_password }}"
       privilege: WRITE_ACCESS
       username: "{{ cloud_vcenter_username }}"
@@ -79,6 +79,7 @@
     avi_credentials: "{{ avi_credentials }}"
     name: "{{ se_management_port_group }}"
     dhcp_enabled: false
+    cloud_ref: "/api/cloud?name=Default-Cloud"
     configured_subnets:
       - prefix:
           ip_addr:
@@ -100,7 +101,7 @@
     avi_credentials: "{{ avi_credentials }}"
     internal_profile:
       usable_networks:
-        - nw_ref: /api/network/?name={{ se_vip_port_group }}
+        - nw_ref: "{{ se_vip_port_group }}"
       ttl: 30
     name: tkg-ipam-profile
     type: IPAMDNS_TYPE_INTERNAL
@@ -165,7 +166,9 @@
   vmware.alb.avi_network:
     avi_credentials: "{{ avi_credentials }}"
     name: "{{ se_vip_port_group }}"
+    cloud_ref: "/api/cloud?name=Default-Cloud"
     dhcp_enabled: false
+    exclude_discovered_subnets: true
     configured_subnets:
       - prefix:
           ip_addr:
@@ -180,4 +183,5 @@
               end:
                 addr: "{{ se_vip_network_range.split('-')[1] }}"
                 type: "V4"
+            type: "STATIC_IPS_FOR_VIP_AND_SE"
   register: vip_network_result

@@ -94,13 +94,13 @@
     # NSX-ALB (Avi) Section
     - role: nsx-alb/deploy-controller
       when: 'nsx_alb is defined'
-      tags: ["nsx-alb"]
+      tags: ["nsx-alb", "alb-controller"]
     - role: nsx-alb/configure-cloud
       when: 'nsx_alb is defined'
       tags: ["nsx-alb", "alb-cloud"]
     - role: nsx-alb/dummy-service
       when: 'nsx_alb.dummy_service is defined'
-      tags: ["nsx-alb"]
+      tags: ["nsx-alb", "alb-dummy"]
 
     # Tanzu Multi-Cloud Secton
     - role: tanzu/multi-cloud-generate-config
