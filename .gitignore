@@ -2,6 +2,7 @@
 temp/*
 settings.json
 tmp/
+ignored/
 
 # Tanzu Multi-cloud outputs
 cluster-config.yml

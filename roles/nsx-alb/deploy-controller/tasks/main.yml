@@ -38,8 +38,8 @@
     status_code: 200,302,301,503
   register: result_controller_check
   until: result_controller_check.status == 200
-  retries: 120
-  delay: 60
+  retries: 480
+  delay: 15
 
 - name: Check Cluster Status
   ansible.builtin.uri:
@@ -49,8 +49,8 @@
     status_code: 200,302,301,503
   register: cluster_status
   until: cluster_status.json.cluster_state.progress == 100
-  retries: 120
-  delay: 60
+  retries: 480
+  delay: 15
 
 - name: Wait to all services be ready
   ansible.builtin.pause:
@@ -58,7 +58,7 @@
     seconds: 60
   when: controller_results.changed
 
-- name: Get main Cluster Information using avi_api_session
+- name: Check to see if password needs to be reset
   vmware.alb.avi_api_session:
     avi_credentials: "{{ avi_credentials }}"
     http_method: get
@@ -82,7 +82,9 @@
     password: "{{ controller_password }}"
     api_version: "{{ api_version }}"
     old_password: "{{ controller_default_password }}"
-  when: "access_test.module_stderr is defined and 'Invalid credentials' in access_test.module_stderr"
+  when: >
+    "access_test.module_stderr is defined and
+    'Invalid credentials' in access_test.module_stderr"
   register: useraccount
 
 - name: Wait to for pw change
@@ -106,7 +108,7 @@
         - "{{ controller_ip }}"
   register: controller_cert_result
 
-- name: Basic Controller Config
+- name: SettingbBasic Controller config
   vmware.alb.avi_systemconfiguration:
     avi_credentials: "{{ avi_credentials }}"
     welcome_workflow_complete: true
@@ -137,11 +139,9 @@
     seconds: 15
   when: system_config_result.changed
 
-# Backup configuration currently broken
 - name: Create BackupConfiguration object
   vmware.alb.avi_backupconfiguration:
     avi_credentials: "{{ avi_credentials }}"
-    # state: present
     name: Backup-Configuration
     backup_passphrase: VMware1!
     upload_to_remote_host: false

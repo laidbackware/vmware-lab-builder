@@ -1,7 +1,31 @@
 ---
 
-- name: Create YAML template file for Tanzu Management Cluster
-  ansible.builtin.template:
-    src: management-cluster.yml
-    dest: "{{ playbook_dir }}/{{ tanzu_multi_cloud.generated_config_file_name }}"
-    mode: '660'
+- name: Load management cluster config
+  ansible.builtin.set_fact:
+    mgmt_cluster_config: "{{ lookup('template', 'management-cluster.yml') | from_yaml }}"
+
+# Allow insertion of variable if set
+# Workaround for j2 tempolate not 
+- name: Set VSPHERE_CONTROL_PLANE_ENDPOINT if exists
+  ansible.builtin.set_fact:
+    mgmt_cluster_config: |
+      {{ 
+        mgmt_cluster_config | combine 
+        ({ 'VSPHERE_CONTROL_PLANE_ENDPOINT': tanzu_multi_cloud.vsphere_control_plane_endpoint }) 
+      }}
+  when: tanzu_multi_cloud.vsphere_control_plane_endpoint is defined
+
+# Workaround for j2 always templating strings instead of booleans
+- name: Set AVI_CONTROL_PLANE_HA_PROVIDER
+  ansible.builtin.set_fact:
+    mgmt_cluster_config: |
+      {{ 
+        mgmt_cluster_config | combine 
+        ({ 'AVI_CONTROL_PLANE_HA_PROVIDER': tanzu_multi_cloud.avi_control_plane_ha_provider }) 
+      }}
+
+- name: Write management cluster config
+  ansible.builtin.copy:
+    content: "{{ mgmt_cluster_config | to_nice_yaml }}"
+    dest: "{{ tanzu_multi_cloud.generated_config_file }}"
+    mode: '0644'

@@ -8,11 +8,14 @@
   ansible.builtin.set_fact:
     build_outputs: >-
       {
+        {% if nested_vcenter is defined %}
         "vcenter": {
           "ip": "{{ nested_vcenter.ip }}",
           "username": "{{ nested_vcenter.username }}",
           "password": "{{ nested_vcenter.password }}"
         },
+        {% endif %}
+        {% if nested_hosts is defined %}
         "esxi_hosts": [
           {% for host in nested_hosts %}
           {
@@ -22,6 +25,7 @@
           },
           {% endfor %}
         ],
+        {% endif %}
         {% if nsxt is defined %}
         "nsxt": {
           "manager_ip": "{{ nsxt.manager.ip }}",
@@ -69,9 +73,10 @@
         },
         {% endif %}
 
-        {% if tanzu_multi_cloud.generated_config_file_name is defined %}
+        {% if tanzu_multi_cloud.generated_config_file is defined %}
         "tanzu_multi_cloud": {
-          "config_file": "{{ playbook_dir }}/{{ tanzu_multi_cloud.generated_config_file_name }}"
+          "config_file": "{{ tanzu_multi_cloud.generated_config_file }}",
+          "mgmt_create_command" : "tanzu management-cluster create --file {{ tanzu_multi_cloud.generated_config_file }}"
         },
         {% endif %}
 

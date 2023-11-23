@@ -10,7 +10,7 @@
     portgroup_name: "VM Network"
     state: absent
   delegate_to: localhost
-  with_dict: "{{ nested_clusters }}"
+  with_dict: "{{ nested_clusters | default({}) }}"
   when: '"vswitch0_vm_port_group_name" in item.value and "vswitch0_vm_port_group_vlan" in item.value'
 
 - name: Add VM Portgroup to vSwitch 0
