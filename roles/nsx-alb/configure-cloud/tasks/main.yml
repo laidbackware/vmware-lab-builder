@@ -97,7 +97,7 @@
   when: "se_management_network_range is defined and '__omit' not in se_management_network_range"
 
 - name: Gather all DV portgroup info
-  community.vmware.vmware_dvs_portgroup_info :
+  community.vmware.vmware_dvs_portgroup_info:
     hostname: "{{ cloud_vcenter_url }}"
     username: "{{ cloud_vcenter_username }}"
     password: "{{ cloud_vcenter_password }}"

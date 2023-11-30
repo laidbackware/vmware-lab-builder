@@ -42,7 +42,7 @@ opinionated:
     worker_num_cpus: "4"
     generated_config_file: "{{ playbook_dir }}/ignored/tkg-cluster-config.yml"
 
-  
+
   # This public key will be assigned to the created VMs, so you must have the private key to be able to use SSH
   ssh_public_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC/qMIbcfUkClzrBi7QjUmtdfpjDlTSXsPcJsmdmezbem2SboQPujpFUGmzFXi5PqhPa3QOxvMn8oJpozlJYydDspFAAqX+0u8n0FrwMMn0ckwUtF4zxz/AnI8tUltjeN67M7mG+3W8ooRFeaY6nrjxEIXbkMOzSbeTaFcB9cDzRXcMmFiuoeDhUonEYbClrsPzLdzscw7Vz6BLMHwo9SBOqlaL25aG/DtZPB7jobQRh48q3RW+Hb29nH18biJNLiBDsRu1SJIzw7Dl+rNSX9Va56vX0cz5CDiTg9A69WgySDx7oZFZM3W6jyHCN0fQbw/OxE/2MemhfQbdJqgffA7zE0qx+/DVIoT5bBP7FPpQSxkMjC+AEAH4PPsDIP0KJH9do6+T/g/Mf6725IOaPSJyV0bAkz1T57T1ty19KdhvPVfjrMnCap+pLvD6Qd/lxzY9uFF4oOwWmo4xQ6hQXZ9oJUhrRsG2A5LF7XGXwOb8mHSG4InfUfjaov4gjLl5tN0=
 
@@ -122,7 +122,7 @@ nsx_alb:
   cloud_vcenter_password: "{{ hosting_vcenter.password }}"
   cloud_vcenter_url: "{{ hosting_vcenter.ip }}"
   cloud_vcenter_datacenter: "{{ hosting_vcenter.datacenter }}"
-  cloud_exclude_other_networks: True
+  cloud_exclude_other_networks: true
 
   se_group_name: Default-Group
   se_vcenter_cluster: "{{ opinionated.hosting_cluster }}"
