@@ -202,6 +202,7 @@ nsx_alb:
   controller_vcenter_cluster: "{{ opinionated.hosting_cluster }}"
   controller_vcenter_datastore: "{{ opinionated.hosting_datastore }}"
   controller_port_group: "{{ opinionated.hosting_network.base.port_group }}"
+  cloud_exclude_other_networks: true
 
   cloud_name: Default-Cloud
   cloud_vcenter_username: "{{ nested_vcenter.username }}"
