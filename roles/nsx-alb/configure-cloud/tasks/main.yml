@@ -3,14 +3,13 @@
 - name: Create a VMWare cloud with write access mode
   vmware.alb.avi_cloud:
     avi_credentials: "{{ avi_credentials }}"
-    # apic_mode: false
     dhcp_enabled: true
     enable_vip_static_routes: false
-    name: Default-Cloud
+    name: "{{ cloud_name }}"
     prefer_static_routes: false
     vcenter_configuration:
       datacenter: "{{ cloud_vcenter_datacenter }}"
-      management_network: /api/vimgrnwruntime/?name={{ se_management_port_group }}
+      management_network: "/api/vimgrnwruntime/?name={{ se_management_port_group }}"
       password: "{{ cloud_vcenter_password }}"
       privilege: WRITE_ACCESS
       username: "{{ cloud_vcenter_username }}"
@@ -22,7 +21,7 @@
 - name: Set Management Network Default Gateway
   vmware.alb.avi_vrfcontext:
     avi_credentials: "{{ avi_credentials }}"
-    cloud_ref: "/api/cloud?name=Default-Cloud"
+    cloud_ref: "/api/cloud?name={{ cloud_name }}"
     name: "management"
     static_routes:
       - route_id: "1"
@@ -47,7 +46,7 @@
     http_method: get
     path: cloudruntime
     params:
-      name: Default-Cloud
+      name: "{{ cloud_name }}"
   register: cloud_status
 
 - name: Abort on sync error
@@ -60,7 +59,7 @@
 - name: Set VIP Network Default Gateway
   vmware.alb.avi_vrfcontext:
     avi_credentials: "{{ avi_credentials }}"
-    cloud_ref: "/api/cloud?name=Default-Cloud"
+    cloud_ref: "/api/cloud?name={{ cloud_name }}"
     name: "global"
     static_routes:
       - route_id: "1"
@@ -79,6 +78,8 @@
     avi_credentials: "{{ avi_credentials }}"
     name: "{{ se_management_port_group }}"
     dhcp_enabled: false
+    exclude_discovered_subnets: true
+    cloud_ref: "/api/cloud?name={{ cloud_name }}"
     configured_subnets:
       - prefix:
           ip_addr:
@@ -93,14 +94,67 @@
               end:
                 addr: "{{ se_management_network_range.split('-')[1] }}"
                 type: "V4"
-  register: management_network_result
+  when: "se_management_network_range is defined and '__omit' not in se_management_network_range"
+
+- name: Gather all DV portgroup info
+  community.vmware.vmware_dvs_portgroup_info:
+    hostname: "{{ cloud_vcenter_url }}"
+    username: "{{ cloud_vcenter_username }}"
+    password: "{{ cloud_vcenter_password }}"
+    validate_certs: false
+    datacenter: "{{ cloud_vcenter_datacenter }}"
+  register: result_dv_port_groups
+  when: cloud_exclude_other_networks
+
+- name: Gather portgroup info about all ESXi Host in given Cluster
+  community.vmware.vmware_portgroup_info:
+    hostname: "{{ cloud_vcenter_url }}"
+    username: "{{ cloud_vcenter_username }}"
+    password: "{{ cloud_vcenter_password }}"
+    validate_certs: false
+    cluster_name: "{{ se_vcenter_cluster }}"
+  register: result_port_groups
+  when: cloud_exclude_other_networks
+
+- name: Set list of available DV port groups
+  ansible.builtin.set_fact:
+    exclude_dv_pgs: >-
+      [
+        {% for vds_pg_list in result_dv_port_groups.dvs_portgroup_info.values() %}
+          {% for pg_details in vds_pg_list %}
+            {% if pg_details.portgroup_name != se_management_port_group and pg_details.portgroup_name != se_vip_port_group %}
+              "{{ pg_details.portgroup_name }}",
+            {% endif %}
+          {% endfor %}
+        {% endfor %}
+
+        {% for host_pg_list in result_port_groups.hosts_portgroup_info.values() %}
+          {% for pg_details in host_pg_list %}
+            {% if pg_details.portgroup != se_management_port_group and pg_details.portgroup != se_vip_port_group and
+               pg_details.portgroup != 'Management Network' %}
+              "{{ pg_details.portgroup }}",
+            {% endif %}
+          {% endfor %}
+        {% endfor %}
+      ]
+  when: cloud_exclude_other_networks
+
+- name: Exclude networks
+  vmware.alb.avi_network:
+    avi_credentials: "{{ avi_credentials }}"
+    name: "{{ item }}"
+    cloud_ref: "/api/cloud?name={{ cloud_name }}"
+    dhcp_enabled: false
+    exclude_discovered_subnets: true
+  loop: "{{ exclude_dv_pgs }}"
+  when: cloud_exclude_other_networks
 
 - name: Create IPAM provider
   vmware.alb.avi_ipamdnsproviderprofile:
     avi_credentials: "{{ avi_credentials }}"
     internal_profile:
       usable_networks:
-        - nw_ref: /api/network/?name={{ se_vip_port_group }}
+        - nw_ref: "{{ se_vip_port_group }}"
       ttl: 30
     name: tkg-ipam-profile
     type: IPAMDNS_TYPE_INTERNAL
@@ -109,8 +163,8 @@
 - name: Configure SE Group
   vmware.alb.avi_serviceenginegroup:
     avi_credentials: "{{ avi_credentials }}"
-    name: "Default-Group"
-    cloud_ref: "/api/cloud?name=Default-Cloud"
+    name: "{{ se_group_name }}"
+    cloud_ref: "/api/cloud?name={{ cloud_name }}"
     se_name_prefix: "{{ seg_prefix | default('Avi') }}"
     vcpus_per_se: "{{ se_vcpu | default(1) }}"
     ha_mode: "{{ ha_mode | default('HA_MODE_LEGACY_ACTIVE_STANDBY') }}"  # Defaults to for Essential
@@ -137,11 +191,11 @@
     dhcp_enabled: false
     enable_vip_static_routes: false
     ipam_provider_ref: /api/ipamdnsproviderprofile/?name=tkg-ipam-profile
-    name: Default-Cloud
+    name: "{{ cloud_name }}"
     prefer_static_routes: false
     vcenter_configuration:
-      datacenter: Lab
-      management_network: /api/vimgrnwruntime/?name={{ se_management_port_group }}
+      datacenter: "{{ cloud_vcenter_datacenter }}"
+      management_network: "/api/vimgrnwruntime/?name={{ se_management_port_group }}"
       password: "{{ cloud_vcenter_password }}"
       privilege: WRITE_ACCESS
       username: "{{ cloud_vcenter_username }}"
@@ -165,7 +219,9 @@
   vmware.alb.avi_network:
     avi_credentials: "{{ avi_credentials }}"
     name: "{{ se_vip_port_group }}"
+    cloud_ref: "/api/cloud?name={{ cloud_name }}"
     dhcp_enabled: false
+    exclude_discovered_subnets: true
     configured_subnets:
       - prefix:
           ip_addr:
@@ -180,4 +236,5 @@
               end:
                 addr: "{{ se_vip_network_range.split('-')[1] }}"
                 type: "V4"
+            type: "STATIC_IPS_FOR_VIP_AND_SE"
   register: vip_network_result

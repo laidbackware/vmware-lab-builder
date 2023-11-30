@@ -4,15 +4,18 @@ AVI_CLOUD_NAME: "{{ tanzu_multi_cloud.avi_cloud_name }}"
 AVI_CONTROLLER: "{{ tanzu_multi_cloud.avi_controller }}"
 AVI_DATA_NETWORK: "{{ tanzu_multi_cloud.avi_data_network }}"
 AVI_DATA_NETWORK_CIDR: "{{ tanzu_multi_cloud.avi_data_network_cidr }}"
-AVI_ENABLE: "true"
+AVI_ENABLE: true
 AVI_LABELS: ""
 AVI_PASSWORD: "{{ tanzu_multi_cloud.avi_password }}"
 AVI_SERVICE_ENGINE_GROUP: "{{ tanzu_multi_cloud.avi_service_engine_group | default('Default-Group') }}"
 AVI_USERNAME: "{{ tanzu_multi_cloud.avi_username }}"
+AVI_CONTROL_PLANE_HA_PROVIDER: "{{ tanzu_multi_cloud.avi_control_plane_ha_provider | bool }}"
+CLUSTER_NAME: "{{ tanzu_multi_cloud.mgmt_cluster_name }}"
+CONTROL_PLANE_MACHINE_COUNT: "{{ tanzu_multi_cloud.control_plane_machine_count }}"
 CLUSTER_CIDR: 100.96.0.0/11
 CLUSTER_PLAN: dev
 ENABLE_CEIP_PARTICIPATION: "false"
-ENABLE_MHC: "true"
+ENABLE_MHC: true
 IDENTITY_MANAGEMENT_TYPE: none
 INFRASTRUCTURE_PROVIDER: vsphere
 LDAP_BIND_DN: ""
@@ -36,11 +39,10 @@ OIDC_IDENTITY_PROVIDER_NAME: ""
 OIDC_IDENTITY_PROVIDER_SCOPES: ""
 OIDC_IDENTITY_PROVIDER_USERNAME_CLAIM: ""
 SERVICE_CIDR: 100.64.0.0/13
-TKG_HTTP_PROXY_ENABLED: "false"
-VSPHERE_CONTROL_PLANE_DISK_GIB: "40"
-VSPHERE_CONTROL_PLANE_ENDPOINT: "{{ tanzu_multi_cloud.vsphere_control_plane_endpoint }}"
-VSPHERE_CONTROL_PLANE_MEM_MIB: "8192"
-VSPHERE_CONTROL_PLANE_NUM_CPUS: "2"
+TKG_HTTP_PROXY_ENABLED: false
+VSPHERE_CONTROL_PLANE_DISK_GIB: "{{ tanzu_multi_cloud.control_plane_disk_gib }}"
+VSPHERE_CONTROL_PLANE_MEM_MIB: "{{ tanzu_multi_cloud.control_plane_mem_mib }}"
+VSPHERE_CONTROL_PLANE_NUM_CPUS: "{{ tanzu_multi_cloud.control_plane_num_cpus }}"
 VSPHERE_DATACENTER: "{{ tanzu_multi_cloud.vsphere_datacenter_path }}"
 VSPHERE_DATASTORE: "{{ tanzu_multi_cloud.vsphere_datastore_path }}"
 DEPLOY_TKG_ON_VSPHERE7: true
@@ -52,6 +54,7 @@ VSPHERE_RESOURCE_POOL: "{{ tanzu_multi_cloud.vsphere_resource_pool_path }}"
 VSPHERE_SERVER: "{{ tanzu_multi_cloud.vsphere_server }}"
 VSPHERE_SSH_AUTHORIZED_KEY: "{{ tanzu_multi_cloud.vsphere_ssh_authorized_key }}"
 VSPHERE_USERNAME: "{{ tanzu_multi_cloud.vsphere_username }}"
-VSPHERE_WORKER_DISK_GIB: "40"
-VSPHERE_WORKER_MEM_MIB: "8192"
-VSPHERE_WORKER_NUM_CPUS: "2"
+VSPHERE_WORKER_DISK_GIB: "{{ tanzu_multi_cloud.worker_disk_gib }}"
+VSPHERE_WORKER_MEM_MIB: "{{ tanzu_multi_cloud.worker_mem_mib }}"
+VSPHERE_WORKER_NUM_CPUS: "{{ tanzu_multi_cloud.worker_num_cpus }}"
+WORKER_MACHINE_COUNT: "{{ tanzu_multi_cloud.worker_machine_count }}"

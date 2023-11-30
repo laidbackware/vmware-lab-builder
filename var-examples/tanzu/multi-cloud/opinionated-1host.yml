@@ -1,9 +1,9 @@
 ---
 # SOFTWARE_DIR must contain all required software
-vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-8.0.1-21860503.iso"
+vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-8.0.1-22088981.iso"
 esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi8.0u1a_Appliance_Template_v1.ova"
-nsx_alb_controller_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/controller-21.1.5-9172.ova"
-tkgm_os_kubernetes_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/ubuntu-2004-kube-v1.26.5+vmware.2-tkg.1-814430d158ce7889d5a7b60efeda67ca.ova"
+nsx_alb_controller_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/controller-22.1.4-9196.ova"
+tkgm_os_kubernetes_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/ubuntu-2004-kube-v1.27.5+vmware.1-tkg.1-0eb96d2f9f4f705ac87c40633d4b69st.ova"
 
 environment_tag: "tanzu-multi-cloud-avi"  # Used to prepend object names in hosting vCenter
 dns_server: "192.168.0.1"
@@ -24,8 +24,8 @@ opinionated:
   master_password: "VMware1!"
   number_of_hosts: 1  # number of ESXi VMs to deploy
   nested_hosts:
-    cpu_cores: 16  # CPU count per nested host
-    ram_in_gb: 128  # memory per nested host
+    cpu_cores: 24  # CPU count per nested host
+    ram_in_gb: 192  # memory per nested host
     local_disks:  # (optional) this section can be removed to not modify local disks
       - size_gb: 500
         datastore_prefix: "datastore"  # omit this to not have a datastore created
@@ -50,6 +50,18 @@ opinionated:
       cidr: "172.19.10.0/24"
       gateway: "172.19.10.1"
       vip_ip_range: "172.19.10.128-172.19.10.254"
+  tanzu:
+    # Settings for the mgmt cluster
+    # Settings for TMC. Worker memory and CPU can be shrunken without TMC.
+    control_plane_machine_count: 1
+    worker_machine_count: 1
+    control_plane_disk_gib: "40"
+    control_plane_mem_mib: "8192"
+    control_plane_num_cpus: "2"
+    worker_disk_gib: "40"
+    worker_mem_mib: "16384"
+    worker_num_cpus: "4"
+    generated_config_file: "{{ playbook_dir }}/ignored/tkg-cluster-config.yml"
   # This public key will be assigned to the created VMs, so you must have the private key to be able to use SSH
   ssh_public_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC/qMIbcfUkClzrBi7QjUmtdfpjDlTSXsPcJsmdmezbem2SboQPujpFUGmzFXi5PqhPa3QOxvMn8oJpozlJYydDspFAAqX+0u8n0FrwMMn0ckwUtF4zxz/AnI8tUltjeN67M7mG+3W8ooRFeaY6nrjxEIXbkMOzSbeTaFcB9cDzRXcMmFiuoeDhUonEYbClrsPzLdzscw7Vz6BLMHwo9SBOqlaL25aG/DtZPB7jobQRh48q3RW+Hb29nH18biJNLiBDsRu1SJIzw7Dl+rNSX9Va56vX0cz5CDiTg9A69WgySDx7oZFZM3W6jyHCN0fQbw/OxE/2MemhfQbdJqgffA7zE0qx+/DVIoT5bBP7FPpQSxkMjC+AEAH4PPsDIP0KJH9do6+T/g/Mf6725IOaPSJyV0bAkz1T57T1ty19KdhvPVfjrMnCap+pLvD6Qd/lxzY9uFF4oOwWmo4xQ6hQXZ9oJUhrRsG2A5LF7XGXwOb8mHSG4InfUfjaov4gjLl5tN0=
 
@@ -137,15 +149,26 @@ vm_templates:
     vsphere_clusters: "{{ nested_clusters.keys() | list }}"
 
 tanzu_multi_cloud:
-  generated_config_file_name: cluster-config.yml
+  generated_config_file: "{{ opinionated.tanzu.generated_config_file }}"
+  mgmt_cluster_name: "{{ environment_tag.replace('_','-') }}-tkg-mgmt"
 
-  avi_cloud_name: "{{ nsx_alb.cloud_name | default('Default-Cloud') }}"
+  avi_username: "{{ nsx_alb.controller_username }}"
+  avi_password: "{{ nsx_alb.controller_password }}"
+  avi_cloud_name: "{{ nsx_alb.cloud_name }}"
   avi_controller: "{{ nsx_alb.controller_ip }}"
   avi_data_network: "{{ nsx_alb.se_vip_port_group }}"
   avi_data_network_cidr: "{{ nsx_alb.se_vip_network_cidr }}"
-  avi_password: "{{ nsx_alb.controller_password }}"
-  avi_service_engine_group: "{{ nsx_alb.se_group_name | default('Default-Group') }}"
-  avi_username: "{{ nsx_alb.controller_username }}"
+  avi_service_engine_group: "{{ nsx_alb.se_group_name }}"
+  avi_control_plane_ha_provider: false
+
+  control_plane_machine_count: "{{ opinionated.tanzu.control_plane_machine_count }}"
+  worker_machine_count: "{{ opinionated.tanzu.worker_machine_count }}"
+  control_plane_disk_gib: "{{ opinionated.tanzu.control_plane_disk_gib }}"
+  control_plane_mem_mib: "{{ opinionated.tanzu.control_plane_mem_mib }}"
+  control_plane_num_cpus: "{{ opinionated.tanzu.control_plane_num_cpus }}"
+  worker_disk_gib: "{{ opinionated.tanzu.worker_disk_gib }}"
+  worker_mem_mib: "{{ opinionated.tanzu.worker_mem_mib }}"
+  worker_num_cpus: "{{ opinionated.tanzu.worker_num_cpus }}"
 
   # used in TKGM cluster config yaml
   vsphere_control_plane_endpoint: "{{ opinionated.hosting_network.workload.cidr | ansible.utils.ipmath(2) }}"
@@ -160,7 +183,7 @@ tanzu_multi_cloud:
   vsphere_username: "{{ nested_vcenter.username }}"
 
 nsx_alb:
-  api_version: "20.1.6"
+  api_version: "22.1.4"
   controller_username: admin
   controller_password: "{{ opinionated.master_password }}"
   controller_ssh_public_key: "{{ opinionated.ssh_public_key }}"
@@ -179,12 +202,15 @@ nsx_alb:
   controller_vcenter_cluster: "{{ opinionated.hosting_cluster }}"
   controller_vcenter_datastore: "{{ opinionated.hosting_datastore }}"
   controller_port_group: "{{ opinionated.hosting_network.base.port_group }}"
+  cloud_exclude_other_networks: true
 
+  cloud_name: Default-Cloud
   cloud_vcenter_username: "{{ nested_vcenter.username }}"
   cloud_vcenter_password: "{{ nested_vcenter.password }}"
   cloud_vcenter_url: "{{ nested_vcenter.ip }}"
   cloud_vcenter_datacenter: "{{ nested_vcenter.datacenter }}"
 
+  se_group_name: Default-Group
   se_vcenter_cluster: compute
   # The management network will host he service engine management interface
   se_management_port_group: vm-network

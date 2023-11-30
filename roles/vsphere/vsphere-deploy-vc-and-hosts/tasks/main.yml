@@ -157,7 +157,7 @@
     disk: "{{ item.disks }}"
   delegate_to: localhost
   register: deploy_vm
-  loop: "{{ disks_to_add }}"
+  loop: "{{ disks_to_add | list }}"
 
 - name: Edit VM CPU, Memory and networks
   community.vmware.vmware_guest:

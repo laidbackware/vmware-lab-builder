@@ -26,20 +26,28 @@
     # Base vsphere section
     - role: vsphere/vsphere-deploy-vc-and-hosts
       tags: ["vsphere"]
+      when: 'nested_vcenter is defined and nested_hosts is defined'
     - role: vsphere/vsphere-datacenter
       tags: ["vsphere"]
+      when: 'nested_vcenter is defined'
     - role: vsphere/vsphere-clusters
       tags: ["vsphere"]
+      when: 'nested_clusters is defined'
     - role: vsphere/vsphere-vswitch0-port-groups
       tags: ["vsphere"]
+      when: 'nested_hosts is defined'
     - role: vsphere/vsphere-local-datastores
       tags: ["vsphere"]
+      when: 'nested_clusters is defined'
     - role: vsphere/vsphere-nfs-datastores
       tags: ["vsphere"]
+      when: 'nested_clusters is defined'
     - role: vsphere/vsphere-enable-cluster-services
       tags: ["vsphere"]
+      when: 'nested_clusters is defined'
     - role: vsphere/vsphere-resource-pools
       tags: ["vsphere"]
+      when: 'nested_clusters is defined'
     - role: vsphere/vsphere-distributed-switches
       when: 'distributed_switches is defined'
       tags: ["vsphere"]
@@ -94,17 +102,17 @@
     # NSX-ALB (Avi) Section
     - role: nsx-alb/deploy-controller
       when: 'nsx_alb is defined'
-      tags: ["nsx-alb"]
+      tags: ["nsx-alb", "alb-controller"]
     - role: nsx-alb/configure-cloud
       when: 'nsx_alb is defined'
       tags: ["nsx-alb", "alb-cloud"]
     - role: nsx-alb/dummy-service
       when: 'nsx_alb.dummy_service is defined'
-      tags: ["nsx-alb"]
+      tags: ["nsx-alb", "alb-dummy"]
 
     # Tanzu Multi-Cloud Secton
     - role: tanzu/multi-cloud-generate-config
-      when: 'tanzu_multi_cloud.generated_config_file_name is defined'
+      when: 'tanzu_multi_cloud.generated_config_file is defined'
       tags: ["tkgm-config"]
 
     # vSphere with Kubernetes Section

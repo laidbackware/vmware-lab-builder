@@ -1,0 +1,143 @@
+---
+# SOFTWARE_DIR must contain all required software
+nsx_alb_controller_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/controller-22.1.4-9196.ova"
+tkgm_os_kubernetes_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/ubuntu-2004-kube-v1.27.5+vmware.1-tkg.1-0eb96d2f9f4f705ac87c40633d4b69st.ova"
+
+environment_tag: "tanzu-multi-cloud-avi-bare"  # Used to prepend object names in hosting vCenter
+dns_server: "192.168.0.1"
+dns_domain: "home.local"
+ntp_server_ip: "192.168.0.1"
+disk_mode: thin  # How all disks should be deployed
+# This will be set everywhere!
+
+hosting_vcenter:  # This is the vCenter which will be the target for nested vCenters and ESXi hosts
+  ip: "192.168.1.250"
+  username: "{{ lookup('env', 'PARENT_VCENTER_USERNAME') }}"
+  password: "{{ lookup('env', 'PARENT_VCENTER_PASSWORD') }}"
+  datacenter: "Home"  # Target for all VM deployment
+
+# This section is only referenced by other variables in this file
+opinionated:
+  master_password: "VMware1!"
+  hosting_cluster: Physical
+  hosting_datastore: NVME
+  hosting_network:
+    base:
+      port_group: Nest
+      cidr: "192.168.0.0/22"
+      gateway: "192.168.0.1"
+      # A TKGM deployment requires 1 IP for the Avi Controller.
+      starting_addr: "192.168.1.100"
+      vip_ip_range: "192.168.1.101-192.168.1.129"
+  tanzu_multi_cloud:
+    # Settings for the mgmt cluster
+    # Settings for TMC. Worker memory and CPU can be shrunken without TMC.
+    control_plane_machine_count: 1
+    worker_machine_count: 1
+    control_plane_disk_gib: "40"
+    control_plane_mem_mib: "4096"
+    control_plane_num_cpus: "4"
+    worker_disk_gib: "40"
+    worker_mem_mib: "16384"
+    worker_num_cpus: "4"
+    generated_config_file: "{{ playbook_dir }}/ignored/tkg-cluster-config.yml"
+
+
+  # This public key will be assigned to the created VMs, so you must have the private key to be able to use SSH
+  ssh_public_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC/qMIbcfUkClzrBi7QjUmtdfpjDlTSXsPcJsmdmezbem2SboQPujpFUGmzFXi5PqhPa3QOxvMn8oJpozlJYydDspFAAqX+0u8n0FrwMMn0ckwUtF4zxz/AnI8tUltjeN67M7mG+3W8ooRFeaY6nrjxEIXbkMOzSbeTaFcB9cDzRXcMmFiuoeDhUonEYbClrsPzLdzscw7Vz6BLMHwo9SBOqlaL25aG/DtZPB7jobQRh48q3RW+Hb29nH18biJNLiBDsRu1SJIzw7Dl+rNSX9Va56vX0cz5CDiTg9A69WgySDx7oZFZM3W6jyHCN0fQbw/OxE/2MemhfQbdJqgffA7zE0qx+/DVIoT5bBP7FPpQSxkMjC+AEAH4PPsDIP0KJH9do6+T/g/Mf6725IOaPSJyV0bAkz1T57T1ty19KdhvPVfjrMnCap+pLvD6Qd/lxzY9uFF4oOwWmo4xQ6hQXZ9oJUhrRsG2A5LF7XGXwOb8mHSG4InfUfjaov4gjLl5tN0=
+
+#####################################################################
+### No need to edit below this line for an opinionated deployment ###
+#####################################################################
+
+vm_templates:
+  - local_path: "{{ tkgm_os_kubernetes_ova }}"
+    vcenter_server: "{{ hosting_vcenter.ip }}"
+    vcenter_username: "{{ hosting_vcenter.username }}"
+    vcenter_password: "{{ hosting_vcenter.password }}"
+    vcenter_datacenter: "{{ hosting_vcenter.datacenter }}"
+    vcenter_datastore: "{{ opinionated.hosting_datastore }}"
+    vcenter_network: "{{ opinionated.hosting_network.base.port_group }}"
+    vsphere_clusters: ["{{ opinionated.hosting_cluster }}"]
+
+tanzu_multi_cloud:
+  generated_config_file: "{{ opinionated.tanzu_multi_cloud.generated_config_file }}"
+  # mgmt_cluster_name can contain only lowercase alphanumeric characters, '.' and '-'
+  mgmt_cluster_name: "{{ environment_tag.replace('_','-') }}-tkg-mgmt"
+
+  avi_username: "{{ nsx_alb.controller_username }}"
+  avi_password: "{{ nsx_alb.controller_password }}"
+  avi_cloud_name: "{{ nsx_alb.cloud_name }}"
+  avi_controller: "{{ nsx_alb.controller_ip }}"
+  avi_data_network: "{{ nsx_alb.se_vip_port_group }}"
+  avi_data_network_cidr: "{{ nsx_alb.se_vip_network_cidr }}"
+  avi_service_engine_group: "{{ nsx_alb.se_group_name }}"
+  avi_control_plane_ha_provider: true
+
+  control_plane_machine_count: "{{ opinionated.tanzu_multi_cloud.control_plane_machine_count }}"
+  worker_machine_count: "{{ opinionated.tanzu_multi_cloud.worker_machine_count }}"
+  control_plane_disk_gib: "{{ opinionated.tanzu_multi_cloud.control_plane_disk_gib }}"
+  control_plane_mem_mib: "{{ opinionated.tanzu_multi_cloud.control_plane_mem_mib }}"
+  control_plane_num_cpus: "{{ opinionated.tanzu_multi_cloud.control_plane_num_cpus }}"
+  worker_disk_gib: "{{ opinionated.tanzu_multi_cloud.worker_disk_gib }}"
+  worker_mem_mib: "{{ opinionated.tanzu_multi_cloud.worker_mem_mib }}"
+  worker_num_cpus: "{{ opinionated.tanzu_multi_cloud.worker_num_cpus }}"
+
+  # Not needed
+  # vsphere_control_plane_endpoint: "{{ opinionated.hosting_network.workload.cidr | ansible.utils.ipmath(2) }}"
+
+  vsphere_datacenter_path: "/{{ hosting_vcenter.datacenter }}"
+  vsphere_datastore_path: "/{{ hosting_vcenter.datacenter }}/datastore/{{ opinionated.hosting_datastore }}"
+  vsphere_folder_path: "/{{ hosting_vcenter.datacenter }}/vm"
+  vsphere_network: "{{ opinionated.hosting_network.base.port_group }}"
+  vsphere_password: "{{ hosting_vcenter.password }}"
+  vsphere_resource_pool_path: "/{{ hosting_vcenter.datacenter }}/host/{{ opinionated.hosting_cluster }}/Resources"
+  vsphere_server: "{{ hosting_vcenter.ip }}"
+  vsphere_ssh_authorized_key: "{{ opinionated.ssh_public_key }}"
+  vsphere_username: "{{ hosting_vcenter.username }}"
+
+nsx_alb:
+  api_version: "22.1.4"
+  controller_username: admin
+  controller_password: "{{ opinionated.master_password }}"
+  controller_ssh_public_key: "{{ opinionated.ssh_public_key }}"
+  controller_default_password: "{{ lookup('env', 'AVI_DEFAULT_PASSWORD') }}"
+
+  controller_ip: "{{ opinionated.hosting_network.base.starting_addr }}"
+  controller_netmask: "{{ opinionated.hosting_network.base.cidr.split('/')[1] }}"
+  controller_gateway: "{{ opinionated.hosting_network.base.gateway }}"
+  dns_server: "{{ dns_server }}"
+  ntp_server: "{{ ntp_server_ip }}"
+
+  controller_vcenter_ip: "{{ hosting_vcenter.ip }}"
+  controller_vcenter_username: "{{ hosting_vcenter.username }}"
+  controller_vcenter_password: "{{ hosting_vcenter.password }}"
+  controller_vcenter_datacenter: "{{ hosting_vcenter.datacenter }}"
+  controller_vcenter_cluster: "{{ opinionated.hosting_cluster }}"
+  controller_vcenter_datastore: "{{ opinionated.hosting_datastore }}"
+  controller_port_group: "{{ opinionated.hosting_network.base.port_group }}"
+
+  cloud_name: Default-Cloud
+  cloud_vcenter_username: "{{ hosting_vcenter.username }}"
+  cloud_vcenter_password: "{{ hosting_vcenter.password }}"
+  cloud_vcenter_url: "{{ hosting_vcenter.ip }}"
+  cloud_vcenter_datacenter: "{{ hosting_vcenter.datacenter }}"
+  cloud_exclude_other_networks: true
+
+  se_group_name: Default-Group
+  se_vcenter_cluster: "{{ opinionated.hosting_cluster }}"
+  # The management network will host he service engine management interface
+  se_management_port_group: "{{ opinionated.hosting_network.base.port_group }}"
+  se_management_network_gateway: "{{ opinionated.hosting_network.base.gateway }}"
+  se_management_network_cidr: "{{ opinionated.hosting_network.base.cidr }}"
+  # The vip network will contain the virtual servers created by Avi
+  se_vip_port_group: "{{ opinionated.hosting_network.base.port_group }}"
+  se_vip_network_cidr: "{{ opinionated.hosting_network.base.cidr }}"
+  se_vip_network_range: "{{ opinionated.hosting_network.base.vip_ip_range }}"
+  se_vip_network_gateway: "{{ opinionated.hosting_network.base.gateway }}"
+
+  # Setting dummy_service will trigger the SEs to be created by temporarily creating a service
+  dummy_service:
+    subnet_addr: "{{ opinionated.hosting_network.base.cidr.split('/')[0] }}"
+    subnet_mask: "{{ opinionated.hosting_network.base.cidr.split('/')[1] }}"
+    network_name: "{{ opinionated.hosting_network.base.port_group }}"
