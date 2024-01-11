@@ -109,3 +109,4 @@
   delay: 10
   until: result_apply_changes.rc == 0
   when: 'not item.apply_changes is defined or item.apply_changes'
+  tags: ["opsman-apply-changes"]
