@@ -76,7 +76,8 @@
         {% if tanzu_multi_cloud.generated_config_file is defined %}
         "tanzu_multi_cloud": {
           "config_file": "{{ tanzu_multi_cloud.generated_config_file }}",
-          "mgmt_create_command" : "tanzu management-cluster create --file {{ tanzu_multi_cloud.generated_config_file }}"
+          "mgmt_create_command" : "tanzu management-cluster create --file {{ tanzu_multi_cloud.generated_config_file }}",
+          "mgmt_reset_command" : "tanzu context delete {{ environment_tag }}-tkg-mgmt"
         },
         {% endif %}
 

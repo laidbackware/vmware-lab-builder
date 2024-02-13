@@ -9,6 +9,7 @@
     state: absent
     force: true
   delegate_to: localhost
+  when: 'nested_vcenter is defined'
 
 - name: Remove ESXi hosts VMs
   community.vmware.vmware_guest:
@@ -21,6 +22,7 @@
     force: true
   delegate_to: localhost
   loop: "{{ nested_hosts }}"
+  when: 'nested_hosts is defined'
 
 - name: Remove NSX-T Manager VM
   community.vmware.vmware_guest:
@@ -45,3 +47,42 @@
     force: true
   delegate_to: localhost
   when: 'nsx_alb is defined'
+
+- name: Check if Opsman is online
+  ansible.builtin.uri:
+    validate_certs: false
+    url: "http://{{ opsman_ip }}/"
+    method: GET
+    status_code: 200,302,301,503
+  register: result_opsman_check
+  until: result_opsman_check.status == 200
+  when: 'tanzu_opsman_bosh is defined and not nested_vcenter is defined'
+
+- name: Delete TAS deployment (if not nested)
+  args:
+    executable: /bin/bash
+  ansible.builtin.shell:
+    cmd: |
+      #/bin/bash
+      set -eu
+
+      unset OM_PASSWORD OM_USERNAME OM_SKIP_SSL_VALIDATION OM_TARGET
+
+      env=$(cat << EOF
+      {{ lookup('template', 'env.yml') | from_yaml | to_nice_yaml }}
+      EOF
+      )
+
+      om --env <(echo "$env") delete-installation --force
+  when: 'tanzu_opsman_bosh is defined and not nested_vcenter is defined and result_opsman_check.status == 200'
+
+- name: Remove Opsman VM
+  community.vmware.vmware_guest:
+    hostname: "{{ hosting_vcenter.ip }}"
+    username: "{{ hosting_vcenter.username }}"
+    password: "{{ hosting_vcenter.password }}"
+    validate_certs: false
+    name: "{{ environment_tag }}-ops-manager"
+    state: absent
+    force: true
+  delegate_to: localhost

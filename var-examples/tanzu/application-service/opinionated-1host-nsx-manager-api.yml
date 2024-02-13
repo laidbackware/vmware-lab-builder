@@ -10,7 +10,7 @@ tas_stemcell: "{{ lookup('env', 'SOFTWARE_DIR') }}/bosh-stemcell-621.561-vsphere
 # tas_stemcell: "{{ lookup('env', 'SOFTWARE_DIR') }}/bosh-stemcell-1.148-vsphere-esxi-ubuntu-jammy-go_agent.tgz"
 ncp_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-NSX-T-4.0.1.20665035.pivotal"
 
-environment_tag: "tas-silk"  # Used to prepend object names in hosting vCenter
+environment_tag: "tas-nsx"  # Used to prepend object names in hosting vCenter
 dns_server: "192.168.0.1"
 dns_domain: "home.local"
 ntp_server_ip: "192.168.0.1"  # Must be set to an IP address!
@@ -34,7 +34,7 @@ opinionated:
       - size_gb: 700
         datastore_prefix: "datastore"  # omit this to not have a datastore created
   hosting_cluster: Physical
-  hosting_datastore: NVME-Sab
+  hosting_datastore: NVME
   hosting_network:
     base:
       port_group: Nest
@@ -386,6 +386,8 @@ tanzu_opsman_bosh:
   #   ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int)+4, 0) }}
   dns: "{{ dns_server }}"
   ntp: "{{ ntp_server_ip }}"
+
+  bosh_template_file: p-bosh-nsx.yml
 
   bosh_networks:
     - name: infra

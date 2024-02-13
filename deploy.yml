@@ -62,6 +62,8 @@
     - role: nsxt/nsxt-mgmt-appliance
       when: 'nsxt is defined'
       tags: ["nsxt", "nsxt-mgr"]
+      # TODO set password expiry
+      # su admin '-c set user admin set user admin password-expiration 9999'
     - role: nsxt/nsxt-mgmt-certificate
       when: 'nsxt is defined'
       tags: ["nsxt", "nsxt-mgr-cert"]

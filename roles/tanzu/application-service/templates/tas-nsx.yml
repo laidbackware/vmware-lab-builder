@@ -109,9 +109,9 @@ product-properties:
   .properties.container_networking:
     selected_option: enable
     value: enable
-  # .properties.container_networking_interface_plugin:
-  #   selected_option: external
-  #   value: external
+  .properties.container_networking_interface_plugin:
+    selected_option: external
+    value: external
   .properties.credhub_database:
     selected_option: internal_mysql
     value: internal_mysql

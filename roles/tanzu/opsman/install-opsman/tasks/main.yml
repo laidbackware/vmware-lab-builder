@@ -3,8 +3,6 @@
 # Importing templates as variables to allow for debugging
 - name: Set variables
   ansible.builtin.set_fact:
-    # opsman_config: |
-    #   {{ lookup('template', 'opsman.yml') | from_yaml }}
     opsman_env: |
       {{ lookup('template', 'env.yml') | from_yaml }}
 
