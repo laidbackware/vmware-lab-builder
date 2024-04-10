@@ -34,6 +34,7 @@
       DNS: "{{ opsman_dns }}"
       ntp_servers: "{{ opsman_ntp }}"
       public_ssh_key: "{{ opsman_ssh_public_key }}"
+      custom_hostname: opsman
   register: result_opsman_create
   # Added retries to allow NSX segment to take time to propogate
   retries: 3

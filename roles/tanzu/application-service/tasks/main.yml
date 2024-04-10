@@ -129,7 +129,7 @@
   ansible.builtin.set_fact:
     tas_vars:
       - slug: VMware-NSX-T
-        file_path: "{{ ncp_tile }}"
+        file_path: "{{ ncp_tile | default('') }}"
         product_config: "{{ lookup('template', 'ncp.yml') | from_yaml }}"
         apply_changes: false
       - slug: cf

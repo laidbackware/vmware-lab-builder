@@ -1,11 +1,8 @@
 ---
 # SOFTWARE_DIR must contain all required software
-opsman_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/ops-manager-vsphere-3.0.11+LTS-T.ova"
-tas_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/srt-4.0.4-build.2.pivotal"
-# tas_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/srt-4.0.4-build.2.pivotal"
-tas_stemcell: "{{ lookup('env', 'SOFTWARE_DIR') }}/bosh-stemcell-621.561-vsphere-esxi-ubuntu-xenial-go_agent.tgz"
-# tas_stemcell: "{{ lookup('env', 'SOFTWARE_DIR') }}/bosh-stemcell-1.148-vsphere-esxi-ubuntu-jammy-go_agent.tgz"
-ncp_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-NSX-T-4.0.1.20665035.pivotal"
+opsman_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/ops-manager-vsphere-3.0.25+LTS-T.ova"
+tas_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/srt-4.0.20-build.2.pivotal"
+tas_stemcell: "{{ lookup('env', 'SOFTWARE_DIR') }}/bosh-stemcell-1.423-vsphere-esxi-ubuntu-jammy-go_agent.tgz"
 
 environment_tag: "tas-direct"  # Used to prepend object names in hosting vCenter
 dns_server: "192.168.0.1"
@@ -33,7 +30,7 @@ opinionated:
       starting_addr: "192.168.1.210"
   tas:
     bosh_reserved_ip_ranges: "192.168.0.2-192.168.1.210,192.168.1.215-192.168.3.254"
-    deployment_reserved_ip_ranges: "192.168.0.2-192.168.1.215,192.168.1.225-192.168.3.254"
+    deployment_reserved_ip_ranges: "192.168.0.2-192.168.1.215,192.168.1.239-192.168.3.254"
 
   ssh_public_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC/qMIbcfUkClzrBi7QjUmtdfpjDlTSXsPcJsmdmezbem2SboQPujpFUGmzFXi5PqhPa3QOxvMn8oJpozlJYydDspFAAqX+0u8n0FrwMMn0ckwUtF4zxz/AnI8tUltjeN67M7mG+3W8ooRFeaY6nrjxEIXbkMOzSbeTaFcB9cDzRXcMmFiuoeDhUonEYbClrsPzLdzscw7Vz6BLMHwo9SBOqlaL25aG/DtZPB7jobQRh48q3RW+Hb29nH18biJNLiBDsRu1SJIzw7Dl+rNSX9Va56vX0cz5CDiTg9A69WgySDx7oZFZM3W6jyHCN0fQbw/OxE/2MemhfQbdJqgffA7zE0qx+/DVIoT5bBP7FPpQSxkMjC+AEAH4PPsDIP0KJH9do6+T/g/Mf6725IOaPSJyV0bAkz1T57T1ty19KdhvPVfjrMnCap+pLvD6Qd/lxzY9uFF4oOwWmo4xQ6hQXZ9oJUhrRsG2A5LF7XGXwOb8mHSG4InfUfjaov4gjLl5tN0=
 

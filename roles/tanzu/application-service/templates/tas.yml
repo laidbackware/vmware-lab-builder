@@ -504,11 +504,11 @@ resource-config:
     swap_as_percent_of_memory_size: automatic
 errand-config:
   deploy-autoscaler:
-    post-deploy-state: true
+    post-deploy-state: false
   deploy-notifications:
-    post-deploy-state: true
+    post-deploy-state: false
   deploy-notifications-ui:
-    post-deploy-state: true
+    post-deploy-state: false
   metric_registrar_smoke_test:
     post-deploy-state: false
   nfsbrokerpush:
@@ -516,7 +516,7 @@ errand-config:
   push-apps-manager:
     post-deploy-state: true
   push-usage-service:
-    post-deploy-state: true
+    post-deploy-state: false
   rotate_cc_database_key:
     post-deploy-state: false
   smbbrokerpush:
@@ -524,4 +524,4 @@ errand-config:
   smoke_tests:
     post-deploy-state: true
   test-autoscaling:
-    post-deploy-state: true
+    post-deploy-state: false
