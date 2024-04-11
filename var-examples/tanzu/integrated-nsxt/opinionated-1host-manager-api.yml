@@ -413,9 +413,6 @@ tanzu_opsman_bosh:
   nsx_username: "{{ nsxt.manager.username }}"
   nsx_password: "{{ nsxt.manager.password }}"
 
-  # Reserve opsman IP.
-  bosh_reserved_ip_ranges: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(2) }}"
-
 tkgi:
   vcenter_url: "{{ nested_vcenter.ip }}"
   vcenter_username: "{{ nested_vcenter.username }}"

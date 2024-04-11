@@ -14,9 +14,10 @@ bosh_vcenter_datastore_persistent: "{{ tanzu_opsman_bosh.vcenter_datastore }}"
 bosh_vcenter_username: "{{ tanzu_opsman_bosh.vcenter_username }}"
 bosh_vcenter_password: "{{ tanzu_opsman_bosh.vcenter_password }}"
 
-bosh_nsx_url: "{{ tanzu_opsman_bosh.nsx_url }}"
-bosh_nsx_username: "{{ tanzu_opsman_bosh.nsx_username }}"
-bosh_nsx_password: "{{ tanzu_opsman_bosh.nsx_password }}"
+bosh_nsx_url: "{{ tanzu_opsman_bosh.nsx_url | default(omit) }}"
+bosh_nsx_username: "{{ tanzu_opsman_bosh.nsx_username | default(omit) }}"
+bosh_nsx_password: "{{ tanzu_opsman_bosh.nsx_password | default(omit) }}"
+bosh_template_file: "{{ tanzu_opsman_bosh.bosh_template_file }}"
 
 bosh_ssh_public_key: "{{ tanzu_opsman_bosh.ssh_public_key }}"
 bosh_username: "{{ tanzu_opsman_bosh.username }}"

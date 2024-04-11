@@ -7,6 +7,7 @@
     password: "{{ tas_nsx_password }}"
     validate_certs: false
   register: result_nsx_routers
+  when: "tas_nsx_manager_url is defined and '__omit' not in tas_nsx_manager_url"
 
 - name: Fetch NSX Manager cert
   ansible.builtin.shell: |-
@@ -18,15 +19,20 @@
   changed_when: false
   args:
     executable: /usr/bin/bash
+  when: "tas_nsx_manager_url is defined and '__omit' not in tas_nsx_manager_url"
+
+- name: Set Opsman env
+  ansible.builtin.set_fact:
+    opsman_env: |
+      {{ lookup('template', 'env.yml') | from_yaml }}
 
 - name: Set NSX facts
   ansible.builtin.set_fact:
     nsx_ca_cert: |-
-      {{ result_nsx_manager_cert_pem.stdout }}
+      {{ result_nsx_manager_cert_pem.stdout |default("") }}
     # Expects the T0 to be the first created router, which is not role agnostic
-    nsx_t0_id: "{{ result_nsx_routers.results[0].id }}"
-    opsman_env: |
-      {{ lookup('template', 'env.yml') | from_yaml }}
+    nsx_t0_id: "{{ result_nsx_routers.results[0].id |default('') }}"
+  # when: "tas_nsx_manager_url is defined and '__omit' not in tas_nsx_manager_url"
 
 - name: Check Gorouter cert hostname
   args:
@@ -119,11 +125,11 @@
     tas_uaa_cert_pair: "{{ result_tas_uaa_cert_pair.stdout | from_json }}"
   when: tas_uaa_cert_replace
 
-- name: Setting TAS Tile vars
+- name: Set base vars
   ansible.builtin.set_fact:
     tas_vars:
       - slug: VMware-NSX-T
-        file_path: "{{ ncp_tile }}"
+        file_path: "{{ ncp_tile | default('') }}"
         product_config: "{{ lookup('template', 'ncp.yml') | from_yaml }}"
         apply_changes: false
       - slug: cf
@@ -151,6 +157,13 @@
       {% set a = tas_vars[1]['product_config']['product-properties'].pop('.properties.haproxy_forward_tls') %}
       {{ tas_vars }}
   when: not "srt-2." in tas_tile
+
+- name: Drop NSX Tile vars if 'tas_nsx_manager_url' not set
+  ansible.builtin.set_fact:
+    tas_vars: |
+      {% set _ = tas_vars.pop(0) %}
+      {{ tas_vars }}
+  when: not tas_nsx_manager_url is defined or '__omit' in tas_nsx_manager_url
 
 - name: Deploy TAS
   ansible.builtin.include_role:

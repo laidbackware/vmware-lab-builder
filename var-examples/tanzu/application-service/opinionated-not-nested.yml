@@ -1,0 +1,102 @@
+---
+# SOFTWARE_DIR must contain all required software
+opsman_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/ops-manager-vsphere-3.0.25+LTS-T.ova"
+tas_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/srt-4.0.20-build.2.pivotal"
+tas_stemcell: "{{ lookup('env', 'SOFTWARE_DIR') }}/bosh-stemcell-1.423-vsphere-esxi-ubuntu-jammy-go_agent.tgz"
+
+environment_tag: "tas-direct"  # Used to prepend object names in hosting vCenter
+dns_server: "192.168.0.1"
+dns_domain: "home.local"
+ntp_server_ip: "192.168.0.1"  # Must be set to an IP address!
+disk_mode: thin  # How all disks should be deployed
+
+hosting_vcenter:  # This is the vCenter which will be the target for nested vCenters and ESXi hosts
+  ip: "vcsa.lab"
+  username: "{{ lookup('env', 'PARENT_VCENTER_USERNAME') }}"
+  password: "{{ lookup('env', 'PARENT_VCENTER_PASSWORD') }}"
+  datacenter: "Home"  # Target for all VM deployment
+
+# This section is only referenced by other variables in this file
+opinionated:
+  master_password: "VMware1!"
+  hosting_cluster: Physical
+  hosting_datastore: NVME
+  hosting_network:
+    base:
+      port_group: Nest
+      cidr: "192.168.0.0/22"
+      gateway: "192.168.0.1"
+      # TAS requires XXX IP addresses!
+      starting_addr: "192.168.1.210"
+  tas:
+    bosh_reserved_ip_ranges: "192.168.0.2-192.168.1.210,192.168.1.215-192.168.3.254"
+    deployment_reserved_ip_ranges: "192.168.0.2-192.168.1.215,192.168.1.239-192.168.3.254"
+
+  ssh_public_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC/qMIbcfUkClzrBi7QjUmtdfpjDlTSXsPcJsmdmezbem2SboQPujpFUGmzFXi5PqhPa3QOxvMn8oJpozlJYydDspFAAqX+0u8n0FrwMMn0ckwUtF4zxz/AnI8tUltjeN67M7mG+3W8ooRFeaY6nrjxEIXbkMOzSbeTaFcB9cDzRXcMmFiuoeDhUonEYbClrsPzLdzscw7Vz6BLMHwo9SBOqlaL25aG/DtZPB7jobQRh48q3RW+Hb29nH18biJNLiBDsRu1SJIzw7Dl+rNSX9Va56vX0cz5CDiTg9A69WgySDx7oZFZM3W6jyHCN0fQbw/OxE/2MemhfQbdJqgffA7zE0qx+/DVIoT5bBP7FPpQSxkMjC+AEAH4PPsDIP0KJH9do6+T/g/Mf6725IOaPSJyV0bAkz1T57T1ty19KdhvPVfjrMnCap+pLvD6Qd/lxzY9uFF4oOwWmo4xQ6hQXZ9oJUhrRsG2A5LF7XGXwOb8mHSG4InfUfjaov4gjLl5tN0=
+
+#####################################################################
+### No need to edit below this line for an opinionated deployment ###
+#####################################################################
+tanzu_opsman_bosh:
+  vm_name: "{{ environment_tag }}-ops-manager"
+  hostname: "{{ environment_tag }}-ops-manager"
+  opsman_username: admin
+  opsman_password: "{{ opinionated.master_password }}"
+  ssh_public_key: "{{ opinionated.ssh_public_key }}"
+
+  opsman_ip: "{{ opinionated.hosting_network.base.starting_addr }}" #| ansible.utils.ipmath(2)
+  netmask: "{{ opinionated.hosting_network.base.cidr | ansible.utils.ipaddr('netmask') }}"
+  gateway: "{{ opinionated.hosting_network.base.gateway }}"
+  network: "{{ opinionated.hosting_network.base.port_group }}"
+  dns: "{{ dns_server }}"
+  ntp: "{{ ntp_server_ip }}"
+
+  bosh_template_file: p-bosh.yml
+
+  bosh_networks:
+    - name: infra
+      subnets:
+        - iaas_identifier: "{{ opinionated.hosting_network.base.port_group }}"
+          cidr: "{{ opinionated.hosting_network.base.cidr }}"
+          dns: "{{ dns_server }}"
+          gateway: "{{ opinionated.hosting_network.base.gateway }}"
+          reserved_ip_ranges: >-
+            {{ opinionated.hosting_network.base.gateway }}-{{ opinionated.hosting_network.base.starting_addr }},{{
+            opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(6) }}-{{
+            opinionated.hosting_network.base.cidr | ansible.utils.ipaddr('-2') | ansible.utils.ipaddr('address') }}
+          availability_zone_names:
+            - az1
+    - name: tas-deployment
+      subnets:
+        - iaas_identifier: "{{ opinionated.hosting_network.base.port_group }}"
+          cidr: "{{ opinionated.hosting_network.base.cidr }}"
+          dns: "{{ dns_server }}"
+          gateway: "{{ opinionated.hosting_network.base.gateway }}"
+          # reserved_ip_ranges: "{{ opinionated.tas.deployment_reserved_ip_ranges }}"
+          reserved_ip_ranges: >-
+            {{ opinionated.hosting_network.base.gateway }}-{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(5) }},{{
+            opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(20) }}-{{
+            opinionated.hosting_network.base.cidr | ansible.utils.ipaddr('-2') | ansible.utils.ipaddr('address') }}
+          availability_zone_names:
+            - az1
+
+  vcenter_url: "{{ hosting_vcenter.ip }}"
+  vcenter_cluster: "{{ opinionated.hosting_cluster }}"
+  vcenter_datacenter: "{{ hosting_vcenter.datacenter }}"
+  vcenter_datastore: "{{ opinionated.hosting_datastore }}"
+  vcenter_folder: "/{{ hosting_vcenter.datacenter }}/vm"
+  vcenter_username: "{{ hosting_vcenter.username }}"
+  vcenter_password: "{{ hosting_vcenter.password }}"
+
+tanzu_application_service:
+  tas_template_file: tas-nsx.yml
+  # install_nsx_tile: true
+  deployment_network: tas-deployment
+  apps_domain: >-
+    apps.{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(19) }}.nip.io
+  sys_domain: >-
+    sys.{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(19) }}.nip.io
+  uaa_domain: >-
+    login.sys.{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(19) }}.nip.io
+  credhub_key: "{{ opinionated.master_password }}{{ opinionated.master_password }}{{ opinionated.master_password }}{{ opinionated.master_password }}"
+  gorouter_ip: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(19) }}"

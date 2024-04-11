@@ -1,0 +1,4 @@
+---
+opsman_ip: "{{ tanzu_opsman_bosh.opsman_ip }}"
+opsman_username: "{{ tanzu_opsman_bosh.opsman_username }}"
+opsman_password: "{{ tanzu_opsman_bosh.opsman_password }}"

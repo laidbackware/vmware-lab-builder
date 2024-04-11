@@ -1,16 +1,16 @@
 ---
 # SOFTWARE_DIR must contain all required software
-vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.3-21477706.iso"
-esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u3k_Appliance_Template_v1.ova"
-nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-3.2.3.0.0.21703641.ova"
+vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.3-22837322.iso"
+esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u3o_Appliance_Template_v2.ova"
+nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-3.2.3.1.0.22104638.ova"
 opsman_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/ops-manager-vsphere-3.0.11+LTS-T.ova"
-tas_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/srt-2.11.41-build.2.pivotal"
+tas_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/srt-4.0.4-build.2.pivotal"
 # tas_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/srt-4.0.4-build.2.pivotal"
 tas_stemcell: "{{ lookup('env', 'SOFTWARE_DIR') }}/bosh-stemcell-621.561-vsphere-esxi-ubuntu-xenial-go_agent.tgz"
 # tas_stemcell: "{{ lookup('env', 'SOFTWARE_DIR') }}/bosh-stemcell-1.148-vsphere-esxi-ubuntu-jammy-go_agent.tgz"
 ncp_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-NSX-T-4.0.1.20665035.pivotal"
 
-environment_tag: "tas"  # Used to prepend object names in hosting vCenter
+environment_tag: "tas-nsx"  # Used to prepend object names in hosting vCenter
 dns_server: "192.168.0.1"
 dns_domain: "home.local"
 ntp_server_ip: "192.168.0.1"  # Must be set to an IP address!
@@ -386,6 +386,8 @@ tanzu_opsman_bosh:
   #   ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int)+4, 0) }}
   dns: "{{ dns_server }}"
   ntp: "{{ ntp_server_ip }}"
+
+  bosh_template_file: p-bosh-nsx.yml
 
   bosh_networks:
     - name: infra

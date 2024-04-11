@@ -9,18 +9,24 @@
     executable: /usr/bin/bash
   register: result_nsx_manager_cert_pem
   changed_when: false
+  when: "bosh_nsx_url is defined and '__omit' not in bosh_nsx_url"
 
 - name: Set NSX CA Cert
   ansible.builtin.set_fact:
     nsx_ca_cert: |-
       {{ result_nsx_manager_cert_pem.stdout }}
+  when: "bosh_nsx_url is defined and '__omit' not in bosh_nsx_url"
 
 - name: Set variables
   ansible.builtin.set_fact:
     bosh_config: |
-      {{ lookup('template', 'p-bosh.yml') | from_yaml }}
+      {{ lookup('template', bosh_template_file) | from_yaml }}
     opsman_env: |
       {{ lookup('template', 'env.yml') | from_yaml }}
+
+- name: Show Opsman/bosh config
+  debug:
+    var: bosh_config
 
 - name: Configure Bosh Director
   args:
