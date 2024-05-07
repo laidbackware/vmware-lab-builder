@@ -13,11 +13,11 @@
         state: directory
         suffix: setup
       register: temp_dir_results
-      tags: ["pre", "always"]
+      tags: ["always"]
 
     - ansible.builtin.set_fact:
         temp_dir: "{{ temp_dir_results.path }}"
-      tags: ["pre", "always"]
+      tags: ["always"]
 
   vars:
     debug_mode: "{{ debug | default(False) | bool }}"
