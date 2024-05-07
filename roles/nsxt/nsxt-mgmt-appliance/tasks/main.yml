@@ -26,7 +26,7 @@
     wait: true
     wait_for_ip_address: true
     inject_ovf_env: true
-    deployment_option: small
+    deployment_option: medium
     properties:
       nsx_ip_0: "{{ nsxt.manager.ip }}"
       nsx_netmask_0: "{{ nsxt.manager.netmask }}"
