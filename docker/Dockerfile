@@ -15,9 +15,11 @@ RUN set -xe \
     \
     && ln --symbolic /usr/bin/python3 /usr/bin/python \
     \
-    && echo "****** Installing OM CLI ******" \
-    && curl -L https://github.com/pivotal-cf/om/releases/download/7.9.0/om-linux-amd64-7.9.0 --output /usr/local/bin/om \
-    && chmod +x /usr/local/bin/om \
+    && echo "****** Installing amd64 OM CLI ******" \
+    && curl -L https://github.com/pivotal-cf/om/releases/download/7.12.0/om-linux-amd64-7.12.0 --output /usr/local/bin/om-amd64 \
+    \
+    && echo "****** Installing arm64 OM CLI ******" \
+    && curl -L https://github.com/pivotal-cf/om/releases/download/7.12.0/om-linux-arm64-7.12.0 --output /usr/local/bin/om-arm64 \
     \
     && echo "****** Installing Python modules ******" \
     && pip3 install ansible pyvmomi netaddr requests \
@@ -43,3 +45,7 @@ RUN set -xe \
     && rm -rf /root/.cache/pip/ \
     && rm -rf /tmp/* \
     && apt-get clean
+
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
