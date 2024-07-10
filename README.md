@@ -105,7 +105,7 @@ docker run  -it --rm \
     --env AVI_DEFAULT_PASSWORD=${AVI_DEFAULT_PASSWORD:-na} \
     --volume ${SOFTWARE_DIR}:/software_dir \
     --volume ${PWD}:/work \
-    laidbackware/vmware-lab-builder:v9 \
+    laidbackware/vmware-lab-builder:v10 \
     /bin/bash
 
 # Then the playbook can be triggered
