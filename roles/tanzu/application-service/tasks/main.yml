@@ -125,6 +125,14 @@
     tas_uaa_cert_pair: "{{ result_tas_uaa_cert_pair.stdout | from_json }}"
   when: tas_uaa_cert_replace
 
+- ansible.builtin.set_fact:
+    networking_plugin_template: >-
+      {%- if tanzu_application_service.nsx is defined -%}
+      tas-nsx.yml
+      {%- else -%}
+      tas.yml
+      {%- endif -%}
+
 - name: Set base vars
   ansible.builtin.set_fact:
     tas_vars:
@@ -134,7 +142,7 @@
         apply_changes: false
       - slug: cf
         file_path: "{{ tas_tile }}"
-        product_config: "{{ lookup('template', 'tas.yml') | from_yaml }}"
+        product_config: "{{ lookup('template', networking_plugin_template) | from_yaml }}"
         stemcell: "{{ tas_stemcell }}"
 
 - name: Dropping gorouter certificates if already set
