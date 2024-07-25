@@ -6,7 +6,7 @@ Build a nested vSphere lab with Ansible.
 
 A change in ansible-for-nsxt requires that the options for field `transport_type` change from `OVERLAY` and `VLAN` to `OVERLAY_BACKED` and `VLAN_BACKED`.
 
-Support for NSX 3.0 has been dropped.
+Support for NSX 3.0 has been dropped. See `nsx-3.0-support` branch for legacy support.
 
 ## <span style="color:red">Warnings</span>
 
