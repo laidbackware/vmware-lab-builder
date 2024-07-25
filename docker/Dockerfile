@@ -16,7 +16,8 @@ RUN set -xe \
     && ln --symbolic /usr/bin/python3 /usr/bin/python \
     \
     && echo "****** Installing OM CLI ******" \
-    && curl -L https://github.com/pivotal-cf/om/releases/download/7.9.0/om-linux-amd64-7.9.0 --output /usr/local/bin/om \
+    && arch=$(a=$(uname -m) && ([ $a = aarch64 ] || [ $a = arm64 ]) && printf arm64 || printf amd64) \
+    && curl -L https://github.com/pivotal-cf/om/releases/download/7.9.0/om-linux-${arch}-7.9.0 --output /usr/local/bin/om \
     && chmod +x /usr/local/bin/om \
     \
     && echo "****** Installing Python modules ******" \
@@ -30,7 +31,7 @@ RUN set -xe \
     && ansible-galaxy collection install vmware.alb:22.1.4 \
     \
     && echo "****** Adding ansible-for-nsxt from Github ******" \
-    && ansible-galaxy collection install git+https://github.com/vmware/ansible-for-nsxt.git,v3.2.0 \
+    && ansible-galaxy collection install git+https://github.com/vmware/ansible-for-nsxt.git,dfbbd0463f834046d2dcd32e70d3e26d6120613a \
     \
     && echo "****** Cloning ansible-for-vsphere-tanzu ******" \
     && ansible-galaxy collection install git+https://github.com/laidbackware/ansible-for-vsphere-tanzu.git,ansible-galaxy \

@@ -59,3 +59,10 @@ product-properties:
     value: "{{ nsx_t0_id }}"
   .properties.wait_for_security_policy_sync:
     value: false
+network-properties:
+  network:
+    name: "{{ tas_deployment_network }}"
+  other_availability_zones:
+    - name: az1
+  singleton_availability_zone:
+    name: az1
