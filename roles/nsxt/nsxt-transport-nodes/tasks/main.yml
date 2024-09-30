@@ -44,7 +44,11 @@
   register: host_transport_node_facts
   retries: 120
   delay: 10
-  until: host_transport_node_facts.results and host_transport_node_facts.results[0].node_deployment_info.managed_by_server
+  until:
+    - host_transport_node_facts.results
+    - host_transport_node_facts | community.general.json_query(host_node_query)
+  vars:
+    host_node_query: "results[?node_deployment_info.resource_type=='HostNode'].node_deployment_info.managed_by_server"
 
 - ansible.builtin.debug: msg="Creating edge nodes {{ nsxt.edge_nodes }}"
 
