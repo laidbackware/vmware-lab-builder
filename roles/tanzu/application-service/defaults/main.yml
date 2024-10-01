@@ -22,6 +22,7 @@ tas_nsx_container_block_name: "{{ tanzu_application_service.nsx.container_block_
 tas_nsx_container_block_cidr: "{{ tanzu_application_service.nsx.container_block_cidr |default(omit) }}"
 
 tas_deployment_network: "{{ tanzu_application_service.deployment_network }}"
+tas_deployment_network_cidr: "{{ tanzu_application_service.deployment_network_cidr }}"
 tas_apps_domain: "{{ tanzu_application_service.apps_domain }}"
 tas_sys_domain: "{{ tanzu_application_service.sys_domain }}"
 tas_uaa_domain: "{{ tanzu_application_service.uaa_domain }}"
