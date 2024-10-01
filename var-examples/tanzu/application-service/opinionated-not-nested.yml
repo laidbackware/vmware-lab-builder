@@ -92,6 +92,7 @@ tanzu_application_service:
   tas_template_file: tas-nsx.yml
   # install_nsx_tile: true
   deployment_network: tas-deployment
+  deployment_network_cidr: "{{ opinionated.hosting_network.base.cidr }}"
   apps_domain: >-
     apps.{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(19) }}.nip.io
   sys_domain: >-

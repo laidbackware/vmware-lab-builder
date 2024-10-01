@@ -434,6 +434,7 @@ tanzu_opsman_bosh:
 
 tanzu_application_service:
   deployment_network: tas-deployment
+  deployment_network_cidr: "{{ opinionated.tas.routeable_super_net }}"
   apps_domain: >-
     apps.{{ opinionated.tas.routeable_super_net |
     ansible.utils.ipsubnet((opinionated.tas.routeable_super_net.split('/')[1] |int) + 2, 1) |
