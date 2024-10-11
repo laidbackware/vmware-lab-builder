@@ -166,9 +166,6 @@ opinionated:
 
   ssh_public_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDNre3RSDIQIbswU/AbFMrdGDTRNIxXs1L1aY9ozDm/TsTKBf85Kr/0Bi3Az1DgOifR3s7SblZFhqKtGueqyv4NKoNy8dgxUsFzGKaRBmwGfCn9rp0hAV/r6BdyhRGloltaZ4KuR3v3AQTTjpyWPsf55wUIMYtOtrQ1tnNspmZmEyh11e8Hbwsq6jaVDCpSWkLPgir4lDTFANRpA/MaU9XUG3PjYszaNFgIScUwQVl0otmCpFgZgf9jXwy4K5CpG4u/1CSIA6H+5XAJaAzDNGcAIGQKaIAj6Cvd8QyUs+UEV5n6rJSsp+gnfu0gEYx4QmeWwcVdGu1Re18qHVgAP56gF58uV7p/V60Tlf9IFqkz67lwLlOuq9dfNmPGIJ/lydcLgcvXmJObyntm1jFi5ChtIrBd7uShh9b6wwOLhekv3TwOn0nHPjXDabVDcmfXVhAgyJyknCFv1Hm3UFwTngoc4WFm38wgxzajOzxt83b8bXXhMNaU8L8VXtVpfIrDHbAKhho6Aaf8JahKa46UxFa4yjkVfN75N4++8CdCpGiruLUp1rW4zYkrjxBuIBcib/06QTsvdPIsYVsPic/mYoxBVTclvLi/ELVdwFFSavwNKI+XwH6ENI7vckkVs6HpM0GJu4qsvmhrlkGVmNM0BkaJN1i1CQgn01OTz+um1rjr+Q== andy.knapp.ak@gmail.com
 
-
-  
-
 #####################################################################
 ### No need to edit below this line for an opinionated deployment ###
 #####################################################################
