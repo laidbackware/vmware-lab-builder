@@ -425,6 +425,8 @@ tkgi:
   api_fqdn: "{{ opinionated.tkgi.api_fqdn }}"
   dns_server: "{{ dns_server }}"
   k8s_services_cidr: "{{ opinionated.tkgi.k8s_services_cidr }}"
+  network: infra
+  service_network: infra
 
   nsx:
     manager_url: "{{ nsxt.manager.ip }}"
@@ -464,3 +466,4 @@ tkgi:
     ip: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(15) }}"
     fdqn: harbor.tkgi.local
     admin_password: "{{ opinionated.master_password }}"
+    network: infra
