@@ -63,7 +63,7 @@ product-properties:
       private_key_pem: |-
         {{ tkgi_nsx_principal_identity.private_key | indent(8) }}
   .properties.network_selector.nsx.policy_api:
-    value: false
+    value: {{ tkgi_nsx_policy_api }}
   .properties.network_selector.nsx.service_cluster_cidr:
     value: "{{ tkgi_k8s_services_cidr }}"
   .properties.network_selector.nsx.t0-router-id:
@@ -86,8 +86,6 @@ product-properties:
   .properties.plan1_selector:
     selected_option: active
     value: Plan Active
-  .properties.plan1_selector.active.admission_plugins:
-    value: []
   .properties.plan1_selector.active.allow_privileged_containers:
     value: false
   .properties.plan1_selector.active.description:
@@ -196,11 +194,11 @@ product-properties:
     value: 4
 network-properties:
   network:
-    name: infra
+    name: "{{ tkgi_network }}"
   other_availability_zones:
     - name: az1
   service_network:
-    name: infra
+    name: "{{ tkgi_service_network }}"
   singleton_availability_zone:
     name: az1
 resource-config:

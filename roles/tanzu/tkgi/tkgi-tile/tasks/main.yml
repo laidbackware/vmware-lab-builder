@@ -10,7 +10,20 @@
     display_name: "{{ tkgi_nsx_floating_pool.display_name }}"
     subnets: "{{ tkgi_nsx_floating_pool.subnets }}"
     state: present
+  when: not tkgi_nsx_policy_api
   register: result_nsx_floating_pool
+
+- name: Create NSX Policy Floating IP Pool
+  vmware.ansible_for_nsxt.nsxt_policy_ip_pool:
+    hostname: "{{ tkgi_nsx_manager_url }}"
+    username: "{{ tkgi_nsx_username }}"
+    password: "{{ tkgi_nsx_password }}"
+    validate_certs: false
+    display_name: "{{ tkgi_nsx_floating_pool.display_name }}"
+    pool_static_subnets: "{{ tkgi_nsx_floating_pool.pool_static_subnets }}"
+    state: present
+  when: tkgi_nsx_policy_api
+  register: result_nsx_policy_floating_pool
 
 - name: Create NSX Node IP block
   vmware.ansible_for_nsxt.nsxt_ip_blocks:
@@ -21,7 +34,20 @@
     display_name: "{{ tkgi_nsx_node_block.display_name }}"
     cidr: "{{ tkgi_nsx_node_block.cidr }}"
     state: present
+  when: not tkgi_nsx_policy_api
   register: result_nsx_node_block
+
+- name: Create NSX Policy Node IP block
+  vmware.ansible_for_nsxt.nsxt_policy_ip_block:
+    hostname: "{{ tkgi_nsx_manager_url }}"
+    username: "{{ tkgi_nsx_username }}"
+    password: "{{ tkgi_nsx_password }}"
+    validate_certs: false
+    display_name: "{{ tkgi_nsx_node_block.display_name }}"
+    cidr: "{{ tkgi_nsx_node_block.cidr }}"
+    state: present
+  when: tkgi_nsx_policy_api
+  register: result_nsx_policy_node_block
 
 - name: Create NSX Pod IP block
   vmware.ansible_for_nsxt.nsxt_ip_blocks:
@@ -32,7 +58,20 @@
     display_name: "{{ tkgi_nsx_pod_block.display_name }}"
     cidr: "{{ tkgi_nsx_pod_block.cidr }}"
     state: present
+  when: not tkgi_nsx_policy_api
   register: result_nsx_pod_block
+
+- name: Create NSX Policy Pod IP block
+  vmware.ansible_for_nsxt.nsxt_policy_ip_block:
+    hostname: "{{ tkgi_nsx_manager_url }}"
+    username: "{{ tkgi_nsx_username }}"
+    password: "{{ tkgi_nsx_password }}"
+    validate_certs: false
+    id: "{{ tkgi_nsx_pod_block.display_name }}"
+    cidr: "{{ tkgi_nsx_pod_block.cidr }}"
+    state: present
+  when: tkgi_nsx_policy_api
+  register: result_nsx_policy_pod_block
 
 - name: List Logical Routers
   vmware.ansible_for_nsxt.nsxt_logical_routers_facts:
@@ -53,6 +92,15 @@
   args:
     executable: /usr/bin/bash
 
+# rewriting variables as the Policy API returns a different format than the Manager API
+# Required so that both Manager API and Policy API can be used in subsequent steps
+- name: Rewrite Policy API response variables to be consistent with Manager API response variables
+  ansible.builtin.set_fact:
+    result_nsx_floating_pool: "{{ (result_nsx_policy_floating_pool.successfully_updated_resources | json_query('[?resource_type==`NSXTIpPool`]'))[0] }}"
+    result_nsx_node_block: "{{ (result_nsx_policy_node_block.successfully_updated_resources | json_query('[?resource_type==`NSXTIpBlock`]'))[0] }}"
+    result_nsx_pod_block: "{{ (result_nsx_policy_pod_block.successfully_updated_resources | json_query('[?resource_type==`NSXTIpBlock`]'))[0] }}"
+  when: tkgi_nsx_policy_api
+
 - name: Set Harbor/NSX facts
   ansible.builtin.set_fact:
     nsx_ca_cert: |-
@@ -60,8 +108,18 @@
     nsx_floating_pool_id: "{{ result_nsx_floating_pool.id }}"
     nsx_node_block_id: "{{ result_nsx_node_block.id }}"
     nsx_pod_block_id: "{{ result_nsx_pod_block.id }}"
+
+- name: Set T0 router ID
+  ansible.builtin.set_fact:
     # Expects the T0 to be the first created router, which is not role agnostic
     nsx_t0_id: "{{ result_nsx_routers.results[0].id }}"
+  when: not tkgi_nsx_policy_api
+
+- name: Set T0 router display name
+  ansible.builtin.set_fact:
+    # Expects the T0 to be the first created router, which is not role agnostic
+    nsx_t0_id: "{{ result_nsx_routers.results[0].display_name }}"
+  when: tkgi_nsx_policy_api
 
 - name: TKGi API cert check
   ansible.builtin.shell: |-

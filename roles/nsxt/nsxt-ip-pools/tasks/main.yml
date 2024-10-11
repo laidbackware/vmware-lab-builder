@@ -16,3 +16,20 @@
   retries: 5
   delay: 10
   until: "'module_stderr' not in result"
+
+- name: Create policy ip pool
+  vmware.ansible_for_nsxt.nsxt_policy_ip_pool:
+    hostname: "{{ nsxt.manager.hostname }}"
+    username: "{{ nsxt.manager.username }}"
+    password: "{{ nsxt.manager.password }}"
+    validate_certs: false
+    display_name: "{{ item.display_name }}"
+    description: "{{ item.description | default(omit) }}"
+    pool_static_subnets: "{{ item.pool_static_subnets }}"
+    state: present
+    tags: "{{ item.tags | default(omit) }}"
+  loop: "{{ nsxt.policy_ip_pools }}"
+  register: result
+  retries: 5
+  delay: 10
+  until: "'module_stderr' not in result"

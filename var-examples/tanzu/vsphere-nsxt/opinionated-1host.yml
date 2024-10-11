@@ -190,12 +190,12 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
 
   # If the section below is defined, the playbook will wait for the IP to become pingable
   # For TKG service deployments this is the default gateway of the supervisor network
-  routing_test:
-    ip_to_ping: "{{ opinionated.tanzu_vsphere.routeable_super_net | ansible.utils.ipmath(1) }}"
-    # The playbook will present a message using the params below
-    # A static route must be made to the router uplink for nsxt_supernet
-    router_uplink: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(3) }}"
-    nsxt_supernet: "{{ opinionated.tanzu_vsphere.routeable_super_net }}"
+  routing_tests:
+    - ip_to_ping: "{{ opinionated.tanzu_vsphere.routeable_super_net | ansible.utils.ipmath(1) }}"
+      # The playbook will present a message using the params below
+      # A static route must be made to the router uplink for nsxt_supernet
+      router_uplink: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(3) }}"
+      nsxt_supernet: "{{ opinionated.tanzu_vsphere.routeable_super_net }}"
 
   policy_ip_pools:
     - display_name: tep-pool  # This is a non-routable range which is used for the overlay tunnels.

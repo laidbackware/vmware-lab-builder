@@ -9,3 +9,14 @@
     cidr: "{{ item.cidr }}"
     state: present
   loop: "{{ nsxt.ip_blocks }}"
+
+- name: Create NSXT Policy IP address blocks
+  vmware.ansible_for_nsxt.nsxt_policy_ip_block:
+    hostname: "{{ nsxt.manager.hostname }}"
+    username: "{{ nsxt.manager.username }}"
+    password: "{{ nsxt.manager.password }}"
+    validate_certs: false
+    display_name: "{{ item.display_name }}"
+    cidr: "{{ item.cidr }}"
+    state: present
+  loop: "{{ nsxt.policy_ip_blocks }}"
