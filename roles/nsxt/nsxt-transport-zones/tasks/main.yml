@@ -12,7 +12,7 @@
     nested_nsx: "{{ item.nested_nsx | default(omit) }}"
     resource_type: "TransportZone"
     tags: "{{ item.tags | default(omit) }}"
-    transport_type: "{{ item.transport_type }}"
+    tz_type: "{{ item.transport_type }}"
   loop: "{{ nsxt.transport_zones }}"
   register: tz_results
 
