@@ -235,7 +235,7 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
 
   transport_zones:
     - display_name: tz-overlay
-      transport_type: OVERLAY
+      transport_type: OVERLAY_BACKED
       # host_switch_name: "{{ distributed_switches[0].vds_name }}"
       # nested_nsx: true  # Set this to true if you use NSX-T for your physical host networking
       description: "Overlay Transport Zone"

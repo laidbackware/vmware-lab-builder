@@ -12,6 +12,8 @@ Support for NSX 3.0 has been dropped. See `nsx-3.0-support` branch for legacy su
 
 When pulling this repo, be sure to use the latest version of the container image or check the dependency setup, to ensure the the roles have all the required dependencies.
 
+`ansible-core` => 2.17.1 is not supported with `ansible-for-nsxt`, recommend using 2.16.x until it is fixed. See [this PR](https://github.com/vmware/ansible-for-nsxt/pull/509) and commit if this affects you..
+
 ## Description
 
 You can use the ansible playbooks in this repo to build out nested ESXi hosts, deploy a vCenter and configure clusters. ESXi/vCenter 7.0 and 8.0 are supported. The main design goal of this project is to be able to provide both opinionated deployment with few variables and to have the ability to fully customize the deployment.

@@ -9,6 +9,7 @@
     cidr: "{{ item.cidr }}"
     state: present
   loop: "{{ nsxt.ip_blocks }}"
+  when: nsxt.ip_blocks is defined
 
 - name: Create NSXT Policy IP address blocks
   vmware.ansible_for_nsxt.nsxt_policy_ip_block:
@@ -20,3 +21,4 @@
     cidr: "{{ item.cidr }}"
     state: present
   loop: "{{ nsxt.policy_ip_blocks }}"
+  when: nsxt.policy_ip_blocks is defined

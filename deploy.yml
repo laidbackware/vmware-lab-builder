@@ -68,10 +68,10 @@
       when: 'nsxt is defined'
       tags: ["nsxt", "nsxt-mgr-cert"]
     - role: nsxt/nsxt-ip-pools
-      when: 'nsxt.ip_pools is defined'
+      when: 'nsxt.ip_pools is defined or nsxt.policy_ip_pools is defined'
       tags: ["nsxt", "nsxt-ip-pools"]
     - role: nsxt/nsxt-ip-blocks
-      when: 'nsxt.ip_blocks is defined'
+      when: 'nsxt.ip_blocks is defined or nsxt.policy_ip_blocks is defined'
       tags: ["nsxt", "nsxt-ip-blocks"]
     - role: nsxt/nsxt-uplink-profiles
       when: 'nsxt is defined'

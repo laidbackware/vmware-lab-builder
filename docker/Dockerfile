@@ -21,7 +21,7 @@ RUN set -xe \
     && chmod +x /usr/local/bin/om \
     \
     && echo "****** Installing Python modules ******" \
-    && pip3 install ansible pyvmomi netaddr requests \
+    && pip3 install ansible==2.16.12 pyvmomi netaddr requests \
         git+https://github.com/vmware/vsphere-automation-sdk-python.git \
     \
     && echo "****** Adding community.vmware from Ansible Galaxy ******" \

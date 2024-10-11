@@ -1,12 +1,12 @@
 ---
 # SOFTWARE_DIR must contain all required software
-vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-8.0.2-23319993.iso"
-esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u3c_Appliance_Template_v1.ova"
-nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-4.2.0.0.0.24105821.ova"
-opsman_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/ops-manager-vsphere-3.0.32+LTS-T.ova"
+vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-8.0.3-24022515.iso"
+esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi8.0u3b_Appliance_Template_v1.ova"
+nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-4.2.1.0.0.24302016.ova"
+opsman_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/ops-manager-vsphere-3.0.33+LTS-T.ova"
 tas_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/srt-6.0.8-build.3.pivotal"
 tas_stemcell: "{{ lookup('env', 'SOFTWARE_DIR') }}/bosh-stemcell-1.555-vsphere-esxi-ubuntu-jammy-go_agent.tgz"
-ncp_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-NSX-T-4.2.0.0.24016753.pivotal"
+ncp_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-NSX-T-4.2.1.0.24284046.pivotal"
 harbor_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/harbor-container-registry-2.11.0-build.2.pivotal"
 tkgi_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/pivotal-container-service-1.20.0-build.52.pivotal"
 tkgi_stemcell: "{{ lookup('env', 'SOFTWARE_DIR') }}/bosh-stemcell-1.555-vsphere-esxi-ubuntu-jammy-go_agent.tgz"
@@ -112,6 +112,7 @@ opinionated:
     pod_ip_block: 100.70.0.0/16
     api_fqdn: api.tkgi.local.knappster.de
   # principal identity can be kept as default unless there is a security reason to change
+    nsx_policy_api: True
     nsx_principal_identity:
       public_key: |-
         -----BEGIN CERTIFICATE-----
@@ -314,12 +315,12 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
 
   transport_zones:
     - display_name: tz-overlay
-      transport_type: OVERLAY
+      transport_type: OVERLAY_BACKED
       # host_switch_name: sw_overlay  # Not required for NSX-T 3.2, but needed for 3.1
       nested_nsx: true  # Set this to true if you use NSX-T for your physical host networking
       description: "Overlay Transport Zone"
     - display_name: tz-vlan
-      transport_type: VLAN
+      transport_type: VLAN_BACKED
       # host_switch_name: sw_vlan  # Not required for NSX-T 3.2, but needed for 3.1
       description: "Uplink Transport Zone"
 
@@ -536,7 +537,7 @@ tanzu_opsman_bosh:
   nsx_url: "{{ nsxt.manager.ip }}"
   nsx_username: "{{ nsxt.manager.username }}"
   nsx_password: "{{ nsxt.manager.password }}"
-  nsx_use_policy_api: true
+  nsx_use_policy_api: "{{ opinionated.tas.nsx_policy_api}}"
 
   # Reserve opsman IP.
   bosh_reserved_ip_ranges: "{{ opinionated.infra.routeable_super_net | ansible.utils.ipmath(2) }}"
@@ -607,7 +608,7 @@ tkgi:
     manager_url: "{{ nsxt.manager.ip }}"
     manager_username: "{{ nsxt.manager.username }}"
     manager_password: "{{ nsxt.manager.password }}"
-    policy_api: true
+    policy_api: "{{ opinionated.tkgi.nsx_policy_api}}"
     floating_ip_pool:
       display_name: tkgi-floating-ips
       pool_static_subnets:

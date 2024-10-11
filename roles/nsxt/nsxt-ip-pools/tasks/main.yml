@@ -16,6 +16,7 @@
   retries: 5
   delay: 10
   until: "'module_stderr' not in result"
+  when: nsxt.ip_pools is defined
 
 - name: Create policy ip pool
   vmware.ansible_for_nsxt.nsxt_policy_ip_pool:
@@ -33,3 +34,4 @@
   retries: 5
   delay: 10
   until: "'module_stderr' not in result"
+  when: nsxt.policy_ip_pools is defined
