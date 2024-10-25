@@ -19,8 +19,8 @@
     username: "{{ tkgi_nsx_username }}"
     password: "{{ tkgi_nsx_password }}"
     validate_certs: false
-    display_name: "{{ tkgi_nsx_floating_pool.display_name }}"
-    pool_static_subnets: "{{ tkgi_nsx_floating_pool.pool_static_subnets }}"
+    display_name: "{{ tkgi_nsx_policy_floating_pool.display_name }}"
+    pool_static_subnets: "{{ tkgi_nsx_policy_floating_pool.pool_static_subnets }}"
     state: present
   when: tkgi_nsx_policy_api
   register: result_nsx_policy_floating_pool

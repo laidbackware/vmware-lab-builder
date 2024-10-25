@@ -244,7 +244,7 @@ errand-config:
   delete-all-clusters:
     pre-delete-state: true
   pks-nsx-t-precheck:
-    post-deploy-state: true
+    post-deploy-state: false # disabled to allow medium edge sizes
   smoke-tests:
     post-deploy-state: true
   upgrade-all-service-instances:

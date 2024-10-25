@@ -1,6 +1,7 @@
 FROM ubuntu:22.04
 
-ENV ANSIBLE_VERSION=2.13.*
+ENV ANSIBLE_VERSION=2.16.*
+ENV PYTHON_VERSION=
 
 ENV ANSIBLE_HOST_KEY_CHECKING=False
 
@@ -21,7 +22,7 @@ RUN set -xe \
     && chmod +x /usr/local/bin/om \
     \
     && echo "****** Installing Python modules ******" \
-    && pip3 install ansible==2.16.12 pyvmomi netaddr requests \
+    && pip3 install ansible==${ANSIBLE_VERSION} pyvmomi jmespath netaddr requests \
         git+https://github.com/vmware/vsphere-automation-sdk-python.git \
     \
     && echo "****** Adding community.vmware from Ansible Galaxy ******" \
@@ -31,7 +32,7 @@ RUN set -xe \
     && ansible-galaxy collection install vmware.alb:22.1.4 \
     \
     && echo "****** Adding ansible-for-nsxt from Github ******" \
-    && ansible-galaxy collection install git+https://github.com/vmware/ansible-for-nsxt.git,dfbbd0463f834046d2dcd32e70d3e26d6120613a \
+    && ansible-galaxy collection install git+https://github.com/laidbackware/ansible-for-nsxt.git,upstream-fixes --force \
     \
     && echo "****** Cloning ansible-for-vsphere-tanzu ******" \
     && ansible-galaxy collection install git+https://github.com/laidbackware/ansible-for-vsphere-tanzu.git,ansible-galaxy \

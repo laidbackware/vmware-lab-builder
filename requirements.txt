@@ -3,4 +3,5 @@ ansible
 pyvmomi
 netaddr
 requests
+jmespath
 git+https://github.com/vmware/vsphere-automation-sdk-python.git

@@ -387,6 +387,8 @@ tanzu_opsman_bosh:
   dns: "{{ dns_server }}"
   ntp: "{{ ntp_server_ip }}"
 
+  bosh_template_file: p-bosh-nsx.yml
+
   bosh_networks:
     - name: infra
       subnets:

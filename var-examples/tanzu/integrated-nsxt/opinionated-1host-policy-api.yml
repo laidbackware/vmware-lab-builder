@@ -388,6 +388,8 @@ tanzu_opsman_bosh:
   dns: "{{ dns_server }}"
   ntp: "{{ ntp_server_ip }}"
 
+  bosh_template_file: p-bosh-nsx.yml
+
   bosh_networks:
     - name: infra
       subnets:
@@ -435,10 +437,12 @@ tkgi:
     manager_username: "{{ nsxt.manager.username }}"
     manager_password: "{{ nsxt.manager.password }}"
     policy_api: "{{ opinionated.tkgi.nsx_policy_api}}"
-    floating_ip_pool:
+    policy_floating_ip_pool:
       display_name: tkgi-floating-ips
-      subnets:
-        - allocation_ranges:
+      pool_static_subnets:
+        - id: tkgi-floating-ips-1
+          state: present
+          allocation_ranges:
             - start: >-
                 {{ opinionated.tkgi.routeable_super_net |
                 ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+1, 1) |

@@ -609,7 +609,7 @@ tkgi:
     manager_username: "{{ nsxt.manager.username }}"
     manager_password: "{{ nsxt.manager.password }}"
     policy_api: "{{ opinionated.tkgi.nsx_policy_api}}"
-    floating_ip_pool:
+    policy_floating_ip_pool:
       display_name: tkgi-floating-ips
       pool_static_subnets:
         - id: tkgi-floating-ips-1
