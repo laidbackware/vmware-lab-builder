@@ -53,12 +53,6 @@
 
 - ansible.builtin.debug: msg="Creating edge nodes {{ nsxt.edge_nodes }}"
 
-- name: Waiting for vlan segments to propagate to the cluster
-  ansible.builtin.pause:
-    echo: false
-    seconds: 30
-  when: tnp_attach_result.changed
-
 - name: Create transport node
   vmware.ansible_for_nsxt.nsxt_transport_nodes:
     hostname: "{{ nsxt.manager.hostname }}"

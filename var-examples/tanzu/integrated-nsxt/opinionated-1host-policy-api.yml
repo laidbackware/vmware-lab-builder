@@ -252,7 +252,7 @@ nsxt:  # (optional) - section can be removed to not create any nsxt objects
       transport_type: VLAN_BACKED
       # host_switch_name: sw_vlan  # Not required for NSX-T 3.2, but needed for 3.1
       description: "Uplink Transport Zone"
-
+  
   transport_node_profiles:
     - display_name: tnp1
       host_switches:
