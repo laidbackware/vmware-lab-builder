@@ -1,0 +1,91 @@
+- name: Create a temporary directory for concourse config files
+  ansible.builtin.tempfile:
+    state: directory
+    suffix: concourse
+  register: temp_dir_concourse
+
+- name: set concourse bosh deployment dir
+  ansible.builtin.set_fact:
+    concourse_bosh_deployment_dir: "{{ temp_dir_concourse.path }}/{{ concourse_bosh_deployment.split('.tgz') | first | split('/') | last }}"   
+
+- name: Create concourse deployment directory
+  ansible.builtin.file:
+    path: "{{ concourse_bosh_deployment_dir }}"
+    state: directory
+
+- name: Extract concourse-bosh-deployment tgz
+  ansible.builtin.unarchive:
+    src: "{{ concourse_bosh_deployment }}"
+    dest: "{{ concourse_bosh_deployment_dir }}"
+
+- name: Set concourse vars
+  ansible.builtin.template:
+    src: vars.yml
+    dest: "{{ temp_dir_concourse.path }}/vars.yml"
+
+- name: Copy file operations.yml
+  ansible.builtin.copy:
+    src: operations.yml
+    dest: "{{ temp_dir_concourse.path }}/operations.yml"
+
+- name: export BOSH environment
+  args:
+    executable: /bin/bash
+  environment:
+    OM_TARGET: "{{ opsman_ip }}"
+    OM_USERNAME: "{{ opsman_username }}"
+    OM_PASSWORD: "{{ opsman_password }}"
+    OM_SKIP_SSL_VALIDATION: true
+  ansible.builtin.shell:
+    cmd: om -d '{{ opsman_password }}{{ opsman_password }}' bosh-env > "{{ temp_dir_concourse.path }}/bosh_env"
+
+- name: Upload releases and stemcell to BOSH director
+  args:
+    executable: /bin/bash
+  ansible.builtin.shell:
+    cmd: |
+      source "{{ temp_dir_concourse.path }}/bosh_env"
+      bosh upload-release {{ bpm_release }}
+      bosh upload-release {{ postgres_release }}
+      bosh upload-release {{ uaa_release }}
+      bosh upload-release {{ credhub_release }}
+      bosh upload-release {{ backup_and_restore_sdk_release }}
+      bosh upload-release {{ concourse_release }}
+      bosh upload-stemcell {{ concourse_stemcell }}
+
+- name: Upload releases and stemcell to BOSH director
+  args:
+    executable: /bin/bash
+  ansible.builtin.shell:
+    cmd: |
+      source "{{ temp_dir_concourse.path }}/bosh_env"
+
+      credhub set \
+        -n /p-bosh/concourse/local_user \
+        -t user \
+        -z "{{ concourse_username }}" \
+        -w "{{ concourse_password }}"
+
+- name: Deploy Concourse BOSH release
+  args:
+    executable: /bin/bash
+  ansible.builtin.shell:
+    cmd: |
+      source "{{ temp_dir_concourse.path }}/bosh_env"
+      bosh -n -d concourse deploy {{ concourse_bosh_deployment_dir }}/cluster/concourse.yml \
+        -o {{ concourse_bosh_deployment_dir }}/cluster/operations/privileged-http.yml \
+        -o {{ concourse_bosh_deployment_dir }}/cluster/operations/privileged-https.yml \
+        -o {{ concourse_bosh_deployment_dir }}/cluster/operations/basic-auth.yml \
+        -o {{ concourse_bosh_deployment_dir }}/cluster/operations/tls-vars.yml \
+        -o {{ concourse_bosh_deployment_dir }}/cluster/operations/tls.yml \
+        -o {{ concourse_bosh_deployment_dir }}/cluster/operations/uaa.yml \
+        -o {{ concourse_bosh_deployment_dir }}/cluster/operations/credhub-colocated.yml \
+        -o {{ concourse_bosh_deployment_dir }}/cluster/operations/offline-releases.yml \
+        -o {{ concourse_bosh_deployment_dir }}/cluster/operations/backup-atc-colocated-web.yml \
+        -o {{ concourse_bosh_deployment_dir }}/cluster/operations/secure-internal-postgres.yml \
+        -o {{ concourse_bosh_deployment_dir }}/cluster/operations/secure-internal-postgres-bbr.yml \
+        -o {{ concourse_bosh_deployment_dir }}/cluster/operations/secure-internal-postgres-uaa.yml \
+        -o {{ concourse_bosh_deployment_dir }}/cluster/operations/secure-internal-postgres-credhub.yml \
+        -o {{ temp_dir_concourse.path }}/operations.yml \
+        -l <(om interpolate --config {{ temp_dir_concourse.path }}/vars.yml) \
+        -l {{ concourse_bosh_deployment_dir }}/versions.yml

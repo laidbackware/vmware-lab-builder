@@ -20,6 +20,16 @@ RUN set -xe \
     && curl -L https://github.com/pivotal-cf/om/releases/download/7.9.0/om-linux-${arch}-7.9.0 --output /usr/local/bin/om \
     && chmod +x /usr/local/bin/om \
     \
+    && echo "****** Installing BOSH CLI ******" \
+    && arch=$(a=$(uname -m) && ([ $a = aarch64 ] || [ $a = arm64 ]) && printf arm64 || printf amd64) \
+    && curl -L https://github.com/cloudfoundry/bosh-cli/releases/download/v7.8.2/bosh-cli-7.8.2-linux-${arch} --output /usr/local/bin/bosh \
+    && chmod +x /usr/local/bin/bosh \
+    \
+    && echo "****** Installing Credhub CLI ******" \
+    && arch=$(a=$(uname -m) && ([ $a = aarch64 ] || [ $a = arm64 ]) && printf arm64 || printf amd64) \
+    && curl -L https://github.com/cloudfoundry/credhub-cli/releases/download/2.9.39/credhub-linux-${arch}-2.9.39.tgz --output /tmp/credhub.tgz \
+    && tar -xvzf /tmp/credhub.tgz -C /usr/local/bin/ \
+    \
     && echo "****** Installing Python modules ******" \
     && pip3 install ansible pyvmomi netaddr requests \
         git+https://github.com/vmware/vsphere-automation-sdk-python.git \

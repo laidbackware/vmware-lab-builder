@@ -160,6 +160,11 @@
       when: 'harbor_standalone is defined'
       tags: ["harbor"]
 
+    # Concourse section
+    - role: concourse
+      when: 'concourse is defined'
+      tags: ["concourse"]
+
   post_tasks:
     - name: Remove the temporary directory
       ansible.builtin.file:

@@ -1,0 +1,15 @@
+deployment_name: concourse
+# This can be any VM type from the cloud config: bosh cloud-config
+web_vm_type: {{ concourse_web_vm_type }}
+external_host: {{ concourse_ip }}
+external_url: https://{{ concourse_ip }}
+# This can be any VM type from the cloud config: bosh cloud-config
+db_vm_type: {{ concourse_db_vm_type }}
+# This can be any disk type from the cloud config: bosh cloud-config
+db_persistent_disk_type: {{ concourse_db_persistent_disk_type }}
+# This can be any VM type from the cloud config: bosh cloud-config
+worker_vm_type: {{ concourse_worker_vm_type }}
+# This assigns created VMs (web, worker, and db) to AZs in the IaaS
+azs: [ az1 ]
+# The network name to assign the VMs to.
+network_name: {{ concourse_network_name }}
