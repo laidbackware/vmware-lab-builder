@@ -166,6 +166,6 @@ Software dependencies for Linux:
    ```
    ansible-galaxy collection install community.vmware:4.5.0 --force
    ansible-galaxy collection install vmware.alb:22.1.4 --force
-   ansible-galaxy collection install git+https://github.com/vmware/ansible-for-nsxt.git,dfbbd0463f834046d2dcd32e70d3e26d6120613a --force
+   ansible-galaxy collection install git+https://github.com/vmware/ansible-for-nsxt.git,945980d5f35cfb7ffc62efd8e44ce0c70fb45c68 --force
    ansible-galaxy collection install git+https://github.com/laidbackware/ansible-for-vsphere-tanzu.git,ansible-galaxy --force
    ```
