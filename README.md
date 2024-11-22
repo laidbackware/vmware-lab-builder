@@ -12,6 +12,10 @@ Support for NSX 3.0 has been dropped. See `nsx-3.0-support` branch for legacy su
 
 When pulling this repo, be sure to use the latest version of the container image or check the dependency setup, to ensure the the roles have all the required dependencies.
 
+Python 3.12 is currently not supported on mainline`ansible-for-nsxt`, due to a bug using a removed funciton. [Bug](https://github.com/vmware/ansible-for-nsxt/issues/517). Recommend using the fixed [fork linked in this repo](#local-usage) or v11 of the Docker image.
+
+`ansible-core` => 2.17.1 is not supported with `ansible-for-nsxt`, recommend using 2.16.x until it is fixed. See [this PR](https://github.com/vmware/ansible-for-nsxt/pull/509) and commit if this affects you..
+
 ## Description
 
 You can use the ansible playbooks in this repo to build out nested ESXi hosts, deploy a vCenter and configure clusters. ESXi/vCenter 7.0 and 8.0 are supported. The main design goal of this project is to be able to provide both opinionated deployment with few variables and to have the ability to fully customize the deployment.
@@ -42,7 +46,7 @@ The pattern names below match the sub-directory under `var-examples` where examp
 | Pattern Name              | Product Versions                     | Status |
 | ------------------------- | ------------------------------------ | ------ |
 | base-vsphere              | n/a                                  | Stable |
-| nsxt                      | NSX-T 3.x,4.0                        | Stable |
+| nsxt                      | NSX-T 3.2,4.x                        | Stable |
 | tanzu/multi-cloud         | NSX-ALB 20.1.7                       | Stable |
 | tanzu/vsphere-nsxt        | NSX-T 3.1, 3.2, 4.0                  | Stable |
 | tanzu/vsphere-vds-alb     | NSX-ALB 20.1.7                       | Stable |
@@ -84,7 +88,7 @@ alias lab-builder="docker run --rm \
     --env AVI_DEFAULT_PASSWORD=\"${AVI_DEFAULT_PASSWORD:-na}\" \
     --volume ${SOFTWARE_DIR}:/software_dir \
     --volume ${PWD}:/work \
-    laidbackware/vmware-lab-builder:v10 \
+    laidbackware/vmware-lab-builder:v11 \
     ansible-playbook"
 
 # This command is run inside the container, so point to the `/work` directory within the container.
@@ -116,7 +120,7 @@ docker run  -it --rm \
     --env AVI_DEFAULT_PASSWORD=${AVI_DEFAULT_PASSWORD:-na} \
     --volume ${SOFTWARE_DIR}:/software_dir \
     --volume ${PWD}:/work \
-    laidbackware/vmware-lab-builder:v10 \
+    laidbackware/vmware-lab-builder:v11 \
     /bin/bash
 
 # Then the playbook can be triggered
@@ -144,20 +148,20 @@ One time build setup process on debian systems:
 
 ```sh
 sudo apt-get install qemu binfmt-support qemu-user-static
-docker buildx create --name multi-arch --driver docker-container --platform linux/amd64,linux/arm64
+docker buildx create --use --name multi-arch --driver docker-container --platform linux/amd64,linux/arm64
 ```
 
 Build command:
 
-```
-docker buildx build --push --platform linux/arm64,linux/amd64 --tag laidbackware/vmware-lab-builder:v10 ./docker
+```sh
+docker buildx build --push --platform linux/arm64,linux/amd64 --tag laidbackware/vmware-lab-builder:v11 ./docker
 ```
 
 ## Local Usage
 
 Software dependencies for Linux:
 - Ansible 2.13 or higher.
-- Linux tools `apt-get install libarchive-tools sshpass python3-pip git python3-jmespath sshpass`
+- Linux tools `apt-get install libarchive-tools sshpass python3-pip git python3-jmespath`
 - Install all necessary Python modules
     ```
     pip install -r requirements.txt
@@ -166,6 +170,6 @@ Software dependencies for Linux:
    ```
    ansible-galaxy collection install community.vmware:4.5.0 --force
    ansible-galaxy collection install vmware.alb:22.1.4 --force
-   ansible-galaxy collection install git+https://github.com/vmware/ansible-for-nsxt.git,dfbbd0463f834046d2dcd32e70d3e26d6120613a --force
+   ansible-galaxy collection install git+https://github.com/laidbackware/ansible-for-nsxt.git,upstream-fixes --force
    ansible-galaxy collection install git+https://github.com/laidbackware/ansible-for-vsphere-tanzu.git,ansible-galaxy --force
    ```

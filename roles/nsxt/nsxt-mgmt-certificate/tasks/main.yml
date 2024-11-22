@@ -1,5 +1,8 @@
 ---
 
+- name: Checking if openssl is installed
+  command: which openssl
+
 - name: NSX Manager cert check
   ansible.builtin.shell: |
     set -o pipefail && \
@@ -9,6 +12,7 @@
   args:
     executable: /usr/bin/bash
   changed_when: false
+  ignore_errors: true
 
 - ansible.builtin.set_fact:
     cert_replace: "{{ nsxt.manager.ip not in result_nsx_manager_cert_sans.stdout }}"

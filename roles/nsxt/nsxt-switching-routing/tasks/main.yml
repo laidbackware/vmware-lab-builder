@@ -59,11 +59,13 @@
 - ansible.builtin.debug:
     msg:
       - The next step will check and wait for NSX-T networks to be available
-      - You must add a static route to {{ nsxt.routing_test.nsxt_supernet }} with next hop {{ nsxt.routing_test.router_uplink }}
+      - You must add a static route to {{ item.nsxt_supernet }} with next hop {{ item.router_uplink }}
       - It may take a short while for NSX-T to complete the configuration and respond
-  when: "nsxt.routing_test is defined"
+  when: "nsxt.routing_tests is defined"
+  loop: "{{ nsxt.routing_tests }}"
 
-- name: Checking static route to NSX-T is in place by pinging {{ nsxt.routing_test.ip_to_ping }}
-  ansible.builtin.shell: "while true; do ping -c1 {{ nsxt.routing_test.ip_to_ping }} > /dev/null && break; done"
+- name: "Checking static route to NSX-T is in place by pinging the IP address"
+  ansible.builtin.shell: "while true; do ping -c1 {{ item.ip_to_ping }} > /dev/null && break; done"
   delegate_to: localhost
-  when: "nsxt.routing_test is defined"
+  when: "nsxt.routing_tests is defined"
+  loop: "{{ nsxt.routing_tests }}"

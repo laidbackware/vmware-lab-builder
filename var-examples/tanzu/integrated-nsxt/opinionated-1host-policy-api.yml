@@ -1,12 +1,12 @@
 ---
 # SOFTWARE_DIR must contain all required software
-vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-7.0.3-21477706.iso"
-esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi7.0u3k_Appliance_Template_v1.ova"
-nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-4.0.1.1.0.20598732.ova"
-opsman_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/ops-manager-vsphere-3.0.8+LTS-T.ova"
-harbor_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/harbor-container-registry-2.8.1-build.4.pivotal"
-tkgi_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/pivotal-container-service-1.16.2-build.11.pivotal"
-tkgi_stemcell: "{{ lookup('env', 'SOFTWARE_DIR') }}/bosh-stemcell-1.125-vsphere-esxi-ubuntu-jammy-go_agent.tgz"
+vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-8.0.3-24022515.iso"
+esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi8.0u3b_Appliance_Template_v1.ova"
+nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-4.2.0.2.0.24278659.ova"
+opsman_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/ops-manager-vsphere-3.0.33+LTS-T.ova"
+harbor_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/harbor-container-registry-2.11.0-build.2.pivotal"
+tkgi_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/pivotal-container-service-1.20.0-build.52.pivotal"
+tkgi_stemcell: "{{ lookup('env', 'SOFTWARE_DIR') }}/bosh-stemcell-1.555-vsphere-esxi-ubuntu-jammy-go_agent.tgz"
 
 environment_tag: "tkgi"  # Used to prepend object names in hosting vCenter
 dns_server: "192.168.0.1"
@@ -51,6 +51,7 @@ opinionated:
     node_ip_block: 100.69.0.0/16
     pod_ip_block: 100.70.0.0/16
     api_fqdn: api.tkgi.local
+    nsx_policy_api: true
 
   ssh_public_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC/qMIbcfUkClzrBi7QjUmtdfpjDlTSXsPcJsmdmezbem2SboQPujpFUGmzFXi5PqhPa3QOxvMn8oJpozlJYydDspFAAqX+0u8n0FrwMMn0ckwUtF4zxz/AnI8tUltjeN67M7mG+3W8ooRFeaY6nrjxEIXbkMOzSbeTaFcB9cDzRXcMmFiuoeDhUonEYbClrsPzLdzscw7Vz6BLMHwo9SBOqlaL25aG/DtZPB7jobQRh48q3RW+Hb29nH18biJNLiBDsRu1SJIzw7Dl+rNSX9Va56vX0cz5CDiTg9A69WgySDx7oZFZM3W6jyHCN0fQbw/OxE/2MemhfQbdJqgffA7zE0qx+/DVIoT5bBP7FPpQSxkMjC+AEAH4PPsDIP0KJH9do6+T/g/Mf6725IOaPSJyV0bAkz1T57T1ty19KdhvPVfjrMnCap+pLvD6Qd/lxzY9uFF4oOwWmo4xQ6hQXZ9oJUhrRsG2A5LF7XGXwOb8mHSG4InfUfjaov4gjLl5tN0=
 
@@ -377,7 +378,7 @@ tanzu_opsman_bosh:
   opsman_ip: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(2) }}"
   netmask: >-
     {{ opinionated.tkgi.routeable_super_net |
-    ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+4, 0) |
+    ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+3, 0) |
     ansible.utils.ipaddr('netmask') }}
   gateway: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(1) }}"
   network: tkgi-infra-seg
@@ -395,7 +396,7 @@ tanzu_opsman_bosh:
         - iaas_identifier: tkgi-infra-seg
           cidr: >-
             {{ opinionated.tkgi.routeable_super_net |
-            ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+4, 0) }}
+            ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+3, 0) }}
           dns: "{{ dns_server }}"
           gateway: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(1) }}"
           reserved_ip_ranges: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(2) }}"
@@ -414,6 +415,7 @@ tanzu_opsman_bosh:
   nsx_url: "{{ nsxt.manager.ip }}"
   nsx_username: "{{ nsxt.manager.username }}"
   nsx_password: "{{ nsxt.manager.password }}"
+  policy_api: "{{ opinionated.tkgi.nsx_policy_api}}"
 
 tkgi:
   vcenter_url: "{{ nested_vcenter.ip }}"
@@ -434,10 +436,13 @@ tkgi:
     manager_url: "{{ nsxt.manager.ip }}"
     manager_username: "{{ nsxt.manager.username }}"
     manager_password: "{{ nsxt.manager.password }}"
-    floating_ip_pool:
+    policy_api: "{{ opinionated.tkgi.nsx_policy_api}}"
+    policy_floating_ip_pool:
       display_name: tkgi-floating-ips
-      subnets:
-        - allocation_ranges:
+      pool_static_subnets:
+        - id: tkgi-floating-ips-1
+          state: present
+          allocation_ranges:
             - start: >-
                 {{ opinionated.tkgi.routeable_super_net |
                 ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+1, 1) |

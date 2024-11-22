@@ -1,6 +1,6 @@
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
-ENV ANSIBLE_VERSION=2.13.*
+ENV ANSIBLE_VERSION=2.16.3-0ubuntu2
 
 ENV ANSIBLE_HOST_KEY_CHECKING=False
 
@@ -11,7 +11,7 @@ RUN set -xe \
     && apt install -y --no-install-recommends \
         ca-certificates iputils-ping python3-apt libarchive-tools sshpass \
         build-essential python3 python3-jmespath python3-setuptools \
-        python3-pip python3-dev git curl \
+        python3-pip python3-dev git curl ansible-core \
     \
     && ln --symbolic /usr/bin/python3 /usr/bin/python \
     \
@@ -21,8 +21,8 @@ RUN set -xe \
     && chmod +x /usr/local/bin/om \
     \
     && echo "****** Installing Python modules ******" \
-    && pip3 install ansible pyvmomi netaddr requests \
-        git+https://github.com/vmware/vsphere-automation-sdk-python.git \
+    && pip3 install pyvmomi netaddr \ 
+        git+https://github.com/vmware/vsphere-automation-sdk-python.git --break-system-packages \
     \
     && echo "****** Adding community.vmware from Ansible Galaxy ******" \
     && ansible-galaxy collection install community.vmware:3.0.0 \
@@ -31,7 +31,7 @@ RUN set -xe \
     && ansible-galaxy collection install vmware.alb:22.1.4 \
     \
     && echo "****** Adding ansible-for-nsxt from Github ******" \
-    && ansible-galaxy collection install git+https://github.com/vmware/ansible-for-nsxt.git,dfbbd0463f834046d2dcd32e70d3e26d6120613a \
+    && ansible-galaxy collection install git+https://github.com/laidbackware/ansible-for-nsxt.git,upstream-fixes --force \
     \
     && echo "****** Cloning ansible-for-vsphere-tanzu ******" \
     && ansible-galaxy collection install git+https://github.com/laidbackware/ansible-for-vsphere-tanzu.git,ansible-galaxy \

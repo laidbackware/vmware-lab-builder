@@ -30,9 +30,19 @@
   ansible.builtin.set_fact:
     nsx_ca_cert: |-
       {{ result_nsx_manager_cert_pem.stdout |default("") }}
-    # Expects the T0 to be the first created router, which is not role agnostic
-    nsx_t0_id: "{{ result_nsx_routers.results[0].id |default('') }}"
   # when: "tas_nsx_manager_url is defined and '__omit' not in tas_nsx_manager_url"
+
+- name: Set T0 router ID
+  ansible.builtin.set_fact:
+    # Expects the T0 to be the first created router, which is not role agnostic
+    nsx_t0_id: "{{ result_nsx_routers.results[0].id }}"
+  when: not tas_nsx_policy_api
+
+- name: Set T0 router display name
+  ansible.builtin.set_fact:
+    # Expects the T0 to be the first created router, which is not role agnostic
+    nsx_t0_id: "{{ result_nsx_routers.results[0].display_name }}"
+  when: tas_nsx_policy_api
 
 - name: Check Gorouter cert hostname
   args:
