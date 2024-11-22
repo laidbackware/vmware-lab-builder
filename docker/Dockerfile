@@ -1,7 +1,6 @@
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
-ENV ANSIBLE_VERSION=2.16.*
-ENV PYTHON_VERSION=
+ENV ANSIBLE_VERSION=2.16.3-0ubuntu2
 
 ENV ANSIBLE_HOST_KEY_CHECKING=False
 
@@ -12,7 +11,7 @@ RUN set -xe \
     && apt install -y --no-install-recommends \
         ca-certificates iputils-ping python3-apt libarchive-tools sshpass \
         build-essential python3 python3-jmespath python3-setuptools \
-        python3-pip python3-dev git curl \
+        python3-pip python3-dev git curl ansible-core \
     \
     && ln --symbolic /usr/bin/python3 /usr/bin/python \
     \
@@ -22,8 +21,8 @@ RUN set -xe \
     && chmod +x /usr/local/bin/om \
     \
     && echo "****** Installing Python modules ******" \
-    && pip3 install ansible==${ANSIBLE_VERSION} pyvmomi jmespath netaddr requests \
-        git+https://github.com/vmware/vsphere-automation-sdk-python.git \
+    && pip3 install pyvmomi netaddr \ 
+        git+https://github.com/vmware/vsphere-automation-sdk-python.git --break-system-packages \
     \
     && echo "****** Adding community.vmware from Ansible Galaxy ******" \
     && ansible-galaxy collection install community.vmware:3.0.0 \
