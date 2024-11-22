@@ -378,7 +378,7 @@ tanzu_opsman_bosh:
   opsman_ip: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(2) }}"
   netmask: >-
     {{ opinionated.tkgi.routeable_super_net |
-    ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+4, 0) |
+    ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+3, 0) |
     ansible.utils.ipaddr('netmask') }}
   gateway: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(1) }}"
   network: tkgi-infra-seg
@@ -396,7 +396,7 @@ tanzu_opsman_bosh:
         - iaas_identifier: tkgi-infra-seg
           cidr: >-
             {{ opinionated.tkgi.routeable_super_net |
-            ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+4, 0) }}
+            ansible.utils.ipsubnet((opinionated.tkgi.routeable_super_net.split('/')[1] |int)+3, 0) }}
           dns: "{{ dns_server }}"
           gateway: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(1) }}"
           reserved_ip_ranges: "{{ opinionated.tkgi.routeable_super_net | ansible.utils.ipmath(2) }}"

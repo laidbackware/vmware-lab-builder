@@ -2,9 +2,9 @@
 # SOFTWARE_DIR must contain all required software
 vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-8.0.3-24022515.iso"
 esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi8.0u3b_Appliance_Template_v1.ova"
-nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-4.2.1.0.0.24302016.ova"
+nsxt_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/nsx-unified-appliance-4.2.0.2.0.24278659.ova"
 opsman_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/ops-manager-vsphere-3.0.33+LTS-T.ova"
-tas_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/srt-6.0.8-build.3.pivotal"
+tas_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/srt-6.0.10-build.2.pivotal"
 tas_stemcell: "{{ lookup('env', 'SOFTWARE_DIR') }}/bosh-stemcell-1.555-vsphere-esxi-ubuntu-jammy-go_agent.tgz"
 ncp_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-NSX-T-4.2.1.0.24284046.pivotal"
 harbor_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/harbor-container-registry-2.11.0-build.2.pivotal"
@@ -12,14 +12,14 @@ tkgi_tile: "{{ lookup('env', 'SOFTWARE_DIR') }}/pivotal-container-service-1.20.0
 tkgi_stemcell: "{{ lookup('env', 'SOFTWARE_DIR') }}/bosh-stemcell-1.555-vsphere-esxi-ubuntu-jammy-go_agent.tgz"
 
 environment_tag: "tas-tkgi-nsx"  # Used to prepend object names in hosting vCenter
-dns_server: "192.168.178.1"
-dns_domain: "local.knappster.de"
-ntp_server_ip: "192.168.178.1"  # Must be set to an IP address!
+dns_server: "192.168.0.1"
+dns_domain: "home.local"
+ntp_server_ip: "192.168.0.1"  # Must be set to an IP address!
 disk_mode: thin  # How all disks should be deployed
 nested_host_password: "{{ opinionated.master_password }}"
 
 hosting_vcenter:  # This is the vCenter which will be the target for nested vCenters and ESXi hosts
-  ip: "192.168.178.102"
+  ip: "vcsa.lab"
   username: "{{ lookup('env', 'PARENT_VCENTER_USERNAME') }}"
   password: "{{ lookup('env', 'PARENT_VCENTER_PASSWORD') }}"
   datacenter: "Home"  # Target for all VM deployment
@@ -38,13 +38,13 @@ opinionated:
   hosting_datastore: NVME
   hosting_network:
     base:
-      port_group: tanzu-without-dhcp
-      cidr: "172.20.16.0/22"
-      gateway: "172.20.16.1"
+      port_group: Nest
+      cidr: "192.168.0.0/22"
+      gateway: "192.168.0.1"
       # A NSX-T deployment requires 4 IPs, plus 1 per esxi host. They MUST be contiguous.
-      starting_addr: "172.20.16.10"
+      starting_addr: "192.168.1.60"
     nsxt_tep:
-      port_group: nsxt-tep
+      port_group: TEP
       vlan_id: 0
       cidr: "172.20.20.0/22"
   infra:
@@ -110,7 +110,7 @@ opinionated:
     k8s_services_cidr: 100.68.0.0/16
     node_ip_block: 100.69.0.0/16
     pod_ip_block: 100.70.0.0/16
-    api_fqdn: api.tkgi.local.knappster.de
+    api_fqdn: api.tkgi.local
   # principal identity can be kept as default unless there is a security reason to change
     nsx_policy_api: True
     nsx_principal_identity:
@@ -165,7 +165,7 @@ opinionated:
         -----END PRIVATE KEY-----
 
 
-  ssh_public_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDNre3RSDIQIbswU/AbFMrdGDTRNIxXs1L1aY9ozDm/TsTKBf85Kr/0Bi3Az1DgOifR3s7SblZFhqKtGueqyv4NKoNy8dgxUsFzGKaRBmwGfCn9rp0hAV/r6BdyhRGloltaZ4KuR3v3AQTTjpyWPsf55wUIMYtOtrQ1tnNspmZmEyh11e8Hbwsq6jaVDCpSWkLPgir4lDTFANRpA/MaU9XUG3PjYszaNFgIScUwQVl0otmCpFgZgf9jXwy4K5CpG4u/1CSIA6H+5XAJaAzDNGcAIGQKaIAj6Cvd8QyUs+UEV5n6rJSsp+gnfu0gEYx4QmeWwcVdGu1Re18qHVgAP56gF58uV7p/V60Tlf9IFqkz67lwLlOuq9dfNmPGIJ/lydcLgcvXmJObyntm1jFi5ChtIrBd7uShh9b6wwOLhekv3TwOn0nHPjXDabVDcmfXVhAgyJyknCFv1Hm3UFwTngoc4WFm38wgxzajOzxt83b8bXXhMNaU8L8VXtVpfIrDHbAKhho6Aaf8JahKa46UxFa4yjkVfN75N4++8CdCpGiruLUp1rW4zYkrjxBuIBcib/06QTsvdPIsYVsPic/mYoxBVTclvLi/ELVdwFFSavwNKI+XwH6ENI7vckkVs6HpM0GJu4qsvmhrlkGVmNM0BkaJN1i1CQgn01OTz+um1rjr+Q== andy.knapp.ak@gmail.com
+  ssh_public_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC/qMIbcfUkClzrBi7QjUmtdfpjDlTSXsPcJsmdmezbem2SboQPujpFUGmzFXi5PqhPa3QOxvMn8oJpozlJYydDspFAAqX+0u8n0FrwMMn0ckwUtF4zxz/AnI8tUltjeN67M7mG+3W8ooRFeaY6nrjxEIXbkMOzSbeTaFcB9cDzRXcMmFiuoeDhUonEYbClrsPzLdzscw7Vz6BLMHwo9SBOqlaL25aG/DtZPB7jobQRh48q3RW+Hb29nH18biJNLiBDsRu1SJIzw7Dl+rNSX9Va56vX0cz5CDiTg9A69WgySDx7oZFZM3W6jyHCN0fQbw/OxE/2MemhfQbdJqgffA7zE0qx+/DVIoT5bBP7FPpQSxkMjC+AEAH4PPsDIP0KJH9do6+T/g/Mf6725IOaPSJyV0bAkz1T57T1ty19KdhvPVfjrMnCap+pLvD6Qd/lxzY9uFF4oOwWmo4xQ6hQXZ9oJUhrRsG2A5LF7XGXwOb8mHSG4InfUfjaov4gjLl5tN0=
 
 #####################################################################
 ### No need to edit below this line for an opinionated deployment ###
