@@ -31,8 +31,8 @@ RUN set -xe \
     && tar -xvzf /tmp/credhub.tgz -C /usr/local/bin/ \
     \
     && echo "****** Installing Python modules ******" \
-    && pip3 install ansible pyvmomi netaddr requests \
-        git+https://github.com/vmware/vsphere-automation-sdk-python.git \
+    && pip3 install pyvmomi netaddr minio \ 
+        git+https://github.com/vmware/vsphere-automation-sdk-python.git --break-system-packages \
     \
     && echo "****** Adding community.vmware from Ansible Galaxy ******" \
     && ansible-galaxy collection install community.vmware:3.0.0 \
@@ -60,6 +60,5 @@ RUN set -xe \
     && apt autoremove -y \
     && rm -Rf /var/lib/apt/lists/* \
     && rm -Rf /usr/share/doc && rm -Rf /usr/share/man \
-    && rm -rf /root/.cache/pip/ \
     && rm -rf /tmp/* \
     && apt-get clean
