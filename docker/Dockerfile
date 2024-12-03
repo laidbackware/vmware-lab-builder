@@ -37,6 +37,12 @@ RUN set -xe \
     && echo "****** Adding community.vmware from Ansible Galaxy ******" \
     && ansible-galaxy collection install community.vmware:3.0.0 \
     \
+    && echo "****** Adding community.crypto from Ansible Galaxy ******" \
+    && ansible-galaxy collection install community.crypto \
+    \
+    && echo "****** Adding ansible.utils from Ansible Galaxy ******" \
+    && ansible-galaxy collection install ansible.utils \
+    \
     && echo "****** Adding vmware.avi from Ansible Galaxy ******" \
     && ansible-galaxy collection install vmware.alb:22.1.4 \
     \
@@ -45,6 +51,9 @@ RUN set -xe \
     \
     && echo "****** Cloning ansible-for-vsphere-tanzu ******" \
     && ansible-galaxy collection install git+https://github.com/laidbackware/ansible-for-vsphere-tanzu.git,ansible-galaxy \
+    \
+    && echo "****** Install Minio role from https://github.com/ricsanfre/ansible-role-minio ******" \
+    && ansible-galaxy role install ricsanfre.minio,v1.1.8 \
     \
     && echo "****** Removing build tools ******" \
     && apt remove -y build-essential python3-pip python3-dev git curl \
