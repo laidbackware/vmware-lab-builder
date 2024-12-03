@@ -1,4 +1,0 @@
-minio_download_url: https://dl.min.io/server/minio/release/linux-amd64/minio
-minio_user: minio-user
-minio_group: minio-user
-minio_folder_path: /mnt/data

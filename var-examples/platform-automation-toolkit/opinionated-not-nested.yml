@@ -1,0 +1,140 @@
+---
+# SOFTWARE_DIR must contain all required software
+opsman_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/ops-manager-vsphere-3.0.32+LTS-T.ova"
+concourse_bosh_deployment: "{{ lookup('env', 'SOFTWARE_DIR') }}/concourse-bosh-deployment-7.11.2.tgz"
+bpm_release: "{{ lookup('env', 'SOFTWARE_DIR') }}/bpm-release-1.2.16.tgz"
+postgres_release: "{{ lookup('env', 'SOFTWARE_DIR') }}/postgres-release-48.tgz"
+uaa_release: "{{ lookup('env', 'SOFTWARE_DIR') }}/uaa-release-76.31.0.tgz"
+credhub_release: "{{ lookup('env', 'SOFTWARE_DIR') }}/credhub-release-2.12.60.tgz"
+backup_and_restore_sdk_release: "{{ lookup('env', 'SOFTWARE_DIR') }}/backup-and-restore-sdk-release-1.18.119.tgz"
+concourse_release: "{{ lookup('env', 'SOFTWARE_DIR') }}/concourse-bosh-release-7.11.2.tgz" 
+concourse_stemcell: "{{ lookup('env', 'SOFTWARE_DIR') }}/bosh-stemcell-1.639-vsphere-esxi-ubuntu-jammy-go_agent.tgz"
+ubuntu_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/noble-server-cloudimg-amd64.ova"
+
+environment_tag: "pa-toolkit"  # Used to prepend object names in hosting vCenter
+dns_server: "192.168.0.1"
+dns_domain: "home.local"
+ntp_server_ip: "192.168.0.1"  # Must be set to an IP address!
+disk_mode: thin  # How all disks should be deployed
+
+
+hosting_vcenter:  # This is the vCenter which will be the target for nested vCenters and ESXi hosts
+  ip: "vcsa.lab"
+  username: "{{ lookup('env', 'PARENT_VCENTER_USERNAME') }}"
+  password: "{{ lookup('env', 'PARENT_VCENTER_PASSWORD') }}"
+  datacenter: "Home"  # Target for all VM deployment
+
+# This section is only referenced by other variables in this file
+opinionated:
+  master_password: "VMware1!"
+  hosting_cluster: Physical
+  hosting_resource_pool: platform-automation-toolkit
+  hosting_datastore: datastore1
+  hosting_network:
+    base:
+      port_group: Nest
+      cidr: "192.168.0.0/22"
+      gateway: "192.168.0.1"
+      # requires 5 IP addresses
+      # - one for Opsman - will be starting+1
+      # - one for BOSH director - will be starting+2
+      # - 3 for Concourse (db,web,worker) - will be starting+3 - starting+5
+      # - 1 fpr MinIO - will be starting+6
+      starting_addr: "192.168.1.210"
+
+  ssh_public_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC/qMIbcfUkClzrBi7QjUmtdfpjDlTSXsPcJsmdmezbem2SboQPujpFUGmzFXi5PqhPa3QOxvMn8oJpozlJYydDspFAAqX+0u8n0FrwMMn0ckwUtF4zxz/AnI8tUltjeN67M7mG+3W8ooRFeaY6nrjxEIXbkMOzSbeTaFcB9cDzRXcMmFiuoeDhUonEYbClrsPzLdzscw7Vz6BLMHwo9SBOqlaL25aG/DtZPB7jobQRh48q3RW+Hb29nH18biJNLiBDsRu1SJIzw7Dl+rNSX9Va56vX0cz5CDiTg9A69WgySDx7oZFZM3W6jyHCN0fQbw/OxE/2MemhfQbdJqgffA7zE0qx+/DVIoT5bBP7FPpQSxkMjC+AEAH4PPsDIP0KJH9do6+T/g/Mf6725IOaPSJyV0bAkz1T57T1ty19KdhvPVfjrMnCap+pLvD6Qd/lxzY9uFF4oOwWmo4xQ6hQXZ9oJUhrRsG2A5LF7XGXwOb8mHSG4InfUfjaov4gjLl5tN0=
+
+  concourse:
+    db_persistent_disk_type: 102400
+    worker_vm_type: large
+    web_vm_type: large
+    db_vm_type: large
+  
+  minio:
+    memory_in_mb: 4096
+    cpus: 2
+    disk_size_in_gb: 100
+    # buckets are not created with versioning enabled. If that is a requirement, then you need to configure it manually afterwards
+    # Platform Automation Toolkit recommends enabling versioning: https://docs.vmware.com/en/Platform-Automation-Toolkit-for-VMware-Tanzu/5.2/vmware-automation-toolkit/GUID-docs-how-to-guides-setting-up-s3.html#object-versions
+    buckets: 
+    - name: products
+      policy: read-write
+    - name: foundation-state
+      policy: read-write
+
+#####################################################################
+### No need to edit below this line for an opinionated deployment ###
+#####################################################################
+
+tanzu_opsman_bosh:
+  vm_name: "{{ environment_tag }}-ops-manager"
+  hostname: "{{ environment_tag }}-ops-manager"
+  opsman_username: admin
+  opsman_password: "{{ opinionated.master_password }}"
+  ssh_public_key: "{{ opinionated.ssh_public_key }}"
+
+  opsman_ip: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(1)}}"
+  netmask: "{{ opinionated.hosting_network.base.cidr | ansible.utils.ipaddr('netmask') }}"
+  gateway: "{{ opinionated.hosting_network.base.gateway }}"
+  network: "{{ opinionated.hosting_network.base.port_group }}"
+  dns: "{{ dns_server }}"
+  ntp: "{{ ntp_server_ip }}"
+
+  bosh_template_file: p-bosh.yml
+  bosh_vmextensions_configuration:
+    - name: increased-disk
+      cloud_properties:
+        disk: 256000
+  bosh_networks:
+    - name: infra
+      subnets:
+        - iaas_identifier: "{{ opinionated.hosting_network.base.port_group }}"
+          cidr: "{{ opinionated.hosting_network.base.cidr }}"
+          dns: "{{ dns_server }}"
+          gateway: "{{ opinionated.hosting_network.base.gateway }}"
+          reserved_ip_ranges: "{{ opinionated.hosting_network.base.gateway }}-{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(1) }},{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(6) }}"
+          availability_zone_names:
+            - az1
+  az_resource_pool: "{{ opinionated.hosting_resource_pool }}"
+
+  vcenter_url: "{{ hosting_vcenter.ip }}"
+  vcenter_cluster: "{{ opinionated.hosting_cluster }}"
+  vcenter_resource_pool: "{{ opinionated.hosting_resource_pool }}"
+  vcenter_datacenter: "{{ hosting_vcenter.datacenter }}"
+  vcenter_datastore: "{{ opinionated.hosting_datastore }}"
+  vcenter_folder: "/{{ hosting_vcenter.datacenter }}/vm"
+  vcenter_username: "{{ hosting_vcenter.username }}"
+  vcenter_password: "{{ hosting_vcenter.password }}"
+
+concourse:
+  network_name: infra
+  ip: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(3) }}"
+  db_persistent_disk_type: "{{ opinionated.concourse.db_persistent_disk_type }}"
+  worker_vm_type: "{{ opinionated.concourse.worker_vm_type }}"
+  web_vm_type: "{{ opinionated.concourse.web_vm_type }}"
+  db_vm_type: "{{ opinionated.concourse.db_vm_type }}"
+
+minio_standalone:
+  vcenter_url: "{{ hosting_vcenter.ip }}"
+  vcenter_cluster: "{{ opinionated.hosting_cluster }}"
+  vcenter_username: "{{ hosting_vcenter.username }}"
+  vcenter_password: "{{ hosting_vcenter.password }}"
+  vcenter_datacenter: "{{ hosting_vcenter.datacenter }}"
+  vcenter_datastore: "{{ opinionated.hosting_datastore }}"
+  network: "{{ opinionated.hosting_network.base.port_group }}"
+  network_cidr: "{{ opinionated.hosting_network.base.cidr }}"
+  gateway: "{{ opinionated.hosting_network.base.gateway }}"
+  ip: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(6) }}"
+  memory_in_mb: "{{ opinionated.minio.memory_in_mb | int }}"
+  cpus: "{{ opinionated.minio.cpus | int }}"
+  disk_size_in_gb: "{{ opinionated.minio.disk_size_in_gb | int }}"
+  host_name: minio
+  vm_username: minio-system
+  vm_password: "{{ opinionated.master_password }}"
+  ssh_public_key: "{{ opinionated.ssh_public_key }}"
+  install_packages: "python3-pip python3-setuptools"
+  minio_root_user: admin 
+  minio_root_password: "{{ opinionated.master_password }}"
+  minio_server_port: "9091"
+  minio_url: "http://{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(6) }}:9091"
+  buckets: "{{ opinionated.minio.buckets }}"
