@@ -56,7 +56,7 @@ RUN set -xe \
     && ansible-galaxy role install ricsanfre.minio,v1.1.8 \
     \
     && echo "****** Removing build tools ******" \
-    && apt remove -y build-essential python3-pip python3-dev git curl \
+    && apt remove -y build-essential python3-dev git curl \
     && apt autoremove -y \
     && rm -Rf /var/lib/apt/lists/* \
     && rm -Rf /usr/share/doc && rm -Rf /usr/share/man \
