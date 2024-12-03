@@ -1,0 +1,37 @@
+---
+# - name: Upgrade apt repositories
+#   ansible.builtin.apt:
+#     update_cache: true
+
+# - name: Download MinIO
+#   ansible.builtin.get_url:
+#     url: "{{ minio_download_url }}"
+#     dest: /usr/local/bin/minio
+#     mode: 0755
+
+# - name: Create minio systemd service file
+#   ansible.builtin.copy:
+#     src: minio.service
+#     dest: "/usr/lib/systemd/system/minio.service"
+
+# - name: create minio group
+#   ansible.builtin.group:
+#     name: "{{ minio_group }}"
+#     system: true
+#     state: present
+
+# - name: Create minio user
+#   ansible.builtin.user:
+#     name: "{{ minio_user }}"
+#     create_home: false
+#     system: true
+#     group: "{{ minio_group }}"
+
+# - name: Give insecure permissions to an existing file
+#   ansible.builtin.file:
+#     path: "{{ minio_folder_path }}"
+#     owner: root
+#     group: root
+#     mode: '1777'
+
+

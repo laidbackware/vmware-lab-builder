@@ -1,0 +1,30 @@
+---
+- name: Prepare Ubuntu Server VM for MinIO
+  ansible.builtin.include_role:
+    name: ubuntu-server
+  vars:
+    inventory_host_group: minio
+
+    ubuntu_ova_path: "{{ ubuntu_ova }}"
+
+    vcsa_hostname: "{{ minio_standalone.vcenter_url }}"
+    vcsa_username: "{{ minio_standalone.vcenter_username }}"
+    vcsa_password: "{{ minio_standalone.vcenter_password }}"
+    datacenter: "{{ minio_standalone.vcenter_datacenter }}"
+    cluster: "{{ minio_standalone.vcenter_cluster }}"
+    datastore: "{{ minio_standalone.vcenter_datastore }}"
+
+    ubuntu_vm_name: "{{ environment_tag }}-minio"
+    ubuntu_vm_network: "{{ minio_standalone.network }}"
+    ubuntu_vm_memory: "{{ minio_standalone.memory_in_mb }}"
+    ubuntu_vm_cpus: "{{ minio_standalone.cpus }}"
+    ubuntu_vm_disk_size: "{{ minio_standalone.disk_size_in_gb }}"
+    ubuntu_install_packages: "{{ minio_standalone.install_packages }}"
+
+    ubuntu_client_hostname: "{{ minio_standalone.host_name }}"
+    ubuntu_client_ip_address: "{{ minio_standalone.ip }}/{{ minio_standalone.network_cidr | ansible.utils.ipaddr('prefix') }}"
+    ubuntu_client_gateway: "{{ minio_standalone.gateway }}"
+    ubuntu_client_nameserver: "{{ dns_server }}"
+    ubuntu_client_username: "{{ minio_standalone.vm_username }}"
+    ubuntu_client_password: "{{ minio_standalone.vm_password }}"
+    ubuntu_ssh_public_key: "{{ minio_standalone.ssh_public_key }}"
