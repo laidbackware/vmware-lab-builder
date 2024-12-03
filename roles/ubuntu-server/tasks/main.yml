@@ -20,12 +20,13 @@
     inject_ovf_env: true
     properties:
       user-data: "{{ lookup('template', 'cloud_init_config.j2') | b64encode }}"
+      public-keys: "{{ ubuntu_ssh_public_key | default(omit) }}"
   delegate_to: localhost
   register: vm_instance_data
 
 - name: Get Ubuntu VM UUID
   ansible.builtin.set_fact:
-    ubuntu_server_vm_uuid: "{{ vm_instance_data.hw_product_uuid }}"
+    ubuntu_server_vm_uuid: "{{ vm_instance_data.instance.hw_product_uuid }}"
 
 - name: Configure Ubuntu VM resources
   community.vmware.vmware_guest:
@@ -59,7 +60,7 @@
     search_regex: OpenSSH
     delay: 10
 
-- name: Add host to harbor group
+- name: Add host to an inventory group
   ansible.builtin.add_host:
     name: "{{ ubuntu_client_ip_address | ansible.utils.ipaddr('address') }}"
     groups: "{{ inventory_host_group }}"
