@@ -16,6 +16,9 @@ users:
   plain_text_passwd: {{ ubuntu_client_password }}
 ssh_pwauth: yes
 
+chpasswd:
+  expire: false
+
 write_files:
   - path: /etc/cloud/cloud.cfg.d/99-custom-networking.cfg
     permissions: '0644'
@@ -40,7 +43,10 @@ write_files:
               - {{ ubuntu_client_nameserver }}
 
 runcmd:
- - [sudo, rm, /etc/netplan/50-cloud-init.yaml]
- - [sudo, ifconfig, ens192, up]
- - [sudo, netplan, generate]
- - [sudo, netplan, apply]
+- [sudo, rm, /etc/netplan/50-cloud-init.yaml]
+- [sudo, netplan, generate]
+- [sudo, netplan, apply]
+{% if ubuntu_install_packages is defined %}
+- sudo apt update -y
+- sudo apt install -y {{ ubuntu_install_packages }}
+{% endif %}
