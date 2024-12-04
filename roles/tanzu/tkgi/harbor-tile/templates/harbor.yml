@@ -43,13 +43,11 @@ product-properties:
   .properties.vm_monitor:
     selected_option: no_monitor
     value: no_monitor
-  .properties.with_notary:
-    value: true
   .properties.with_trivy:
     value: true
 network-properties:
   network:
-    name: infra
+    name: "{{ harbor_network }}"
   other_availability_zones:
     - name: az1
   singleton_availability_zone:

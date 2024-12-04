@@ -8,6 +8,7 @@ tas_template_file: "{{ tanzu_application_service.tas_template_file }}"
 tas_nsx_manager_url: "{{ tanzu_application_service.nsx.nsx_manager_url |default(omit) }}"
 tas_nsx_username: "{{ tanzu_application_service.nsx.username |default(omit) }}"
 tas_nsx_password: "{{ tanzu_application_service.nsx.password |default(omit) }}"
+tas_nsx_policy_api: "{{ tanzu_application_service.nsx.policy_api |default(False) }}"
 tas_nsx_transport_zone: "{{ tanzu_application_service.nsx.transport_zone |default(omit) }}"
 tas_nsx_principal_identity:
   public_key: |-

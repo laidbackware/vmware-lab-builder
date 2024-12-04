@@ -31,7 +31,7 @@
       ( tas_apps_domain not in result_harbor_cert_sans.stdout and
       tas_sys_domain not in result_harbor_cert_sans.stdout ) }}
 
-- name: Generate gorouter certificate
+- name: Generate Harbor certificate
   args:
     executable: /usr/bin/bash
   ansible.builtin.shell:

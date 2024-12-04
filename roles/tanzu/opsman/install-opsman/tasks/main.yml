@@ -1,5 +1,4 @@
 ---
-
 # Importing templates as variables to allow for debugging
 - name: Set variables
   ansible.builtin.set_fact:

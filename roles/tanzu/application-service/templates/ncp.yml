@@ -10,7 +10,7 @@ product-properties:
   .properties.enable_inventory:
     value: true
   .properties.enable_policy_api:
-    value: "{{ tas_nsx_policy_api | default(False) }}"
+    value: {{ tas_nsx_policy_api }}
   .properties.enable_snat:
     value: true
   .properties.exit_on_disconnection:

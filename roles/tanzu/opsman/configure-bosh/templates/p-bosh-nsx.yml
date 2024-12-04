@@ -24,7 +24,7 @@ iaas-configurations:
     nsx_networking_enabled: true
     nsx_password: "{{ bosh_nsx_password }}"
     nsx_t_auth_type: local_user
-    nsx_t_use_policy_api: false
+    nsx_t_use_policy_api: {{ bosh_nsx_use_policy_api }}
     nsx_username: "{{ bosh_nsx_username }}"
     persistent_datastore_clusters_string: ""
     persistent_datastores_string: "{{ bosh_vcenter_datastore_persistent }}"
