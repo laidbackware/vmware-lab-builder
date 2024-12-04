@@ -19,7 +19,7 @@
     ubuntu_vm_memory: "{{ minio_standalone.memory_in_mb }}"
     ubuntu_vm_cpus: "{{ minio_standalone.cpus }}"
     ubuntu_vm_disk_size: "{{ minio_standalone.disk_size_in_gb }}"
-    ubuntu_install_packages: "{{ minio_standalone.install_packages }}"
+    ubuntu_install_packages: "{{ minio_standalone.ubuntu_install_packages }}"
 
     ubuntu_client_hostname: "{{ minio_standalone.host_name }}"
     ubuntu_client_ip_address: "{{ minio_standalone.ip }}/{{ minio_standalone.network_cidr | ansible.utils.ipaddr('prefix') }}"

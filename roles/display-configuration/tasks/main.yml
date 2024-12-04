@@ -96,6 +96,13 @@
           "login_instructions": "username: admin. password: (opsman > TKGi tile > credentials > uaa.)"
         },
         {% endif %}
+        {% if concourse is defined %}
+        "platform_automation_toolkit": {
+          "opsman_ip": "{{ tanzu_opsman_bosh.opsman_ip }}",
+          "concourse": "https://{{ concourse.ip }}",
+          "minio": "{{ minio_standalone.minio_url }}"
+        },
+        {% endif %}
 
       }
 

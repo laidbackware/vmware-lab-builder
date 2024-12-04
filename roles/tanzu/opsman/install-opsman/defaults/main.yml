@@ -19,6 +19,7 @@ opsman_vcenter_folder: "{{ tanzu_opsman_bosh.vcenter_folder }}"
 opsman_vcenter_username: "{{ tanzu_opsman_bosh.vcenter_username }}"
 opsman_vcenter_password: "{{ tanzu_opsman_bosh.vcenter_password }}"
 opsman_vcenter_cluster: "{{ tanzu_opsman_bosh.vcenter_cluster }}"
+opsman_vcenter_resource_pool: "{{ tanzu_opsman_bosh.vcenter_resource_pool | default('Resources') }}"
 
 opsman_ssh_public_key: "{{ tanzu_opsman_bosh.ssh_public_key }}"
 opsman_username: "{{ tanzu_opsman_bosh.opsman_username }}"

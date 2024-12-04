@@ -1,4 +1,16 @@
 ---
+- name: Create resource pool
+  community.vmware.vmware_resource_pool:
+    hostname: "{{ vcsa_hostname }}"
+    username: "{{ vcsa_username }}"
+    password: "{{ vcsa_password }}"
+    validate_certs: false
+    datacenter: "{{ datacenter }}"
+    cluster: "{{ cluster }}"
+    resource_pool: "{{ vm_resource_pool }}"
+    state: present
+  when: vm_resource_pool != "Resources"
+
 - name: Deploy Ubuntu OVA
   community.vmware.vmware_deploy_ovf:
     hostname: "{{ vcsa_hostname }}"
@@ -9,6 +21,7 @@
     cluster: "{{ cluster }}"
     datacenter: "{{ datacenter }}"
     datastore: "{{ datastore }}"
+    resource_pool: "{{ vm_resource_pool }}"
     disk_provisioning: thin
     networks: "{u'VM Network':u'{{ ubuntu_vm_network }}'}"
     ova: "{{ ubuntu_ova_path }}"

@@ -155,6 +155,11 @@
       when: 'tanzu_application_service is defined'
       tags: ["tas-tile"]
 
+    # Concourse section
+    - role: concourse
+      when: 'concourse is defined'
+      tags: ["concourse"]
+
     # Harbor VM section
     - role: harbor-standalone/harbor-vm
       when: 'harbor_standalone is defined'
@@ -164,11 +169,6 @@
     - role: minio-standalone/minio-vm
       when: 'minio_standalone is defined'
       tags: ["minio"]
-
-    # Concourse section
-    - role: concourse
-      when: 'concourse is defined'
-      tags: ["concourse"]
 
   post_tasks:
     - name: Remove the temporary directory
@@ -194,7 +194,8 @@
       minio_root_user: "{{ minio_standalone.minio_root_user }}"
       minio_root_password: "{{ minio_standalone.minio_root_password }}"
       minio_enable_tls: false
-      minio_url: "http://{{ minio_standalone.ip }}:{{ minio_server_port }}"
+      minio_server_port: "{{ minio_standalone.minio_server_port }}"
+      minio_url: "{{ minio_url }}"
       minio_buckets: "{{ minio_standalone.buckets }}"
       minio_pip_environment_vars:
         PIP_BREAK_SYSTEM_PACKAGES: "1"

@@ -6,6 +6,18 @@
     opsman_env: |
       {{ lookup('template', 'env.yml') | from_yaml }}
 
+- name: Create resource pool
+  community.vmware.vmware_resource_pool:
+    hostname: "{{ opsman_vcenter_url }}"
+    username: "{{ opsman_vcenter_username }}"
+    password: "{{ opsman_vcenter_password }}"
+    validate_certs: false
+    datacenter: "{{ opsman_vcenter_datacenter }}"
+    cluster: "{{ opsman_vcenter_cluster }}"
+    resource_pool: "{{ opsman_vcenter_resource_pool }}"
+    state: present
+  when: opsman_vcenter_resource_pool != "Resources"
+
 - name: Deploy Opsman VM
   community.vmware.vmware_deploy_ovf:
     hostname: "{{ opsman_vcenter_url }}"
@@ -16,6 +28,7 @@
     datacenter: "{{ opsman_vcenter_datacenter }}"
     # folder: /SG1/vm
     cluster: "{{ opsman_vcenter_cluster }}"
+    resource_pool: "{{ opsman_vcenter_resource_pool }}"
     datastore: "{{ opsman_vcenter_datastore }}"
     disk_provisioning: thin
     networks:

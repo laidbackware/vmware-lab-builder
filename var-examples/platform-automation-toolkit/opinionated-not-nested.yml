@@ -132,7 +132,7 @@ minio_standalone:
   vm_username: minio-system
   vm_password: "{{ opinionated.master_password }}"
   ssh_public_key: "{{ opinionated.ssh_public_key }}"
-  install_packages: "python3-pip python3-setuptools"
+  ubuntu_install_packages: "python3-pip python3-setuptools"
   minio_root_user: admin 
   minio_root_password: "{{ opinionated.master_password }}"
   minio_server_port: "9091"
