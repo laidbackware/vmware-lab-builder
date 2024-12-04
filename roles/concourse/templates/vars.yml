@@ -10,6 +10,6 @@ db_persistent_disk_type: {{ concourse_db_persistent_disk_type }}
 # This can be any VM type from the cloud config: bosh cloud-config
 worker_vm_type: {{ concourse_worker_vm_type }}
 # This assigns created VMs (web, worker, and db) to AZs in the IaaS
-azs: [ az1 ]
+azs: [az1]
 # The network name to assign the VMs to.
 network_name: {{ concourse_network_name }}

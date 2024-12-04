@@ -6,7 +6,7 @@
 
 - name: set concourse bosh deployment dir
   ansible.builtin.set_fact:
-    concourse_bosh_deployment_dir: "{{ temp_dir_concourse.path }}/{{ concourse_bosh_deployment.split('.tgz') | first | split('/') | last }}"   
+    concourse_bosh_deployment_dir: "{{ temp_dir_concourse.path }}/{{ concourse_bosh_deployment.split('.tgz') | first | split('/') | last }}"
 
 - name: Create concourse deployment directory
   ansible.builtin.file:

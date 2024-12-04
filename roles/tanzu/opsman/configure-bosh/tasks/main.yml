@@ -86,4 +86,3 @@
   retries: 2
   delay: 15
   until: result_bosh_changes.rc == 0
-

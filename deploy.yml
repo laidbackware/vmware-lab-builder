@@ -195,7 +195,8 @@
       minio_root_password: "{{ minio_standalone.minio_root_password }}"
       minio_enable_tls: false
       minio_server_port: "{{ minio_standalone.minio_server_port }}"
-      minio_url: "{{ minio_url }}"
+      minio_url: "{{ minio_standalone.minio_url }}"
+      minio_site_region: "{{ minio_standalone.minio_site_region }}"
       minio_buckets: "{{ minio_standalone.buckets }}"
       minio_pip_environment_vars:
         PIP_BREAK_SYSTEM_PACKAGES: "1"

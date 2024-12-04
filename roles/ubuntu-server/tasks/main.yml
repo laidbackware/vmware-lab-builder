@@ -9,7 +9,7 @@
     cluster: "{{ cluster }}"
     resource_pool: "{{ vm_resource_pool }}"
     state: present
-  when: vm_resource_pool != "Resources"
+  when: vm_resource_pool is defined
 
 - name: Deploy Ubuntu OVA
   community.vmware.vmware_deploy_ovf:
@@ -21,7 +21,7 @@
     cluster: "{{ cluster }}"
     datacenter: "{{ datacenter }}"
     datastore: "{{ datastore }}"
-    resource_pool: "{{ vm_resource_pool }}"
+    resource_pool: "{{ vm_resource_pool | default('Resources') }}"
     disk_provisioning: thin
     networks: "{u'VM Network':u'{{ ubuntu_vm_network }}'}"
     ova: "{{ ubuntu_ova_path }}"

@@ -1,1 +1,0 @@
-vm_resource_pool: "{{ resource_pool | default('Resources') }}"
