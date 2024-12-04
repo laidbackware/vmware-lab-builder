@@ -1,16 +1,16 @@
 ---
 - name: Create BOSH AZ resource pool
-  community.vmware.vmware_resource_pool:
-    hostname: "{{ bosh_vcenter_url }}"
-    username: "{{ bosh_vcenter_username }}"
-    password: "{{ bosh_vcenter_password }}"
-    validate_certs: false
+  ansible.builtin.include_role:
+    name: vsphere/vsphere-resource-pool
+  vars:
+    vcenter_ip: "{{ bosh_vcenter_url }}"
+    vcenter_username: "{{ bosh_vcenter_username }}"
+    vcenter_password: "{{ bosh_vcenter_password }}"
     datacenter: "{{ bosh_vcenter_datacenter }}"
-    cluster: "{{ bosh_vcenter_cluster }}"
+    cluster_name: "{{ bosh_vcenter_cluster }}"
     resource_pool: "{{ bosh_az_resource_pool }}"
-    state: present
-  delegate_to: localhost
   when: bosh_az_resource_pool != ""
+
 
 - name: Fetch NSX Manager cert
   ansible.builtin.shell: |

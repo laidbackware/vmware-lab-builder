@@ -16,15 +16,14 @@
         {% endfor %}
       ]
 
-- name: Add resource pool to vCenter
-  community.vmware.vmware_resource_pool:
-    hostname: "{{ nested_vcenter.ip }}"
-    username: "{{ nested_vcenter.username }}"
-    password: "{{ nested_vcenter.password }}"
-    validate_certs: false
+- name: Add resource pools to vCenter
+  ansible.builtin.include_role:
+    name: vsphere/vsphere-resource-pool
+  vars:
+    vcenter_ip: "{{ nested_vcenter.ip }}"
+    vcenter_username: "{{ nested_vcenter.username }}"
+    vcenter_password: "{{ nested_vcenter.password }}"
     datacenter: "{{ nested_vcenter.datacenter }}"
-    cluster: "{{ item.cluster_name }}"
+    cluster_name: "{{ item.cluster_name }}"
     resource_pool: "{{ item.resource_pool }}"
-    state: present
   loop: "{{ resource_pools_to_add }}"
-  delegate_to: localhost

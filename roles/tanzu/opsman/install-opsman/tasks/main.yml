@@ -5,16 +5,16 @@
     opsman_env: |
       {{ lookup('template', 'env.yml') | from_yaml }}
 
-- name: Create resource pool
-  community.vmware.vmware_resource_pool:
-    hostname: "{{ opsman_vcenter_url }}"
-    username: "{{ opsman_vcenter_username }}"
-    password: "{{ opsman_vcenter_password }}"
-    validate_certs: false
+- name: Create resource pool for Opsman
+  ansible.builtin.include_role:
+    name: vsphere/vsphere-resource-pool
+  vars:
+    vcenter_ip: "{{ opsman_vcenter_url }}"
+    vcenter_username: "{{ opsman_vcenter_username }}"
+    vcenter_password: "{{ opsman_vcenter_password }}"
     datacenter: "{{ opsman_vcenter_datacenter }}"
-    cluster: "{{ opsman_vcenter_cluster }}"
+    cluster_name: "{{ opsman_vcenter_cluster }}"
     resource_pool: "{{ opsman_vcenter_resource_pool }}"
-    state: present
   when: opsman_vcenter_resource_pool != "Resources"
 
 - name: Deploy Opsman VM
