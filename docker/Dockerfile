@@ -25,10 +25,19 @@ RUN set -xe \
         git+https://github.com/vmware/vsphere-automation-sdk-python.git --break-system-packages \
     \
     && echo "****** Adding community.vmware from Ansible Galaxy ******" \
-    && ansible-galaxy collection install community.vmware:3.0.0 \
+    && ansible-galaxy collection install community.vmware:5.1.0 \
     \
     && echo "****** Adding vmware.avi from Ansible Galaxy ******" \
     && ansible-galaxy collection install vmware.alb:22.1.4 \
+    \
+    && echo "****** Adding ansible.utils from Ansible Galaxy ******" \
+    && ansible-galaxy collection install ansible.utils \
+    \
+    && echo "****** Adding community.crypto from Ansible Galaxy ******" \
+    && ansible-galaxy collection install community.crypto \
+    \
+    && echo "****** Adding community.general from Ansible Galaxy ******" \
+    && ansible-galaxy collection install community.general \
     \
     && echo "****** Adding ansible-for-nsxt from Github ******" \
     && ansible-galaxy collection install git+https://github.com/laidbackware/ansible-for-nsxt.git,upstream-fixes --force \

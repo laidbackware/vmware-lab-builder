@@ -147,14 +147,14 @@ From the root of the repo. Note no-cache flag used to force builds to pickup any
 One time build setup process on debian systems:
 
 ```sh
-sudo apt-get install qemu binfmt-support qemu-user-static
+sudo apt-get install qemu-system binfmt-support qemu-user-static
 docker buildx create --use --name multi-arch --driver docker-container --platform linux/amd64,linux/arm64
 ```
 
 Build command:
 
 ```sh
-docker buildx build --push --platform linux/arm64,linux/amd64 --tag laidbackware/vmware-lab-builder:v11 ./docker
+docker buildx build --push --platform linux/arm64,linux/amd64 --tag laidbackware/vmware-lab-builder:v11 --load ./docker
 ```
 
 ## Local Usage
