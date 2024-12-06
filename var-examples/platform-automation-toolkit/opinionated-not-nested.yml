@@ -121,6 +121,7 @@ minio_standalone:
   vcenter_password: "{{ hosting_vcenter.password }}"
   vcenter_datacenter: "{{ hosting_vcenter.datacenter }}"
   vcenter_datastore: "{{ opinionated.hosting_datastore }}"
+  vcenter_resource_pool: "{{ opinionated.hosting_resource_pool }}"
   network: "{{ opinionated.hosting_network.base.port_group }}"
   network_cidr: "{{ opinionated.hosting_network.base.cidr }}"
   gateway: "{{ opinionated.hosting_network.base.gateway }}"

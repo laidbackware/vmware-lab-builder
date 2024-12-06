@@ -10,9 +10,10 @@
     vcsa_hostname: "{{ minio_standalone.vcenter_url }}"
     vcsa_username: "{{ minio_standalone.vcenter_username }}"
     vcsa_password: "{{ minio_standalone.vcenter_password }}"
-    datacenter: "{{ minio_standalone.vcenter_datacenter }}"
-    cluster: "{{ minio_standalone.vcenter_cluster }}"
-    datastore: "{{ minio_standalone.vcenter_datastore }}"
+    vsphere_datacenter: "{{ minio_standalone.vcenter_datacenter }}"
+    vsphere_cluster: "{{ minio_standalone.vcenter_cluster }}"
+    vsphere_datastore: "{{ minio_standalone.vcenter_datastore }}"
+    vsphere_resource_pool: "{{ minio_standalone.vcenter_resource_pool }}"
 
     ubuntu_vm_name: "{{ environment_tag }}-minio"
     ubuntu_vm_network: "{{ minio_standalone.network }}"

@@ -6,10 +6,10 @@
     vcenter_ip: "{{ vcsa_hostname }}"
     vcenter_username: "{{ vcsa_username }}"
     vcenter_password: "{{ vcsa_password }}"
-    datacenter: "{{ datacenter }}"
-    cluster_name: "{{ cluster }}"
-    resource_pool: "{{ vm_resource_pool }}"
-  when: vm_resource_pool is defined
+    datacenter: "{{ vsphere_datacenter }}"
+    cluster_name: "{{ vsphere_cluster }}"
+    resource_pool: "{{ vsphere_resource_pool }}"
+  when: vsphere_resource_pool is defined
 
 - name: Deploy Ubuntu OVA
   community.vmware.vmware_deploy_ovf:
@@ -18,10 +18,10 @@
     password: "{{ vcsa_password }}"
     validate_certs: false
     name: "{{ ubuntu_vm_name }}"
-    cluster: "{{ cluster }}"
-    datacenter: "{{ datacenter }}"
-    datastore: "{{ datastore }}"
-    resource_pool: "{{ vm_resource_pool | default('Resources') }}"
+    cluster: "{{ vsphere_cluster }}"
+    datacenter: "{{ vsphere_datacenter }}"
+    datastore: "{{ vsphere_datastore }}"
+    resource_pool: "{{ vsphere_resource_pool | default('Resources') }}"
     disk_provisioning: thin
     networks: "{u'VM Network':u'{{ ubuntu_vm_network }}'}"
     ova: "{{ ubuntu_ova_path }}"

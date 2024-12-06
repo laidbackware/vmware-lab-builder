@@ -10,9 +10,9 @@
     vcsa_hostname: "{{ hosting_vcenter.ip }}"
     vcsa_username: "{{ hosting_vcenter.username }}"
     vcsa_password: "{{ hosting_vcenter.password }}"
-    datacenter: "{{ hosting_vcenter.datacenter }}"
-    cluster: "{{ harbor_standalone.hosting_cluster }}"
-    datastore: "{{ harbor_standalone.hosting_datastore }}"
+    vsphere_datacenter: "{{ hosting_vcenter.datacenter }}"
+    vsphere_cluster: "{{ harbor_standalone.hosting_cluster }}"
+    vsphere_datastore: "{{ harbor_standalone.hosting_datastore }}"
 
     ubuntu_vm_name: "{{ environment_tag }}-harbor"
     ubuntu_vm_network: "{{ harbor_standalone.hosting_network }}"
