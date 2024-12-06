@@ -15,6 +15,7 @@
     datacenter: "{{ opsman_vcenter_datacenter }}"
     # folder: /SG1/vm
     cluster: "{{ opsman_vcenter_cluster }}"
+    resource_pool: "{{ opsman_vcenter_resource_pool }}"
     datastore: "{{ opsman_vcenter_datastore }}"
     disk_provisioning: thin
     networks:

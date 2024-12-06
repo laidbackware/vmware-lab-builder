@@ -117,5 +117,5 @@ resource-configuration:
     persistent_disk:
       size_mb: automatic
     swap_as_percent_of_memory_size: automatic
-vmextensions-configuration: []
+vmextensions-configuration: {{ bosh_vmextensions_configuration }}
 vmtypes-configuration: {}

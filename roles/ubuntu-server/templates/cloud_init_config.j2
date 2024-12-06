@@ -9,15 +9,22 @@ manage_etc_hosts: true
 users:
 - default
 - name: {{ ubuntu_client_username }}
-  passwd: "{{ ubuntu_client_password | password_hash('sha512') }}"
   sudo: ALL=(ALL) NOPASSWD:ALL
   groups: sudo
   shell: /bin/bash
   lock_passwd: False
+  plain_text_passwd: {{ ubuntu_client_password }}
 ssh_pwauth: yes
 
+chpasswd:
+  expire: false
+
 write_files:
-  - path:  /etc/netplan/50-cloud-init.yaml
+  - path: /etc/cloud/cloud.cfg.d/99-custom-networking.cfg
+    permissions: '0644'
+    content: |
+      network: {config: disabled}
+  - path:  /etc/netplan/custom-static-ip-config.yaml
     permissions: '0644'
     content: |
       network:
@@ -25,14 +32,21 @@ write_files:
         ethernets:
           ens192:
             dhcp4: false
+            dhcp6: false
             addresses:
             - {{ ubuntu_client_ip_address }}
-            gateway4: {{ ubuntu_client_gateway }}
+            routes:
+            - to: default
+              via: {{ ubuntu_client_gateway }}
             nameservers:
               addresses:
               - {{ ubuntu_client_nameserver }}
 
 runcmd:
- - [sudo, ifconfig, ens192, up]
- - [sudo, netplan, generate]
- - [sudo, netplan, apply]
+- [sudo, rm, /etc/netplan/50-cloud-init.yaml]
+- [sudo, netplan, generate]
+- [sudo, netplan, apply]
+{% if ubuntu_install_packages is defined %}
+- sudo apt update -y
+- sudo apt install -y {{ ubuntu_install_packages }}
+{% endif %}

@@ -152,10 +152,20 @@
       when: 'tanzu_application_service is defined'
       tags: ["tas-tile"]
 
+    # Concourse section
+    - role: concourse
+      when: 'concourse is defined'
+      tags: ["concourse"]
+
     # Harbor VM section
     - role: harbor-standalone/harbor-vm
       when: 'harbor_standalone is defined'
       tags: ["harbor"]
+
+    # MinIO VM section
+    - role: minio-standalone/minio-vm
+      when: 'minio_standalone is defined'
+      tags: ["minio"]
 
   post_tasks:
     - name: Remove the temporary directory
@@ -172,6 +182,23 @@
     - role: harbor-standalone/harbor-configuration
       when: 'harbor_standalone is defined'
       tags: ["harbor"]
+
+- name: Setup Standalone Minio
+  hosts: minio
+  become: true
+  roles:
+    - role: ricsanfre.minio
+      minio_root_user: "{{ minio_standalone.minio_root_user }}"
+      minio_root_password: "{{ minio_standalone.minio_root_password }}"
+      minio_enable_tls: false
+      minio_server_port: "{{ minio_standalone.minio_server_port }}"
+      minio_url: "{{ minio_standalone.minio_url }}"
+      minio_site_region: "{{ minio_standalone.minio_site_region }}"
+      minio_buckets: "{{ minio_standalone.buckets }}"
+      minio_pip_environment_vars:
+        PIP_BREAK_SYSTEM_PACKAGES: "1"
+      when: 'minio_standalone is defined'
+      tags: ["minio"]
 
 - name: Display Summary
   hosts: localhost

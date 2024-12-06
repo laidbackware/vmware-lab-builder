@@ -1,5 +1,4 @@
 ---
-
 - name: Fetch NSX Manager cert
   ansible.builtin.shell: |
     set -o pipefail && \

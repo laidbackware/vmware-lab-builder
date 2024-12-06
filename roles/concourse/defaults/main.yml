@@ -1,0 +1,12 @@
+concourse_ip: "{{ concourse.ip }}"
+concourse_db_persistent_disk_type: "{{ concourse.db_persistent_disk_type | default(102400) | int }}"
+concourse_worker_vm_type: "{{ concourse.worker_vm_type }}"
+concourse_web_vm_type: "{{ concourse.web_vm_type }}"
+concourse_db_vm_type: "{{ concourse.db_vm_type }}"
+concourse_network_name: "{{ concourse.network_name }}"
+concourse_username: "{{ tanzu_opsman_bosh.opsman_username }}"
+concourse_password: "{{ tanzu_opsman_bosh.opsman_password }}"
+
+opsman_ip: "{{ tanzu_opsman_bosh.opsman_ip }}"
+opsman_username: "{{ tanzu_opsman_bosh.opsman_username }}"
+opsman_password: "{{ tanzu_opsman_bosh.opsman_password }}"

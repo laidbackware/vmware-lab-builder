@@ -25,7 +25,10 @@ bosh_username: "{{ tanzu_opsman_bosh.username }}"
 bosh_password: "{{ tanzu_opsman_bosh.password }}"
 
 bosh_trusted_ca_certs: "{{ tanzu_opsman_bosh.trusted_ca_certs | default('') }}"
+bosh_az_resource_pool: "{{ tanzu_opsman_bosh.az_resource_pool | default('') }}"
 
 bosh_disk_path: pcf_disk
 bosh_template_folder: pcf_templates
 bosh_vm_folder: pcf_vms
+
+bosh_vmextensions_configuration: "{{ tanzu_opsman_bosh.bosh_vmextensions_configuration | default([]) }}"

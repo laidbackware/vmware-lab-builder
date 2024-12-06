@@ -20,8 +20,18 @@ RUN set -xe \
     && curl -L https://github.com/pivotal-cf/om/releases/download/7.9.0/om-linux-${arch}-7.9.0 --output /usr/local/bin/om \
     && chmod +x /usr/local/bin/om \
     \
+    && echo "****** Installing BOSH CLI ******" \
+    && arch=$(a=$(uname -m) && ([ $a = aarch64 ] || [ $a = arm64 ]) && printf arm64 || printf amd64) \
+    && curl -L https://github.com/cloudfoundry/bosh-cli/releases/download/v7.8.2/bosh-cli-7.8.2-linux-${arch} --output /usr/local/bin/bosh \
+    && chmod +x /usr/local/bin/bosh \
+    \
+    && echo "****** Installing Credhub CLI ******" \
+    && arch=$(a=$(uname -m) && ([ $a = aarch64 ] || [ $a = arm64 ]) && printf arm64 || printf amd64) \
+    && curl -L https://github.com/cloudfoundry/credhub-cli/releases/download/2.9.39/credhub-linux-${arch}-2.9.39.tgz --output /tmp/credhub.tgz \
+    && tar -xvzf /tmp/credhub.tgz -C /usr/local/bin/ \
+    \
     && echo "****** Installing Python modules ******" \
-    && pip3 install pyvmomi netaddr \ 
+    && pip3 install pyvmomi netaddr minio \ 
         git+https://github.com/vmware/vsphere-automation-sdk-python.git --break-system-packages \
     \
     && echo "****** Adding community.vmware from Ansible Galaxy ******" \
@@ -45,11 +55,13 @@ RUN set -xe \
     && echo "****** Cloning ansible-for-vsphere-tanzu ******" \
     && ansible-galaxy collection install git+https://github.com/laidbackware/ansible-for-vsphere-tanzu.git,ansible-galaxy \
     \
+    && echo "****** Install Minio role from https://github.com/ricsanfre/ansible-role-minio ******" \
+    && ansible-galaxy role install ricsanfre.minio,v1.1.8 \
+    \
     && echo "****** Removing build tools ******" \
-    && apt remove -y build-essential python3-pip python3-dev git curl \
+    && apt remove -y build-essential python3-dev git curl \
     && apt autoremove -y \
     && rm -Rf /var/lib/apt/lists/* \
     && rm -Rf /usr/share/doc && rm -Rf /usr/share/man \
-    && rm -rf /root/.cache/pip/ \
     && rm -rf /tmp/* \
     && apt-get clean

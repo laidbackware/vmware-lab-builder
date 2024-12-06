@@ -6,7 +6,7 @@ az-configuration:
       - cluster: "{{ bosh_vcenter_cluster }}"
         drs_rule: MUST
         host_group: null
-        resource_pool: null
+        resource_pool: "{{ bosh_az_resource_pool }}"
 iaas-configurations:
   - additional_cloud_properties: {}
     bosh_disk_path: "{{ bosh_disk_path }}"
@@ -94,5 +94,5 @@ resource-configuration:
     persistent_disk:
       size_mb: automatic
     swap_as_percent_of_memory_size: automatic
-vmextensions-configuration: []
+vmextensions-configuration: {{ bosh_vmextensions_configuration }}
 vmtypes-configuration: {}
