@@ -86,3 +86,14 @@
     state: absent
     force: true
   delegate_to: localhost
+
+- name: Remove MinIO VM
+  community.vmware.vmware_guest:
+    hostname: "{{ hosting_vcenter.ip }}"
+    username: "{{ hosting_vcenter.username }}"
+    password: "{{ hosting_vcenter.password }}"
+    validate_certs: false
+    name: "{{ environment_tag }}-minio"
+    state: absent
+    force: true
+  delegate_to: localhost
