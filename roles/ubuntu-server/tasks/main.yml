@@ -1,16 +1,4 @@
 ---
-- name: Create resource pool for Ubuntu VM
-  ansible.builtin.include_role:
-    name: vsphere/vsphere-resource-pool
-  vars:
-    vcenter_ip: "{{ vcsa_hostname }}"
-    vcenter_username: "{{ vcsa_username }}"
-    vcenter_password: "{{ vcsa_password }}"
-    datacenter: "{{ vsphere_datacenter }}"
-    cluster_name: "{{ vsphere_cluster }}"
-    resource_pool: "{{ vsphere_resource_pool }}"
-  when: vsphere_resource_pool is defined
-
 - name: Deploy Ubuntu OVA
   community.vmware.vmware_deploy_ovf:
     hostname: "{{ vcsa_hostname }}"

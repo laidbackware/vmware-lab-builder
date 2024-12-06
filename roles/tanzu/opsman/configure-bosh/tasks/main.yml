@@ -1,17 +1,4 @@
 ---
-- name: Create BOSH AZ resource pool
-  ansible.builtin.include_role:
-    name: vsphere/vsphere-resource-pool
-  vars:
-    vcenter_ip: "{{ bosh_vcenter_url }}"
-    vcenter_username: "{{ bosh_vcenter_username }}"
-    vcenter_password: "{{ bosh_vcenter_password }}"
-    datacenter: "{{ bosh_vcenter_datacenter }}"
-    cluster_name: "{{ bosh_vcenter_cluster }}"
-    resource_pool: "{{ bosh_az_resource_pool }}"
-  when: bosh_az_resource_pool != ""
-
-
 - name: Fetch NSX Manager cert
   ansible.builtin.shell: |
     set -o pipefail && \
