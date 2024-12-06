@@ -43,16 +43,17 @@ This release has been tested with the following components and should be backwar
 
 The pattern names below match the sub-directory under `var-examples` where examples can be found.</br>
 
-| Pattern Name              | Product Versions                     | Status |
-| ------------------------- | ------------------------------------ | ------ |
-| base-vsphere              | n/a                                  | Stable |
-| nsxt                      | NSX-T 3.2,4.x                        | Stable |
-| tanzu/multi-cloud         | NSX-ALB 20.1.7                       | Stable |
-| tanzu/vsphere-nsxt        | NSX-T 3.1, 3.2, 4.0                  | Stable |
-| tanzu/vsphere-vds-alb     | NSX-ALB 20.1.7                       | Stable |
-| tanzu/vsphere-vds-haproxy | haproxy                              | Stable |
-| tanzu/integrated          | TKGi 1.13-1.16 & NSX-T 3.x, 4.0      | Stable |
-| tanzu/application-service | TAS 2.11, 2.13, 4.0 & NSX-T 3.2, 4.1 | Stable |
+| Pattern Name                      | Product Versions                     | Status |
+| --------------------------------- | ------------------------------------ | ------ |
+| base-vsphere                      | n/a                                  | Stable |
+| nsxt                              | NSX-T 3.2,4.x                        | Stable |
+| tanzu/multi-cloud                 | NSX-ALB 20.1.7                       | Stable |
+| tanzu/vsphere-nsxt                | NSX-T 3.1, 3.2, 4.0                  | Stable |
+| tanzu/vsphere-vds-alb             | NSX-ALB 20.1.7                       | Stable |
+| tanzu/vsphere-vds-haproxy         | haproxy                              | Stable |
+| tanzu/integrated                  | TKGi 1.13-1.16 & NSX-T 3.x, 4.0      | Stable |
+| tanzu/application-service         | TAS 2.11, 2.13, 4.0 & NSX-T 3.2, 4.1 | Stable |
+| tanzu/platform-automation-toolkit | Opsman 3.0, Concourse 7.11           | Stable |
 
 ## Usage with Docker
 
