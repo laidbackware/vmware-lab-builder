@@ -1,0 +1,30 @@
+---
+vsan_witness_image_path: "{{ vsan_witness_ova }}"
+
+vsan_witness_vm_name: "{{ vsan.witness.vm_name }}"
+vsan_witness_hostname: "{{ vsan.witness.vm_name }}"
+
+vsan_witness_ip: "{{ vsan.witness.ip }}"
+vsan_witness_netmask: "{{ vsan.witness.netmask }}"
+vsan_witness_gateway: "{{ vsan.witness.gateway }}"
+vsan_witness_network: "{{ vsan.witness.network }}"
+vsan_witness_dns_server: "{{ vsan.witness.dns_server }}"
+vsan_witness_dns_domain: "{{ vsan.witness.dns_domain }}"
+vsan_witness_ntp_server: "{{ vsan.witness.ntp_server }}"
+
+vsan_witness_hosting_vcenter_url: "{{ vsan.witness.hosting_vcenter_ip }}"
+vsan_witness_hosting_vcenter_datacenter: "{{ vsan.witness.hosting_vcenter_datacenter }}"
+vsan_witness_hosting_vcenter_datastore: "{{ vsan.witness.hosting_vcenter_datastore }}"
+vsan_witness_hosting_vcenter_username: "{{ vsan.witness.hosting_vcenter_username }}"
+vsan_witness_hosting_vcenter_password: "{{ vsan.witness.hosting_vcenter_password }}"
+vsan_witness_hosting_vcenter_cluster: "{{ vsan.witness.hosting_vcenter_cluster }}"
+vsan_witness_hosting_vcenter_network: "{{ vsan.witness.hosting_vcenter_network }}"
+vsan_witness_hosting_vcenter_network2: "{{ vsan.witness.hosting_vcenter_network2 }}" # no used
+
+vsan_witness_password: "{{ vsan.witness.root_password }}"
+
+vsan_witness_connected_vcenter_url: "{{ vsan.witness.connected_vcenter_ip }}"
+vsan_witness_connected_vcenter_datacenter: "{{ vsan.witness.connected_vcenter_datacenter }}"
+vsan_witness_connected_vcenter_username: "{{ vsan.witness.connected_vcenter_username }}"
+vsan_witness_connected_vcenter_password: "{{ vsan.witness.connected_vcenter_password }}"
+vsan_witness_connected_vcenter_folder: "{{ vsan.witness.connected_vcenter_folder }}"

@@ -1,0 +1,64 @@
+---
+
+- debug:
+    var: vsan.witness
+
+- name: Deploy VSAN Witness OVA
+  community.vmware.vmware_deploy_ovf:
+    hostname: "{{ vsan_witness_hosting_vcenter_url }}"
+    username: "{{ vsan_witness_hosting_vcenter_username }}"
+    password: "{{ vsan_witness_hosting_vcenter_password }}"
+    validate_certs: false
+    name: "{{ environment_tag }}-witness"
+    datacenter: "{{ vsan_witness_hosting_vcenter_datacenter }}"
+    cluster: "{{ vsan_witness_hosting_vcenter_cluster }}"
+    datastore: "{{ vsan_witness_hosting_vcenter_datastore }}"
+    disk_provisioning: "{{ disk_mode }}"
+    networks:
+      "Management Network": "{{ vsan_witness_hosting_vcenter_network }}"
+      "Secondary Network": "{{ vsan_witness_hosting_vcenter_network2 }}"
+    ova: "{{ vsan_witness_image_path }}"
+    allow_duplicates: false
+    power_on: true
+    fail_on_spec_warnings: true
+    wait: true
+    wait_for_ip_address: true
+    inject_ovf_env: true
+    deployment_option: "medium"
+    properties:
+      guestinfo.passwd: "{{ vsan_witness_password }}"
+      guestinfo.vsannetwork: "Management"
+      guestinfo.ipaddress0: "{{ vsan_witness_ip }}"
+      guestinfo.netmask0: "{{ vsan_witness_netmask }}"
+      guestinfo.gateway0: "{{ vsan_witness_gateway }}"
+      guestinfo.dnsDomain: "{{ vsan_witness_dns_domain }}"
+      guestinfo.hostname: "{{ vsan_witness_hostname }}"
+      guestinfo.dns: "{{ vsan_witness_dns_server }}"
+      guestinfo.ntp: "{{ vsan_witness_ntp_server }}"
+      guestinfo.ipaddress1: ""
+      guestinfo.netmask1: ""
+      guestinfo.gateway1: ""
+
+- name: Wait for Witness be ready
+  ansible.builtin.uri:
+    validate_certs: false
+    url: "https://{{ vsan_witness_ip }}/"
+    method: GET
+    status_code: 200
+  register: result_witness_check
+  until: result_witness_check.status == 200
+  retries: 20 
+  delay: 5
+
+- name: Add Witness to vCenter
+  community.vmware.vmware_host:
+    hostname: "{{ vsan_witness_connected_vcenter_url }}"
+    username: "{{ vsan_witness_connected_vcenter_username }}"
+    password: "{{ vsan_witness_connected_vcenter_password }}"
+    datacenter_name: "{{ vsan_witness_connected_vcenter_datacenter }}"
+    validate_certs: false
+    esxi_hostname: "{{ vsan_witness_ip }}"
+    esxi_username: "root"
+    esxi_password: "{{ vsan_witness_password }}"
+    folder: "{{ vsan_witness_connected_vcenter_folder }}"
+    state: present
