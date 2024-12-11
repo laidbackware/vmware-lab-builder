@@ -1,0 +1,42 @@
+---
+- name: Add Management vmkernel port to Distributed Switch
+  community.vmware.vmware_vmkernel:
+    hostname: "{{ nested_vcenter.ip }}"
+    username: "{{ nested_vcenter.username }}"
+    password: "{{ nested_vcenter.password }}"
+    validate_certs: false
+    esxi_hostname: "{{ item.host }}"
+    dvswitch_name: "{{ item.dvs }}"
+    portgroup_name: "{{ item.port_group }}"
+    mtu: 9000
+    network:
+      type: 'static'
+      ip_address: "{{ item.ip }}"
+      subnet_mask: "{{ item.netmask }}"
+    state: present
+    enable_mgmt: "{{ item.enable_mgmt | default(omit) }}"
+    enable_vsan: "{{ item.enable_vsan | default(omit) }}"
+  delegate_to: localhost
+  loop: "{{ vsan.host_vmks }}"
+
+- name: Disable VSAN on vmk0
+  community.vmware.vmware_vmkernel:
+    hostname: "{{ nested_vcenter.ip }}"
+    username: "{{ nested_vcenter.username }}"
+    password: "{{ nested_vcenter.password }}"
+    validate_certs: false
+    esxi_hostname: "{{ item.ip }}"
+    vswitch_name: vSwitch0
+    portgroup_name: Management Network
+    mtu: 1500
+    network:
+      type: 'static'
+      ip_address: "{{ item.ip }}"
+      subnet_mask: "{{ item.mask }}"
+      default_gateway: "{{ item.gw }}"
+    state: present
+    enable_mgmt: true
+    enable_vmotion: true
+    enable_vsan: false
+  delegate_to: localhost
+  loop: "{{ nested_hosts }}"

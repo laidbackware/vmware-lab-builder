@@ -2,6 +2,7 @@
 # SOFTWARE_DIR must contain all required software
 vc_iso: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-VCSA-all-8.0.3-24022515.iso"
 esxi_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/Nested_ESXi8.0u3b_Appliance_Template_v1.ova"
+vsan_witness_ova: "{{ lookup('env', 'SOFTWARE_DIR') }}/VMware-vSAN-ESA-Witness-8.0U3-24022510.ova"
 
 environment_tag: "vsan-stretched"  # Used to prepend object names in hosting vCenter
 dns_server: "192.168.0.1"
@@ -20,11 +21,10 @@ hosting_vcenter:  # This is the vCenter which will be the target for nested vCen
 opinionated:
   master_password: "VMware1!"
   nested_hosts:
-    cpu_cores: 16  # CPU count per nested host
-    ram_in_gb: 192  # memory per nested host
+    cpu_cores: 12  # CPU count per nested host
+    ram_in_gb: 100  # memory per nested host
     local_disks:  # (optional) this section can be removed to not modify local disks
-      - size_gb: 700
-        datastore_prefix: "datastore"  # omit this to not have a datastore created
+      - size_gb: 500
   hosting_cluster: Physical
   hosting_datastore: NVME
   hosting_network:
@@ -81,23 +81,82 @@ nested_clusters:  # You can add clusters in this section by duplicating the exis
 # opinionated_host_ip_ofset: 1
 # # See the custom example for host to build hosts out manually
 nested_hosts:
-  - name: "esx1`"
+  - name: esx1
     ip: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(1) }}"
     mask: "{{ opinionated.hosting_network.base.cidr | ansible.utils.ipaddr('netmask') }}"
     gw: "{{ opinionated.hosting_network.base.gateway }}"
     nested_cluster: "compute"
-  - name: "esx2"
+  - name: esx2
     ip: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(2) }}"
+    mask: "{{ opinionated.hosting_network.base.cidr | ansible.utils.ipaddr('netmask') }}"
+    gw: "{{ opinionated.hosting_network.base.gateway }}"
+    nested_cluster: "compute"
+  - name: esx3
+    ip: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(3) }}"
+    mask: "{{ opinionated.hosting_network.base.cidr | ansible.utils.ipaddr('netmask') }}"
+    gw: "{{ opinionated.hosting_network.base.gateway }}"
+    nested_cluster: "compute"
+  - name: esx4
+    ip: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(4) }}"
     mask: "{{ opinionated.hosting_network.base.cidr | ansible.utils.ipaddr('netmask') }}"
     gw: "{{ opinionated.hosting_network.base.gateway }}"
     nested_cluster: "compute"
 
 distributed_switches:
   - vds_name: vsan-vds
-    mtu: 1500
+    mtu: 9000
     vds_version: 8.0.3
     clusters:  # distributed switch will be attached to all hosts in the clusters listed
       - compute
     uplink_quantity: 1
     vmnics:
       - vmnic1
+    distributed_port_groups:
+      - port_group_name: vsan
+        vlan_id: 0
+
+
+vsan:
+  witness:
+    vm_name:
+    ip: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(5) }}"
+    mask: "{{ opinionated.hosting_network.base.cidr | ansible.utils.ipaddr('netmask') }}"
+    gw: "{{ opinionated.hosting_network.base.gateway }}"
+    root_password: "{{ opinionated.master_password }}{{ opinionated.master_password }}"
+    vcenter_ip: "{{ hosting_vcenter.ip }}"
+    vcenter_username: "{{ hosting_vcenter.username }}"
+    vcenter_password: "{{ hosting_vcenter.password }}"
+    vcenter_datacenter: "{{ hosting_vcenter.datacenter }}"
+    vcenter_datastore: "{{ opinionated.hosting_datastore }}"
+    vcenter_cluster: "{{ opinionated.hosting_cluster }}"
+    vcenter_network: "{{ opinionated.hosting_network.base.port_group }}"
+  host_vmks:
+    - host: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(1) }}"
+      ip: "{{ opinionated.hosting_network.vsan.cidr | ansible.utils.ipaddr('2') | ansible.utils.ipv4('address') }}"
+      netmask: "{{ opinionated.hosting_network.vsan.cidr | ansible.utils.ipaddr('netmask') }}"
+      dvs: vsan-vds
+      port_group: vsan
+      enable_mgmt: false
+      enable_vsan: true
+    - host: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(2) }}"
+      ip: "{{ opinionated.hosting_network.vsan.cidr | ansible.utils.ipaddr('3') | ansible.utils.ipv4('address') }}"
+      netmask: "{{ opinionated.hosting_network.vsan.cidr | ansible.utils.ipaddr('netmask') }}"
+      dvs: vsan-vds
+      port_group: vsan
+      enable_mgmt: false
+      enable_vsan: true
+    - host: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(3) }}"
+      ip: "{{ opinionated.hosting_network.vsan.cidr | ansible.utils.ipaddr('4') | ansible.utils.ipv4('address') }}"
+      netmask: "{{ opinionated.hosting_network.vsan.cidr | ansible.utils.ipaddr('netmask') }}"
+      dvs: vsan-vds
+      port_group: vsan
+      enable_mgmt: false
+      enable_vsan: true
+    - host: "{{ opinionated.hosting_network.base.starting_addr | ansible.utils.ipmath(4) }}"
+      ip: "{{ opinionated.hosting_network.vsan.cidr | ansible.utils.ipaddr('5') | ansible.utils.ipv4('address') }}"
+      netmask: "{{ opinionated.hosting_network.vsan.cidr | ansible.utils.ipaddr('netmask') }}"
+      dvs: vsan-vds
+      port_group: vsan
+      enable_mgmt: false
+      enable_vsan: true
+

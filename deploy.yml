@@ -58,6 +58,11 @@
       when: 'vm_templates is defined'
       tags: ["vsphere", "vm-template"]
 
+    # VSAN section
+    - role: vsan/vsan-networking
+      when: 'vsan is defined and vsan.host_vmks is defined'
+      tags: ["vsan", "vsan-networking"]
+
     # NSX-T Section
     - role: nsxt/nsxt-mgmt-appliance
       when: 'nsxt is defined'
