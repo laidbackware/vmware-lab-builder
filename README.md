@@ -12,7 +12,7 @@ Support for NSX 3.0 has been dropped. See `nsx-3.0-support` branch for legacy su
 
 When pulling this repo, be sure to use the latest version of the container image or check the dependency setup, to ensure the the roles have all the required dependencies.
 
-Python 3.12 is currently not supported on mainline`ansible-for-nsxt`, due to a bug using a removed funciton. [Bug](https://github.com/vmware/ansible-for-nsxt/issues/517). Recommend using the fixed [fork linked in this repo](#local-usage) or v11 of the Docker image.
+Python 3.12 is currently not supported on mainline`ansible-for-nsxt`, due to a bug using a removed funciton. [Bug](https://github.com/vmware/ansible-for-nsxt/issues/517). Recommend using the fixed [fork linked in this repo](#local-usage) or v12 of the Docker image.
 
 `ansible-core` => 2.17.1 is not supported with `ansible-for-nsxt`, recommend using 2.16.x until it is fixed. See [this PR](https://github.com/vmware/ansible-for-nsxt/pull/509) and commit if this affects you..
 
@@ -89,7 +89,7 @@ alias lab-builder="docker run --rm \
     --env AVI_DEFAULT_PASSWORD=\"${AVI_DEFAULT_PASSWORD:-na}\" \
     --volume ${SOFTWARE_DIR}:/software_dir \
     --volume ${PWD}:/work \
-    laidbackware/vmware-lab-builder:v11 \
+    laidbackware/vmware-lab-builder:v12 \
     ansible-playbook"
 
 # This command is run inside the container, so point to the `/work` directory within the container.
@@ -121,7 +121,7 @@ docker run  -it --rm \
     --env AVI_DEFAULT_PASSWORD=${AVI_DEFAULT_PASSWORD:-na} \
     --volume ${SOFTWARE_DIR}:/software_dir \
     --volume ${PWD}:/work \
-    laidbackware/vmware-lab-builder:v11 \
+    laidbackware/vmware-lab-builder:v12 \
     /bin/bash
 
 # Then the playbook can be triggered
@@ -155,7 +155,7 @@ docker buildx create --use --name multi-arch --driver docker-container --platfor
 Build command:
 
 ```sh
-docker buildx build --push --platform linux/arm64,linux/amd64 --tag laidbackware/vmware-lab-builder:v11 --load ./docker
+docker buildx build --push --platform linux/arm64,linux/amd64 --tag laidbackware/vmware-lab-builder:v12 --load ./docker
 ```
 
 ## Local Usage
